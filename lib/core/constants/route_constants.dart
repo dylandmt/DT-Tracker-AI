@@ -49,4 +49,6 @@ class RouteConstants {
   static const String alertDetailName = 'alertDetail';
   static const String settingsName = 'settings';
   static const String profileName = 'profile';
+  static const String exampleName = 'example';
+  
 }

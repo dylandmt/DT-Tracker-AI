@@ -58,7 +58,7 @@
 		<string>remote-notification</string>
 	</array>
 	<key>GMSApiKey</key>
-	<string>YOUR_GOOGLE_MAPS_API_KEY_HERE</string>
+	<string>AIzaSyB--sCf0YvUgIJyNzk3jeW3MCPS4PlL11A</string>
 	<key>FirebaseAppDelegateProxyEnabled</key>
 	<false/>
 </dict>

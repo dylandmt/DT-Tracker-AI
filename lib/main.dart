@@ -7,14 +7,7 @@ import 'injection_container.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
-  await SystemChrome.setPreferredOrientations([
-    DeviceOrientation.portraitUp,
-    DeviceOrientation.portraitDown,
-  ]);
-
   await Firebase.initializeApp();
   await initializeDependencies();
-
   runApp(const DTTrackerApp());
 }

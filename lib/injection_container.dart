@@ -18,6 +18,7 @@ import 'features/auth/domain/usecases/sign_in_with_email.dart';
 import 'features/auth/domain/usecases/sign_out.dart';
 import 'features/auth/domain/usecases/sign_up_with_email.dart';
 import 'features/auth/presentation/bloc/auth_bloc.dart';
+import 'config/environment/firebase_config.dart';
 
 final sl = GetIt.instance;
 
@@ -28,9 +29,9 @@ Future<void> initializeDependencies() async {
 
   // Firebase
   sl.registerLazySingleton<FirebaseAuth>(() => FirebaseAuth.instance);
-  sl.registerLazySingleton<FirebaseFirestore>(() => FirebaseFirestore.instance);
-  sl.registerLazySingleton<FirebaseDatabase>(() => FirebaseDatabase.instance);
-  sl.registerLazySingleton<FirebaseStorage>(() => FirebaseStorage.instance);
+  sl.registerLazySingleton<FirebaseFirestore>(() => FirebaseConfig.getFirestore());
+  sl.registerLazySingleton<FirebaseDatabase>(() => FirebaseConfig.getRealtimeDatabase());
+  sl.registerLazySingleton<FirebaseStorage>(() => FirebaseConfig.getStorage());
 
   // Connectivity
   sl.registerLazySingleton<Connectivity>(() => Connectivity());

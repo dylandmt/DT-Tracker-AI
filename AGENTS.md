@@ -108,18 +108,17 @@ Environment is set at **build time** via `--dart-define=ENV=dev|prod`.
 
 ## Android Build Gotchas
 
-**Pinned versions in `android/build.gradle.kts`** - required for compatibility:
-- AGP 8.7.3, Kotlin 2.1.0
-- `androidx.core:core` pinned to 1.15.0
-- `kotlin-stdlib` pinned to 2.1.0
-- `android-maps-utils` pinned to 4.0.0
+**Pinned versions in `android/settings.gradle.kts`** - required for compatibility:
+- AGP 8.9.1, Kotlin 2.1.0
+- Gradle 8.11.1 (in `gradle-wrapper.properties`)
+- `android-maps-utils` pinned to 4.0.0 (in `build.gradle.kts`)
 
 If build fails with version conflicts, check these pins first.
 
 **If Gradle cache corrupts**, run:
 ```bash
 cd android && ./gradlew --stop
-rm -rf ~/.gradle/caches/8.10.2 android/.gradle
+rm -rf ~/.gradle/caches android/.gradle
 flutter clean && flutter pub get
 ```
 
@@ -135,9 +134,9 @@ Google Maps API key placeholders in:
 
 ## Current State
 
-- **Phase 1-3 Complete**: Project setup, auth feature
-- **Phase 4 Next**: Vehicles feature (CRUD, images, device linking)
-- **Future**: Real-time tracking (Phase 5), Geofencing (Phase 6), Alerts (Phase 7)
+- **Phase 1-5 Complete**: Project setup, auth feature, vehicles feature, real-time map tracking with My Location
+- **Phase 6 Next**: Geofencing (create/edit zones, enter/exit alerts)
+- **Future**: Alerts (Phase 7), Trip playback animation polish
 
 ---
 
@@ -154,7 +153,6 @@ Google Maps API key placeholders in:
 | `LoginPage` | `/login` | Email/password sign-in with validation |
 | `RegisterPage` | `/register` | Sign-up with name, email, password, confirm password |
 | `ForgotPasswordPage` | `/forgot-password` | Password reset via email |
-| `_PlaceholderHomePage` | `/home` | Temporary home screen (replaced in Phase 4+) |
 
 #### BLoC Pattern
 **File**: `presentation/bloc/auth_bloc.dart` (uses `part` for events/states)
@@ -472,28 +470,29 @@ AppColors.routeColor        // #1976D2
 ### Route Constants (`core/constants/route_constants.dart`)
 
 **Implemented Routes**:
-| Constant | Path | Status |
-|----------|------|--------|
-| `splash` | `/` | Implemented |
-| `login` | `/login` | Implemented |
-| `register` | `/register` | Implemented |
-| `forgotPassword` | `/forgot-password` | Implemented |
-| `home` | `/home` | Placeholder |
+| Constant | Path | Description |
+|----------|------|-------------|
+| `splash` | `/` | Initial screen |
+| `login` | `/login` | Login page |
+| `register` | `/register` | Registration page |
+| `forgotPassword` | `/forgot-password` | Password reset |
+| `home` | `/home` | Redirects to `/home/vehicles` |
+| `homeVehicles` | `/home/vehicles` | Vehicles list (with bottom nav) |
+| `homeMap` | `/home/map` | Map placeholder (with bottom nav) |
+| `homeSettings` | `/home/settings` | Settings (with bottom nav) |
+| `vehicleAdd` | `/home/vehicles/add` | Add vehicle form |
+| `vehicleDetail` | `/home/vehicles/:id` | Vehicle details |
+| `vehicleEdit` | `/home/vehicles/:id/edit` | Edit vehicle form |
+| `vehicleLinkTracker` | `/home/vehicles/:id/link-tracker` | Link GPS tracker |
 
 **Defined but NOT Implemented** (for future phases):
 | Constant | Path |
 |----------|------|
-| `map` | `/map` |
-| `vehicles` | `/vehicles` |
-| `vehicleDetail` | `/vehicles/:id` |
-| `vehicleAdd` | `/vehicles/add` |
-| `vehicleEdit` | `/vehicles/:id/edit` |
 | `geofences` | `/geofences` |
 | `geofenceAdd` | `/geofences/add` |
 | `geofenceEdit` | `/geofences/:id/edit` |
 | `alerts` | `/alerts` |
 | `alertDetail` | `/alerts/:id` |
-| `settings` | `/settings` |
 | `profile` | `/settings/profile` |
 
 ---
@@ -544,6 +543,495 @@ MaterialApp(
 | **Utils** | intl | ^0.20.2 |
 | | uuid | ^4.5.1 |
 | | permission_handler | ^11.3.1 |
+| **Image** | image_picker | ^1.0.7 |
+| | flutter_image_compress | ^2.1.0 |
 | **Notifications** | flutter_local_notifications | ^18.0.1 |
 | **Dev** | bloc_test | ^9.1.7 |
 | | mocktail | ^1.0.4 |
+
+---
+
+## Feature: Vehicles (Phase 4)
+**Status**: Complete  
+**Location**: `lib/features/vehicles/`
+
+### Screens
+| Screen | Route | Description |
+|--------|-------|-------------|
+| `VehiclesPage` | `/home/vehicles` | Grid view of user's vehicles |
+| `VehicleDetailPage` | `/home/vehicles/:id` | Vehicle details with tracker status |
+| `VehicleFormPage` | `/home/vehicles/add`, `/home/vehicles/:id/edit` | Create/edit vehicle |
+| `LinkTrackerPage` | `/home/vehicles/:id/link-tracker` | Link GPS tracker via IMEI |
+
+### BLoC Pattern
+
+**VehiclesBloc** - Vehicle list management
+```dart
+// Events
+LoadVehicles()
+StartWatchingVehicles()
+StopWatchingVehicles()
+DeleteVehicleRequested(vehicleId)
+RefreshVehicles()
+ClearVehiclesError()
+
+// States (VehiclesStatus enum)
+initial, loading, loaded, error, deleting, deleted
+```
+
+**VehicleFormBloc** - Create/edit form
+```dart
+// Events
+LoadVehicleForEdit(vehicleId)
+SubmitVehicleForm(name, plateNumber, brand?, model?, year?, color?)
+AddVehicleImage(filePath)
+RemoveVehicleImage(imageUrl)
+ResetVehicleForm()
+ClearFormError()
+
+// States (VehicleFormStatus enum)
+initial, loading, loaded, submitting, success, error, uploadingImage, deletingImage
+```
+
+**TrackerLinkBloc** - Link/unlink tracker
+```dart
+// Events
+ValidateImei(imei)
+LinkTrackerToVehicle(vehicleId, imei)
+UnlinkTrackerFromVehicle(vehicleId)
+ResetTrackerLink()
+ClearTrackerError()
+
+// States (TrackerLinkStatus enum)
+initial, validating, valid, invalid, linking, linked, unlinking, unlinked, error
+```
+
+### Domain Layer
+
+**Entities**:
+```dart
+VehicleEntity {
+  String id;
+  String name;              // Required
+  String plateNumber;       // Required
+  String? brand;
+  String? model;
+  int? year;
+  String? color;
+  List<String> imageUrls;   // Max 5 images
+  String? trackerId;        // IMEI, null if no tracker
+  DateTime? trackerLinkedAt;
+  DateTime createdAt;
+  DateTime updatedAt;
+  
+  // Computed
+  bool hasTracker;
+  bool canAddMoreImages;
+  int remainingImageSlots;
+  String? primaryImageUrl;
+}
+
+TrackerInfoEntity {
+  String imei;
+  String? model;
+  String? provider;
+  String? ownerId;
+  DateTime? linkedAt;
+  
+  bool isAvailable;
+}
+
+TrackerLiveEntity {
+  String imei;
+  int battery;
+  double lat, lng;
+  double speed;
+  bool online;
+  DateTime datetime;
+}
+
+TrackerStatusEntity {
+  String imei;
+  int battery;
+  bool online;
+  double speed;
+  DateTime lastUpdate;
+}
+```
+
+**Use Cases**:
+| UseCase | Params | Returns |
+|---------|--------|---------|
+| `GetVehicles` | `NoParams` | `List<VehicleEntity>` |
+| `GetVehicleById` | `IdParams(id)` | `VehicleEntity` |
+| `WatchVehicles` | `NoParams` | `Stream<List<VehicleEntity>>` |
+| `CreateVehicle` | `CreateVehicleParams(...)` | `VehicleEntity` |
+| `UpdateVehicle` | `UpdateVehicleParams(...)` | `VehicleEntity` |
+| `DeleteVehicle` | `IdParams(id)` | `void` |
+| `UploadVehicleImage` | `UploadImageParams(vehicleId, filePath)` | `String` (URL) |
+| `DeleteVehicleImage` | `DeleteImageParams(vehicleId, imageUrl)` | `void` |
+| `LinkTracker` | `LinkTrackerParams(vehicleId, trackerId)` | `VehicleEntity` |
+| `UnlinkTracker` | `IdParams(vehicleId)` | `VehicleEntity` |
+| `GetTrackerInfo` | `ImeiParams(imei)` | `TrackerInfoEntity` |
+| `IsTrackerAvailable` | `ImeiParams(imei)` | `bool` |
+
+### Data Layer
+
+**Firestore Collection**: `users/{uid}/vehicles/{vehicleId}`
+```json
+{
+  "name": "string",
+  "plateNumber": "string",
+  "brand": "string | null",
+  "model": "string | null",
+  "year": "number | null",
+  "color": "string | null",
+  "imageUrls": ["string"],
+  "trackerId": "string | null",
+  "trackerLinkedAt": "Timestamp | null",
+  "createdAt": "Timestamp",
+  "updatedAt": "Timestamp"
+}
+```
+
+**Firebase Storage Path**: `vehicles/{userId}/{vehicleId}/{uuid}.jpg`
+
+**RTDB Structure** (tracker data from external GPS):
+```
+trackers_info/{imei}/
+  imei, model, provider, ownerId, linkedAt
+
+trackers_live/{imei}/
+  imei, battery, lat, lng, speed, online, datetime, ts
+
+trackers_status/{imei}/
+  battery, online, speed, lastUpdate
+```
+
+### Reusable Widgets
+
+**VehicleCard** - Grid card with image, name, plate, tracker indicator
+```dart
+VehicleCard(
+  vehicle: vehicle,
+  onTap: () {},
+  onLongPress: () {},
+)
+```
+
+**VehiclesEmptyState** - Empty state with "Add Vehicle" CTA
+```dart
+VehiclesEmptyState(onAddVehicle: () {})
+```
+
+**DeleteVehicleDialog** - Confirmation dialog (warns about tracker unlink)
+```dart
+showDeleteVehicleDialog(context, vehicle) // Returns bool?
+```
+
+**VehicleImagePicker** - Horizontal image list with add/remove
+```dart
+VehicleImagePicker(
+  vehicle: vehicle,
+  imageUrls: urls,
+  isUploading: false,
+  uploadingIndex: null,
+  onImageAdded: (path) {},
+  onImageRemoved: (url) {},
+  enabled: true,
+)
+```
+
+**TrackerStatusCard** - Shows tracker status or link CTA
+```dart
+TrackerStatusCard(
+  vehicle: vehicle,
+  trackerStatus: status,
+  isLoading: false,
+  onLinkTracker: () {},
+  onUnlinkTracker: () {},
+)
+```
+
+**VehicleFormFields** - Reusable form fields with color picker
+```dart
+VehicleFormFields(
+  nameController: _name,
+  plateNumberController: _plate,
+  brandController: _brand,
+  modelController: _model,
+  yearController: _year,
+  selectedColor: 'White',
+  onColorChanged: (color) {},
+  enabled: true,
+)
+```
+
+---
+
+## Feature: Home Dashboard
+**Status**: Complete  
+**Location**: `lib/features/home/`
+
+**HomePage** - Shell with bottom NavigationBar
+- Uses GoRouter ShellRoute
+- 3 tabs: Vehicles, Map, Settings
+
+**AppNavigationBar** - Material 3 NavigationBar
+- Icons: directions_car, map, settings
+
+---
+
+## Feature: Settings
+**Status**: Basic (Phase 4)  
+**Location**: `lib/features/settings/`
+
+**SettingsPage** - User info + sign out
+- User avatar and info header
+- Placeholder links for Profile, Notifications, Speed Alerts, Geofences
+- About dialog
+- Sign out with confirmation
+
+---
+
+## Feature: Map (Phase 5)
+**Status**: Complete  
+**Location**: `lib/features/map/`
+
+### Screens
+| Screen | Route | Description |
+|--------|-------|-------------|
+| `MapPage` | `/home/map` | Real-time vehicle tracking map with Google Maps |
+
+### BLoC Pattern
+
+**MapBloc** - Real-time map state management
+```dart
+// Events
+StartWatchingLocations()     // Start real-time location stream
+StopWatchingLocations()      // Stop watching
+LocationsUpdated(locations)  // Internal: when locations update
+LocationsError(message)      // Internal: when error occurs
+SelectVehicle(vehicle)       // Select vehicle for focus/details
+ClearVehicleSelection()      // Deselect vehicle
+LoadTripHistory(startDate, endDate)  // Load trip history
+ClearTripHistory()           // Clear trip data
+StartTripPlayback()          // Start trip replay
+PauseTripPlayback()          // Pause replay
+StopTripPlayback()           // Stop and reset replay
+UpdatePlaybackPosition(position)  // Seek to position
+ClearMapError()              // Clear error state
+ToggleTrafficLayer()         // Toggle traffic overlay
+ChangeMapType(mapType)       // Switch map type
+
+// States (MapStatus enum)
+initial, loading, loaded, error
+
+// TripStatus enum
+initial, loading, loaded, error
+
+// PlaybackStatus enum
+idle, playing, paused
+
+// MapViewType enum
+normal, satellite, terrain, hybrid
+```
+
+**State Helpers**:
+```dart
+state.isLoading              // bool
+state.isLoaded               // bool
+state.hasError               // bool
+state.hasSelectedVehicle     // bool
+state.hasTripHistory         // bool
+state.isPlaying              // bool
+state.isPaused               // bool
+state.onlineVehicleCount     // int
+state.movingVehicleCount     // int
+state.currentPlaybackPoint   // TripPointEntity?
+state.playbackProgress       // double (0.0-1.0)
+```
+
+### Domain Layer
+
+**Entities**:
+```dart
+VehicleLocationEntity {
+  String vehicleId;
+  String vehicleName;
+  String plateNumber;
+  String? color;
+  String? imageUrl;
+  String trackerId;
+  double latitude, longitude;
+  double speed;
+  int battery;
+  bool isOnline;
+  DateTime lastUpdate;
+  
+  // Computed
+  bool isMoving;
+  bool isIdle;
+  bool isBatteryLow;
+  VehicleStatus status;       // moving, idle, offline
+  String formattedSpeed;
+  String formattedCoordinates;
+}
+
+TripPointEntity {
+  DateTime timestamp;
+  double latitude, longitude;
+  double speed;
+  int battery;
+}
+
+TripEntity {
+  String vehicleId;
+  String trackerId;
+  DateTime startTime, endTime;
+  List<TripPointEntity> points;
+  
+  // Computed
+  Duration duration;
+  double totalDistanceKm;
+  double averageSpeed;
+  double maxSpeed;
+}
+```
+
+**Use Cases**:
+| UseCase | Params | Returns |
+|---------|--------|---------|
+| `GetVehicleLocations` | `NoParams` | `List<VehicleLocationEntity>` |
+| `WatchVehicleLocations` | `NoParams` | `Stream<List<VehicleLocationEntity>>` |
+| `GetVehicleLocation` | `IdParams(id)` | `VehicleLocationEntity` |
+| `WatchVehicleLocation` | `IdParams(id)` | `Stream<VehicleLocationEntity>` |
+| `GetTripHistory` | `TripHistoryParams(vehicleId, startDate, endDate)` | `TripEntity` |
+| `GetDayTripPoints` | `DayTripParams(vehicleId, date)` | `List<TripPointEntity>` |
+
+### Data Layer
+
+**Data Flow**:
+1. `MapRemoteDataSource` combines Firestore vehicle data with RTDB tracker live data
+2. Streams Firestore `vehicles` collection + RTDB `trackers_live/{imei}` for each vehicle
+3. Trip history reads from RTDB `trackers_history/{imei}` with timestamp range query
+
+**RTDB Structure** (referenced from Phase 4):
+```
+trackers_live/{imei}/
+  battery, lat, lng, speed, online, datetime, ts
+
+trackers_history/{imei}/{timestamp}/
+  battery, lat, lng, speed, datetime, ts
+```
+
+### Widgets
+
+**MapPage** - Full-screen map with:
+- Google Maps with vehicle markers (color-coded by status)
+- Top bar with vehicle counts (total, online, moving)
+- Sliding vehicle list panel (left side)
+- Map controls (right side: zoom, map type, traffic, fit bounds)
+- Vehicle info card (bottom sheet when vehicle selected)
+
+**VehicleListPanel** - Sliding panel with vehicle list
+```dart
+VehicleListPanel(
+  vehicles: locations,
+  selectedVehicle: selected,
+  onVehicleSelected: (v) {},
+  onClose: () {},
+)
+```
+
+**VehicleInfoCard** - Bottom sheet with vehicle details
+```dart
+VehicleInfoCard(
+  vehicle: location,
+  onClose: () {},
+  onViewHistory: () {},
+  onNavigate: () {},
+)
+```
+
+**MapControls** - Floating control buttons
+```dart
+MapControls(
+  mapType: MapViewType.normal,
+  showTraffic: false,
+  onZoomIn: () {},
+  onZoomOut: () {},
+  onMyLocation: () {},
+  onFitBounds: () {},
+  onToggleTraffic: () {},
+  onMapTypeChanged: (type) {},
+)
+```
+
+### Features
+- Real-time vehicle positions with color-coded markers (blue=moving, orange=idle, red=offline)
+- Vehicle list with status indicators and live speed
+- Vehicle info card with speed, battery, last update time
+- Map controls: zoom, map type selector, traffic toggle, fit all vehicles
+- **My Location button** - Gets current GPS position with permission handling
+- Blue dot overlay showing user's current location (when permission granted)
+- Trip history date picker (loads from RTDB)
+- Playback controls for trip replay (pending full implementation)
+
+### My Location Implementation
+The "My Location" button uses `geolocator` package with the reusable permission system:
+
+```dart
+// In MapPage
+Future<void> _goToMyLocation() async {
+  // 1. Check/request location permission via AppPermissionHandler
+  // 2. Check if location services enabled
+  // 3. Get current position with Geolocator.getCurrentPosition()
+  // 4. Animate map camera to user's location
+  // 5. If permanently denied, show dialog to open settings
+}
+```
+
+**State Variables**:
+- `_locationPermissionGranted` - Enables `myLocationEnabled` on GoogleMap
+- `_isGettingLocation` - Prevents multiple simultaneous requests
+
+### Next Steps (Phase 6)
+- Full trip playback with polyline animation
+- Navigation integration (Google Maps / Apple Maps)
+- Geofencing zones on map
+
+---
+
+## Core: Permissions System
+**Location**: `lib/core/permissions/`
+
+**AppPermission** enum: camera, photos, location, locationAlways, notification, storage
+
+**AppPermissionStatus** enum: granted, denied, permanentlyDenied, restricted, limited, unknown
+
+**AppPermissionHandler** - Abstract interface
+```dart
+Future<AppPermissionStatus> checkPermission(permission)
+Future<AppPermissionStatus> requestPermission(permission)
+Future<Map<...>> requestPermissions(permissions)
+Future<bool> isGranted(permission)
+Future<bool> openSettings()
+Future<bool> ensurePermission(permission)  // Check + request if needed
+```
+
+**PermissionDeniedWidget** - Full-screen permission denied UI
+**PermissionDeniedBanner** - Compact inline banner
+
+---
+
+## Core: Image Compression
+**Location**: `lib/core/utils/image_compressor.dart`
+
+**ImageCompressor** - Compresses images before upload
+```dart
+Future<String> compressImage(filePath, quality: 70, maxWidth: 1080, maxHeight: 1080)
+Future<List<String>> compressImages(filePaths, ...)
+Future<Uint8List?> compressBytes(bytes, ...)
+Future<Uint8List?> compressFileToBytes(filePath, ...)
+```

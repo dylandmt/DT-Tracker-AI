@@ -1,0 +1,290 @@
+openapi: 3.0.3
+info:
+  title: DT Tracker Backend API
+  version: 1.0.0
+  description: API contract for DT Tracker backend.
+servers:
+  - url: https://dev.dt-tracker.com/api/v1
+    description: Development
+  - url: https://staging.dt-tracker.com/api/v1
+    description: Staging
+  - url: https://api.dt-tracker.com/api/v1
+    description: Production
+tags:
+  - name: Ingest
+  - name: Trackers
+  - name: Vehicles
+paths:
+  /ingest:
+    post:
+      tags: [Ingest]
+      summary: Ingest tracker telemetry
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IngestPayload'
+      responses:
+        '200':
+          description: Telemetry accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OkResponse'
+        '400':
+          description: Invalid payload
+        '500':
+          description: Internal server error
+  /trackers/register:
+    post:
+      tags: [Trackers]
+      summary: Register tracker in inventory
+      security:
+        - adminApiKey: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TrackerRegisterPayload'
+      responses:
+        '201':
+          description: Tracker registered
+        '400':
+          description: Invalid registration payload
+        '401':
+          description: Invalid admin API key
+        '409':
+          description: Tracker already registered
+  /trackers/validate:
+    post:
+      tags: [Trackers]
+      summary: Validate tracker availability
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ImeiPayload'
+      responses:
+        '200':
+          description: Tracker validation result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TrackerValidationResponse'
+        '400':
+          description: Invalid IMEI
+        '401':
+          description: Unauthorized
+        '404':
+          description: Tracker not registered
+  /vehicles/{vehicleId}/link:
+    post:
+      tags: [Vehicles]
+      summary: Link tracker to vehicle
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/VehicleId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ImeiPayload'
+      responses:
+        '200':
+          description: Tracker linked
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VehicleTrackerResponse'
+        '400':
+          description: Invalid input
+        '401':
+          description: Unauthorized
+        '404':
+          description: Vehicle or tracker not found
+        '409':
+          description: Tracker unavailable or already in use
+  /vehicles/{vehicleId}/unlink:
+    post:
+      tags: [Vehicles]
+      summary: Unlink tracker from vehicle
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/VehicleId'
+      responses:
+        '200':
+          description: Tracker unlinked
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VehicleUnlinkResponse'
+        '400':
+          description: Invalid vehicle ID
+        '401':
+          description: Unauthorized
+        '404':
+          description: Vehicle not found
+        '409':
+          description: Tracker owner mismatch
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: Firebase ID Token
+    adminApiKey:
+      type: apiKey
+      in: header
+      name: x-admin-api-key
+  parameters:
+    VehicleId:
+      name: vehicleId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+      example: df25934b-c7fd-4581-8640-c2384e3e7d5d
+  schemas:
+    OkResponse:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+    IngestPayload:
+      type: object
+      required: [imei, lat, lng, speed, battery, datetime, ts]
+      properties:
+        imei:
+          type: string
+          pattern: '^\\d{14,17}$'
+          example: '864643060618008'
+        lat:
+          type: number
+          minimum: -90
+          maximum: 90
+          example: 20.182058
+        lng:
+          type: number
+          minimum: -180
+          maximum: 180
+          example: -96.865013
+        speed:
+          type: number
+          minimum: 0
+          example: 18.1
+        battery:
+          type: integer
+          minimum: 0
+          maximum: 100
+          example: 100
+        datetime:
+          type: string
+          format: date-time
+          example: '2026-07-02T13:59:11Z'
+        ts:
+          type: integer
+          minimum: 0
+          example: 31151
+    ImeiPayload:
+      type: object
+      required: [imei]
+      properties:
+        imei:
+          type: string
+          pattern: '^\\d{15}$'
+          example: '864643060618008'
+    TrackerRegisterPayload:
+      type: object
+      required: [imei, model, provider]
+      properties:
+        imei:
+          type: string
+          pattern: '^\\d{15}$'
+          example: '864643060618008'
+        model:
+          type: string
+          example: SIM7670
+        provider:
+          type: string
+          example: Telcel
+        firmware:
+          type: string
+          example: 1.0.0
+        manufacturedAt:
+          type: string
+          format: date-time
+          example: '2026-07-03T00:00:00Z'
+    Tracker:
+      type: object
+      properties:
+        imei:
+          type: string
+          example: '864643060618008'
+        model:
+          type: string
+          example: SIM7670
+        provider:
+          type: string
+          example: Telcel
+        firmware:
+          type: string
+          nullable: true
+          example: 1.0.0
+        manufacturedAt:
+          type: string
+          nullable: true
+          example: '2026-07-03T00:00:00Z'
+        status:
+          type: string
+          enum: [available, linked]
+          example: available
+        ownerId:
+          type: string
+          nullable: true
+        linkedAt:
+          type: string
+          nullable: true
+    TrackerValidationResponse:
+      type: object
+      properties:
+        tracker:
+          $ref: '#/components/schemas/Tracker'
+        isAvailable:
+          type: boolean
+          example: true
+    VehicleTrackerResponse:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        vehicleId:
+          type: string
+          example: df25934b-c7fd-4581-8640-c2384e3e7d5d
+        imei:
+          type: string
+          example: '864643060618008'
+    VehicleUnlinkResponse:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        vehicleId:
+          type: string
+          example: df25934b-c7fd-4581-8640-c2384e3e7d5d
+        trackerId:
+          type: string
+          nullable: true
+          example: '864643060618008'

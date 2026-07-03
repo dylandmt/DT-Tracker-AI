@@ -5,15 +5,18 @@ import '../../../../core/errors/failures.dart';
 import '../../../../core/network/network_info.dart';
 import '../../domain/entities/tracker_info.dart';
 import '../../domain/repositories/tracker_repository.dart';
+import '../datasources/tracker_backend_datasource.dart';
 import '../datasources/tracker_remote_datasource.dart';
 
 /// Implementation of [TrackerRepository]
 class TrackerRepositoryImpl implements TrackerRepository {
   final TrackerRemoteDataSource trackerDataSource;
+  final TrackerBackendDataSource backendDataSource;
   final NetworkInfo networkInfo;
 
   TrackerRepositoryImpl({
     required this.trackerDataSource,
+    required this.backendDataSource,
     required this.networkInfo,
   });
 
@@ -24,13 +27,12 @@ class TrackerRepositoryImpl implements TrackerRepository {
     }
 
     try {
-      final tracker = await trackerDataSource.getTrackerInfo(imei);
-
-      if (tracker == null) {
+      // Prefer backend validate to avoid RTDB read restrictions
+      final (info, _) = await backendDataSource.validateImei(imei);
+      if (info == null) {
         return const Left(NotFoundFailure(message: 'Tracker not found'));
       }
-
-      return Right(tracker);
+      return Right(info);
     } on ServerException catch (e) {
       return Left(ServerFailure(message: e.message));
     } catch (e) {
@@ -61,7 +63,7 @@ class TrackerRepositoryImpl implements TrackerRepository {
     }
 
     try {
-      final available = await trackerDataSource.isTrackerAvailable(imei);
+      final (_, available) = await backendDataSource.validateImei(imei);
       return Right(available);
     } on ServerException catch (e) {
       return Left(ServerFailure(message: e.message));
@@ -75,12 +77,16 @@ class TrackerRepositoryImpl implements TrackerRepository {
     required String imei,
     required String userId,
   }) async {
+    // Linking is now handled via vehicle endpoints using VehicleRepository
+    // Keep this for API completeness but call validate instead
     if (!await networkInfo.isConnected) {
       return const Left(NetworkFailure());
     }
-
     try {
-      await trackerDataSource.setTrackerOwner(imei, userId);
+      final (_, available) = await backendDataSource.validateImei(imei);
+      if (!available) {
+        return const Left(ValidationFailure(message: 'Tracker not available'));
+      }
       return const Right(null);
     } on ServerException catch (e) {
       return Left(ServerFailure(message: e.message));
@@ -91,18 +97,11 @@ class TrackerRepositoryImpl implements TrackerRepository {
 
   @override
   Future<Either<Failure, void>> unlinkTrackerFromUser(String imei) async {
+    // Unlink is done through vehicle endpoint; keep as no-op
     if (!await networkInfo.isConnected) {
       return const Left(NetworkFailure());
     }
-
-    try {
-      await trackerDataSource.setTrackerOwner(imei, null);
-      return const Right(null);
-    } on ServerException catch (e) {
-      return Left(ServerFailure(message: e.message));
-    } catch (e) {
-      return Left(UnknownFailure(message: e.toString()));
-    }
+    return const Right(null);
   }
 
   @override

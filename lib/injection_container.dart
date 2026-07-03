@@ -7,6 +7,7 @@ import 'package:get_it/get_it.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'config/environment/firebase_config.dart';
+import 'config/environment/environment.dart';
 import 'core/network/network_info.dart';
 import 'core/permissions/permission_handler.dart';
 import 'core/permissions/permission_handler_impl.dart';
@@ -23,6 +24,7 @@ import 'features/auth/domain/usecases/sign_out.dart';
 import 'features/auth/domain/usecases/sign_up_with_email.dart';
 import 'features/auth/presentation/bloc/auth_bloc.dart';
 import 'features/vehicles/data/datasources/tracker_remote_datasource.dart';
+import 'features/vehicles/data/datasources/tracker_backend_datasource.dart';
 import 'features/vehicles/data/datasources/vehicle_image_datasource.dart';
 import 'features/vehicles/data/datasources/vehicle_remote_datasource.dart';
 import 'features/vehicles/data/repositories/tracker_repository_impl.dart';
@@ -142,6 +144,14 @@ Future<void> initializeDependencies() async {
     () => TrackerRemoteDataSourceImpl(database: sl()),
   );
 
+  // Backend Data Source (secure endpoints)
+  sl.registerLazySingleton<TrackerBackendDataSource>(
+    () => TrackerBackendDataSource(
+      firebaseAuth: sl(),
+      baseUrl: EnvironmentConfig.apiBaseUrl,
+    ),
+  );
+
   sl.registerLazySingleton<VehicleImageDataSource>(
     () => VehicleImageDataSourceImpl(
       storage: sl(),
@@ -155,6 +165,7 @@ Future<void> initializeDependencies() async {
       vehicleDataSource: sl(),
       imageDataSource: sl(),
       trackerDataSource: sl(),
+      backendDataSource: sl(),
       firebaseAuth: sl(),
       networkInfo: sl(),
     ),
@@ -163,6 +174,7 @@ Future<void> initializeDependencies() async {
   sl.registerLazySingleton<TrackerRepository>(
     () => TrackerRepositoryImpl(
       trackerDataSource: sl(),
+      backendDataSource: sl(),
       networkInfo: sl(),
     ),
   );

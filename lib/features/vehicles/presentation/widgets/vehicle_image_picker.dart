@@ -1,3 +1,5 @@
+import 'dart:io' show Platform;
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -43,22 +45,45 @@ class _VehicleImagePickerState extends State<VehicleImagePicker> {
   Future<void> _pickImage(ImageSource source) async {
     if (!_canAddMore) return;
 
-    // Check permission
-    final permission = source == ImageSource.camera
-        ? AppPermission.camera
-        : AppPermission.photos;
-
-    final hasPermission = await _permissionHandler.ensurePermission(permission);
-
-    if (!hasPermission) {
-      if (mounted) {
-        final requiresSettings =
-            await _permissionHandler.requiresSettings(permission);
-        if (requiresSettings) {
-          _showSettingsDialog(permission);
+    // Permission strategy
+    // - Camera: always request camera permission
+    // - Gallery: iOS -> photos permission; Android -> attempt directly and handle errors
+    if (source == ImageSource.camera) {
+      final hasPermission = await _permissionHandler.ensurePermission(AppPermission.camera);
+      if (!hasPermission) {
+        if (mounted) {
+          final requiresSettings =
+              await _permissionHandler.requiresSettings(AppPermission.camera);
+          if (requiresSettings) {
+            _showSettingsDialog(AppPermission.camera);
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Camera permission denied')),
+            );
+          }
+        }
+        return;
+      }
+    } else {
+      // Gallery
+      if (Platform.isIOS) {
+        final hasPermission = await _permissionHandler.ensurePermission(AppPermission.photos);
+        if (!hasPermission) {
+          if (mounted) {
+            final requiresSettings =
+                await _permissionHandler.requiresSettings(AppPermission.photos);
+            if (requiresSettings) {
+              _showSettingsDialog(AppPermission.photos);
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Photos permission denied')),
+              );
+            }
+          }
+          return;
         }
       }
-      return;
+      // On Android, try directly; modern Android may not require pre-permission for gallery
     }
 
     try {

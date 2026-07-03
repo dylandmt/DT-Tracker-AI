@@ -10,6 +10,19 @@ class TrackerInfoModel extends TrackerInfoEntity {
     super.linkedAt,
   });
 
+  /// Create a TrackerInfoModel from backend JSON
+  factory TrackerInfoModel.fromJson(Map<String, dynamic> json) {
+    return TrackerInfoModel(
+      imei: json['imei'] as String,
+      model: json['model'] as String?,
+      provider: json['provider'] as String?,
+      ownerId: json['ownerId'] as String?,
+      linkedAt: json['linkedAt'] != null
+          ? DateTime.tryParse(json['linkedAt'] as String)
+          : null,
+    );
+  }
+
   /// Create a TrackerInfoModel from RTDB data
   factory TrackerInfoModel.fromRtdb(Map<dynamic, dynamic> data, String imei) {
     return TrackerInfoModel(

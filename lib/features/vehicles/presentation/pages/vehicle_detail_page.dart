@@ -117,10 +117,22 @@ class _VehicleDetailPageState extends State<VehicleDetailPage> {
                 actions: [
                   IconButton(
                     icon: const Icon(Icons.edit),
-                    onPressed: () => context.push(
-                      RouteConstants.vehicleEdit
-                          .replaceFirst(':id', vehicle.id),
-                    ),
+                    onPressed: () async {
+                      await context.push(
+                        RouteConstants.vehicleEdit
+                            .replaceFirst(':id', vehicle.id),
+                      );
+                      if (!mounted) return;
+                      // Reload vehicle details after returning
+                      context
+                          .read<VehicleFormBloc>()
+                          .add(LoadVehicleForEdit(vehicleId: widget.vehicleId));
+                      final refreshed =
+                          context.read<VehicleFormBloc>().state.vehicle;
+                      if (refreshed?.trackerId != null) {
+                        _startWatchingTracker(refreshed!.trackerId!);
+                      }
+                    },
                   ),
                   IconButton(
                     icon: const Icon(Icons.delete),
@@ -222,9 +234,24 @@ class _VehicleDetailPageState extends State<VehicleDetailPage> {
                               vehicle: vehicle,
                               trackerStatus: _trackerStatus,
                               isLoading: trackerState.isLoading,
-                              onLinkTracker: () => context.push(
-                                '${RouteConstants.vehicleDetail.replaceFirst(':id', vehicle.id)}/link-tracker',
-                              ),
+                              onLinkTracker: () async {
+                                await context.push(
+                                  '${RouteConstants.vehicleDetail.replaceFirst(':id', vehicle.id)}/link-tracker',
+                                );
+                                if (!mounted) return;
+                                // Reload and (re)start tracker watcher if linked
+                                context.read<VehicleFormBloc>().add(
+                                      LoadVehicleForEdit(
+                                          vehicleId: widget.vehicleId),
+                                    );
+                                final refreshed = context
+                                    .read<VehicleFormBloc>()
+                                    .state
+                                    .vehicle;
+                                if (refreshed?.trackerId != null) {
+                                  _startWatchingTracker(refreshed!.trackerId!);
+                                }
+                              },
                               onUnlinkTracker: () => _showUnlinkDialog(context, vehicle.id),
                             );
                           },

@@ -9,6 +9,7 @@ import '../../domain/entities/vehicle.dart';
 import '../../domain/repositories/vehicle_repository.dart';
 import '../datasources/tracker_remote_datasource.dart';
 import '../datasources/vehicle_image_datasource.dart';
+import '../datasources/tracker_backend_datasource.dart';
 import '../datasources/vehicle_remote_datasource.dart';
 import '../models/vehicle_model.dart';
 
@@ -17,6 +18,7 @@ class VehicleRepositoryImpl implements VehicleRepository {
   final VehicleRemoteDataSource vehicleDataSource;
   final VehicleImageDataSource imageDataSource;
   final TrackerRemoteDataSource trackerDataSource;
+  final TrackerBackendDataSource backendDataSource;
   final FirebaseAuth firebaseAuth;
   final NetworkInfo networkInfo;
   final Uuid _uuid = const Uuid();
@@ -25,6 +27,7 @@ class VehicleRepositoryImpl implements VehicleRepository {
     required this.vehicleDataSource,
     required this.imageDataSource,
     required this.trackerDataSource,
+    required this.backendDataSource,
     required this.firebaseAuth,
     required this.networkInfo,
   });
@@ -184,7 +187,12 @@ class VehicleRepositoryImpl implements VehicleRepository {
 
       // Unlink tracker if linked
       if (vehicle.trackerId != null) {
-        await trackerDataSource.setTrackerOwner(vehicle.trackerId!, null);
+        try {
+          await backendDataSource.unlinkTracker(vehicleId: id);
+        } catch (_) {
+          // Fallback to legacy unlink if backend unavailable
+          await trackerDataSource.setTrackerOwner(vehicle.trackerId!, null);
+        }
       }
 
       // Delete all images from storage
@@ -285,19 +293,8 @@ class VehicleRepositoryImpl implements VehicleRepository {
     }
 
     try {
-      // Check if tracker is available
-      final isAvailable = await trackerDataSource.isTrackerAvailable(trackerId);
-      if (!isAvailable) {
-        return const Left(ValidationFailure(
-          message: 'Tracker is not available or does not exist',
-        ));
-      }
-
-      // Link tracker to user in RTDB
-      await trackerDataSource.setTrackerOwner(trackerId, _userId);
-
-      // Update vehicle with tracker ID
-      await vehicleDataSource.setTrackerId(_userId, vehicleId, trackerId);
+      // Perform secure link via backend (also updates Firestore)
+      await backendDataSource.linkTracker(vehicleId: vehicleId, imei: trackerId);
 
       // Get updated vehicle
       final vehicle = await vehicleDataSource.getVehicleById(_userId, vehicleId);
@@ -318,16 +315,8 @@ class VehicleRepositoryImpl implements VehicleRepository {
     }
 
     try {
-      // Get vehicle to get tracker ID
-      final vehicle = await vehicleDataSource.getVehicleById(_userId, vehicleId);
-
-      if (vehicle.trackerId != null) {
-        // Unlink tracker from user in RTDB
-        await trackerDataSource.setTrackerOwner(vehicle.trackerId!, null);
-      }
-
-      // Remove tracker from vehicle
-      await vehicleDataSource.setTrackerId(_userId, vehicleId, null);
+      // Backend will unlink and update Firestore
+      await backendDataSource.unlinkTracker(vehicleId: vehicleId);
 
       // Get updated vehicle
       final updatedVehicle =

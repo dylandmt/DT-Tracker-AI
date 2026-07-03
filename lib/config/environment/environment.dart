@@ -68,4 +68,16 @@ class EnvironmentConfig {
         return 'gs://dttracker-prod-01';
     }
   }
+
+  /// Backend API base URL for secure operations
+  static String get apiBaseUrl {
+    switch (current) {
+      case Environment.dev:
+        return 'https://dev.dt-tracker.com/api/v1';
+      case Environment.staging:
+        return 'https://staging.dt-tracker.com/api/v1';
+      case Environment.prod:
+        return 'https://api.dt-tracker.com/api/v1';
+    }
+  }
 }

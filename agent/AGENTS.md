@@ -2,6 +2,73 @@
 
 Instructions for AI agents working on DT Tracker.
 
+## Recent Updates (Jul 2026)
+
+This section captures the latest mobile app changes and how they affect workflows and integration.
+
+- Backend-driven tracker linking
+  - The app no longer writes to RTDB to link/unlink trackers. It calls backend endpoints using a Firebase ID token.
+  - Endpoints (see DT-Tracker-Backend-Endpoints.md):
+    - POST /api/v1/trackers/validate
+    - POST /api/v1/vehicles/{vehicleId}/link
+    - POST /api/v1/vehicles/{vehicleId}/unlink
+  - DI: new TrackerBackendDataSource wraps HTTP + ID token.
+  - Repos: VehicleRepositoryImpl and TrackerRepositoryImpl now route link/unlink/validate via backend; RTDB reads for live/status/history remain unchanged.
+
+- Strict RTDB rules supported
+  - Client reads of trackers_live/status/history are allowed only when users/{uid}/devices/{imei} = true.
+  - The backend link endpoint writes the users/{uid}/devices mapping and sets trackers_info/{imei}/ownerId.
+
+- Environment config adds API Base URL
+  - EnvironmentConfig.apiBaseUrl:
+    - dev: https://dev.dt-tracker.com/api/v1
+    - staging: https://staging.dt-tracker.com/api/v1
+    - prod: https://api.dt-tracker.com/api/v1
+  - DI wires TrackerBackendDataSource with the current environment base URL.
+
+- Setup Permissions gate before dashboard
+  - New route: /setup. Users must grant Location (When in Use) and Notifications before entering /home.
+  - Splash routing: after auth, checks Location permission, Notifications permission, and OS Location Services (via Geolocator). If any missing/off, navigates to /setup.
+  - SetupPermissionsPage lets users request permissions individually, batch-request both, and open OS settings. It also shows a Location Services tile with an Open Settings action.
+
+- Map page UX for Location Services
+  - Shows a dismissible banner when OS Location Services are off, with an Enable button that opens system settings and refreshes state on resume.
+  - The "My Location" action prompts to enable services if off and opens settings.
+
+- Vehicle detail UX fixes
+  - After returning from edit or link pages, the Vehicle Detail page auto-reloads the vehicle and restarts tracker status watching.
+  - Tracker card "Last Update" text now truncates with ellipsis to avoid overflow.
+
+- Image picker robustness
+  - Camera permission still requested before camera use.
+  - On Android, gallery selection attempts directly (no pre-permission gate); errors show a snackbar. On iOS, Photos permission is requested first.
+
+- Small test coverage
+  - Added a unit test for the permission gate route decision logic.
+
+Key code references
+- Environment
+  - lib/config/environment/environment.dart (apiBaseUrl)
+  - lib/config/environment/firebase_config.dart (multi-env instances)
+- DI
+  - lib/injection_container.dart (registers TrackerBackendDataSource and injects into repos)
+- Backend data source
+  - lib/features/vehicles/data/datasources/tracker_backend_datasource.dart
+- Repositories
+  - lib/features/vehicles/data/repositories/vehicle_repository_impl.dart (link/unlink via backend)
+  - lib/features/vehicles/data/repositories/tracker_repository_impl.dart (validate via backend)
+- Setup flow
+  - lib/features/auth/presentation/pages/splash_page.dart (post-auth permission + services gate)
+  - lib/features/setup/presentation/pages/setup_permissions_page.dart (permissions UI)
+  - lib/features/auth/utils/permission_gate.dart (testable route decision)
+  - test/permission_gate_test.dart
+- Map UX
+  - lib/features/map/presentation/pages/map_page.dart (banner + dialog)
+- Vehicles UX
+  - lib/features/vehicles/presentation/pages/vehicle_detail_page.dart (auto-refresh on return)
+  - lib/features/vehicles/presentation/widgets/tracker_status_card.dart (overflow fix)
+  - lib/features/vehicles/presentation/widgets/vehicle_image_picker.dart (Android gallery logic + feedback)
+
 ## Quick Reference
 
 ```bash

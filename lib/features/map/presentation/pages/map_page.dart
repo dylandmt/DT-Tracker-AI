@@ -24,13 +24,16 @@ class MapPage extends StatefulWidget {
   State<MapPage> createState() => _MapPageState();
 }
 
-class _MapPageState extends State<MapPage> {
+class _MapPageState extends State<MapPage> with WidgetsBindingObserver {
   GoogleMapController? _mapController;
   final Completer<GoogleMapController> _controllerCompleter = Completer();
 
   bool _showVehicleList = false;
   bool _locationPermissionGranted = false;
   bool _isGettingLocation = false;
+  bool _locationServicesEnabled = true;
+  bool _servicesBannerDismissed = false;
+  bool _lastServicesEnabled = true;
 
   // Default camera position (Mexico City)
   static const _defaultPosition = LatLng(19.4326, -99.1332);
@@ -39,10 +42,12 @@ class _MapPageState extends State<MapPage> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     // Start watching vehicle locations
     context.read<MapBloc>().add(const StartWatchingLocations());
     // Check location permission
     _checkLocationPermission();
+    _checkLocationServices();
   }
 
   Future<void> _checkLocationPermission() async {
@@ -57,8 +62,16 @@ class _MapPageState extends State<MapPage> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _mapController?.dispose();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _checkLocationServices();
+    }
   }
 
   @override
@@ -101,6 +114,15 @@ class _MapPageState extends State<MapPage> {
                 right: 16,
                 child: _buildTopBar(context, state),
               ),
+
+              // Location services banner
+              if (!_locationServicesEnabled && !_servicesBannerDismissed)
+                Positioned(
+                  top: MediaQuery.of(context).padding.top + 60,
+                  left: 16,
+                  right: 16,
+                  child: _buildServicesBanner(context),
+                ),
 
               // Map controls (right side)
               Positioned(
@@ -179,6 +201,27 @@ class _MapPageState extends State<MapPage> {
         },
       ),
     );
+  }
+
+  Future<void> _checkLocationServices() async {
+    final enabled = await Geolocator.isLocationServiceEnabled();
+    if (mounted) {
+      // Show toast when services become enabled after being disabled
+      final wasEnabled = _locationServicesEnabled;
+      setState(() {
+        _lastServicesEnabled = _locationServicesEnabled;
+        _locationServicesEnabled = enabled;
+        if (!enabled) {
+          // if services are off, re-show banner unless user explicitly dismisses
+        }
+      });
+      if (!wasEnabled && enabled) {
+        // Services transitioned to enabled
+        context.showSuccessSnackBar('Location services enabled');
+        // Reset dismissal so banner stays hidden naturally
+        setState(() => _servicesBannerDismissed = false);
+      }
+    }
   }
 
   Widget _buildMap(BuildContext context, MapState state) {
@@ -345,6 +388,10 @@ class _MapPageState extends State<MapPage> {
     if (_isGettingLocation) return;
 
     setState(() => _isGettingLocation = true);
+    // Re-show banner once user tries to go to My Location again
+    if (mounted) {
+      setState(() => _servicesBannerDismissed = false);
+    }
 
     try {
       final permissionHandler = sl<AppPermissionHandler>();
@@ -363,7 +410,7 @@ class _MapPageState extends State<MapPage> {
         final serviceEnabled = await Geolocator.isLocationServiceEnabled();
         if (!serviceEnabled) {
           if (mounted) {
-            context.showErrorSnackBar('Please enable location services');
+            _showEnableLocationServicesDialog();
           }
           return;
         }
@@ -423,6 +470,70 @@ class _MapPageState extends State<MapPage> {
             child: const Text('Open Settings'),
           ),
         ],
+      ),
+    );
+  }
+
+  void _showEnableLocationServicesDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Enable Location Services'),
+        content: const Text(
+          'Location services are turned off.\n\n'
+          'Please enable them in system settings to use My Location and real-time updates.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              await Geolocator.openLocationSettings();
+            },
+            child: const Text('Open Settings'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildServicesBanner(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Material(
+      elevation: 2,
+      borderRadius: BorderRadius.circular(12),
+      color: colorScheme.errorContainer,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        child: Row(
+          children: [
+            Icon(Icons.gps_off, color: colorScheme.onErrorContainer),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                'Location services are off. Enable them for accurate tracking.',
+                style: TextStyle(color: colorScheme.onErrorContainer),
+              ),
+            ),
+            TextButton(
+              onPressed: () async {
+                await Geolocator.openLocationSettings();
+                await _checkLocationServices();
+              },
+              child: const Text('Enable'),
+            ),
+            IconButton(
+              tooltip: 'Dismiss',
+              icon: Icon(Icons.close, color: colorScheme.onErrorContainer),
+              onPressed: () {
+                setState(() => _servicesBannerDismissed = true);
+              },
+            ),
+          ],
+        ),
       ),
     );
   }

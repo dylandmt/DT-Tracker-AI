@@ -7,6 +7,7 @@ class RouteConstants {
   static const String login = '/login';
   static const String register = '/register';
   static const String forgotPassword = '/forgot-password';
+  static const String setup = '/setup';
 
   // Main Routes (with bottom nav)
   static const String home = '/home';
@@ -42,6 +43,7 @@ class RouteConstants {
   static const String loginName = 'login';
   static const String registerName = 'register';
   static const String forgotPasswordName = 'forgotPassword';
+  static const String setupName = 'setup';
   static const String homeName = 'home';
   static const String homeVehiclesName = 'homeVehicles';
   static const String homeMapName = 'homeMap';

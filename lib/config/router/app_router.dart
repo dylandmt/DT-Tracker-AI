@@ -8,6 +8,7 @@ import '../../features/auth/presentation/pages/forgot_password_page.dart';
 import '../../features/auth/presentation/pages/login_page.dart';
 import '../../features/auth/presentation/pages/register_page.dart';
 import '../../features/auth/presentation/pages/splash_page.dart';
+import '../../features/setup/presentation/pages/setup_permissions_page.dart';
 import '../../features/home/presentation/pages/home_page.dart';
 import '../../features/map/presentation/bloc/map_bloc.dart';
 import '../../features/map/presentation/pages/map_page.dart';
@@ -67,6 +68,12 @@ class AppRouter {
           create: (_) => sl<AuthBloc>(),
           child: const ForgotPasswordPage(),
         ),
+      ),
+      // Setup permissions
+      GoRoute(
+        path: RouteConstants.setup,
+        name: RouteConstants.setupName,
+        builder: (context, state) => const SetupPermissionsPage(),
       ),
 
       // Redirect /home to /home/vehicles

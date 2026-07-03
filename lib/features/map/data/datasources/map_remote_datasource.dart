@@ -9,9 +9,9 @@ import '../models/trip_point_model.dart';
 import '../models/vehicle_location_model.dart';
 
 /// Abstract interface for map remote data source
-abstract class MapRemoteDataSource {
-  /// Get all vehicle locations for the current user
-  Future<List<VehicleLocationModel>> getVehicleLocations();
+  abstract class MapRemoteDataSource {
+    /// Get all vehicle locations for the current user
+    Future<List<VehicleLocationModel>> getVehicleLocations();
 
   /// Stream of all vehicle locations for real-time updates
   Stream<List<VehicleLocationModel>> watchVehicleLocations();
@@ -22,13 +22,16 @@ abstract class MapRemoteDataSource {
   /// Stream of single vehicle location
   Stream<VehicleLocationModel> watchVehicleLocation(String vehicleId);
 
-  /// Get trip history points for a date range
-  Future<List<TripPointModel>> getTripPoints({
-    required String trackerId,
-    required DateTime startDate,
-    required DateTime endDate,
-  });
-}
+    /// Get trip history points for a date range
+    Future<List<TripPointModel>> getTripPoints({
+      required String trackerId,
+      required DateTime startDate,
+      required DateTime endDate,
+    });
+
+    /// Get vehicle's trackerId from Firestore (no dependency on live data)
+    Future<String> getVehicleTrackerId(String vehicleId);
+  }
 
 /// Implementation of [MapRemoteDataSource]
 class MapRemoteDataSourceImpl implements MapRemoteDataSource {
@@ -48,6 +51,25 @@ class MapRemoteDataSourceImpl implements MapRemoteDataSource {
       throw const AuthException(message: 'User not authenticated');
     }
     return user.uid;
+  }
+
+  @override
+  Future<String> getVehicleTrackerId(String vehicleId) async {
+    try {
+      final vehicleDoc = await _vehiclesCollection.doc(vehicleId).get();
+      if (!vehicleDoc.exists) {
+        throw const ServerException(message: 'Vehicle not found');
+      }
+      final data = vehicleDoc.data()!;
+      final trackerId = data['trackerId'] as String?;
+      if (trackerId == null || trackerId.isEmpty) {
+        throw const ServerException(message: 'Vehicle has no linked tracker');
+      }
+      return trackerId;
+    } catch (e) {
+      if (e is ServerException || e is AuthException) rethrow;
+      throw ServerException(message: 'Failed to get vehicle tracker: $e');
+    }
   }
 
   CollectionReference<Map<String, dynamic>> get _vehiclesCollection {
@@ -347,36 +369,128 @@ class MapRemoteDataSourceImpl implements MapRemoteDataSource {
     required DateTime endDate,
   }) async {
     try {
-      // Query history data within date range
-      // RTDB structure: trackers_history/{imei}/{timestamp}
-      final startTs = startDate.millisecondsSinceEpoch;
-      final endTs = endDate.millisecondsSinceEpoch;
-
-      final snapshot = await _trackerHistoryRef(trackerId)
-          .orderByChild('ts')
-          .startAt(startTs)
-          .endAt(endTs)
-          .get();
-
-      if (!snapshot.exists || snapshot.value == null) {
-        return [];
-      }
-
-      final data = snapshot.value as Map<dynamic, dynamic>;
+      // RTDB structure (from backend ingest): trackers_history/{imei}/{yyyy-MM-dd}/{pushId}
+      // We query per-day buckets within the requested range to avoid wide scans
       final points = <TripPointModel>[];
 
-      for (final entry in data.entries) {
-        if (entry.value is Map) {
-          points.add(TripPointModel.fromRtdb(entry.value as Map));
+      DateTime cursor = DateTime(startDate.year, startDate.month, startDate.day);
+      final last = DateTime(endDate.year, endDate.month, endDate.day);
+
+      while (!cursor.isAfter(last)) {
+        final dateStr = _formatDate(cursor);
+
+        // Clamp per-day start/end timestamps
+        final dayStart = DateTime(cursor.year, cursor.month, cursor.day);
+        final dayEnd = DateTime(cursor.year, cursor.month, cursor.day, 23, 59, 59, 999);
+        final startTs = cursor.isAtSameMomentAs(dayStart)
+            ? startDate.millisecondsSinceEpoch
+            : dayStart.millisecondsSinceEpoch;
+        final endTs = cursor.isAtSameMomentAs(last)
+            ? endDate.millisecondsSinceEpoch
+            : dayEnd.millisecondsSinceEpoch;
+
+        final dayRef = _trackerHistoryRef(trackerId).child(dateStr);
+        try {
+          // Preferred: indexed range query by 'ts' using a single-value stream read
+          final query = dayRef
+              .orderByChild('ts')
+              .startAt(startTs)
+              .endAt(endTs);
+          final event = await query.onValue.first;
+          final daySnap = event.snapshot;
+
+          bool loadedAny = false;
+          if (daySnap.exists && daySnap.value != null) {
+            final data = daySnap.value as Map<dynamic, dynamic>;
+            for (final entry in data.entries) {
+              if (entry.value is Map) {
+                final m = entry.value as Map<dynamic, dynamic>;
+                final ev = _extractEventMillis(m);
+                if (ev == null || (ev >= startTs && ev <= endTs)) {
+                  points.add(TripPointModel.fromRtdb(m));
+                  loadedAny = true;
+                }
+              }
+            }
+          }
+
+          // Fallback when indexed query returns empty (ts might be seconds) → read full day and filter with normalization
+          if (!loadedAny) {
+            final fullEvent = await dayRef.onValue.first;
+            final fullSnap = fullEvent.snapshot;
+            if (fullSnap.exists && fullSnap.value != null) {
+              final data = fullSnap.value as Map<dynamic, dynamic>;
+              for (final entry in data.entries) {
+                if (entry.value is Map) {
+                  final m = entry.value as Map<dynamic, dynamic>;
+                  final ev = _extractEventMillis(m);
+                  if (ev == null || (ev >= startTs && ev <= endTs)) {
+                    points.add(TripPointModel.fromRtdb(m));
+                  }
+                }
+              }
+            }
+          }
+        } catch (e) {
+          // Fallback: no index defined on 'ts' for this day. Read full day via stream and filter client-side.
+          try {
+            final event = await dayRef.onValue.first;
+            final daySnap = event.snapshot;
+            if (daySnap.exists && daySnap.value != null) {
+              final data = daySnap.value as Map<dynamic, dynamic>;
+              for (final entry in data.entries) {
+                if (entry.value is Map) {
+                  final m = entry.value as Map<dynamic, dynamic>;
+                  final ev = _extractEventMillis(m);
+                  if (ev == null || (ev >= startTs && ev <= endTs)) {
+                    points.add(TripPointModel.fromRtdb(m));
+                  }
+                }
+              }
+            }
+          } catch (_) {
+            // Ignore day-level errors and continue
+          }
         }
+
+        cursor = cursor.add(const Duration(days: 1));
       }
 
-      // Sort by timestamp
       points.sort((a, b) => a.timestamp.compareTo(b.timestamp));
-
       return points;
     } catch (e) {
       throw ServerException(message: 'Failed to get trip history: $e');
     }
+  }
+
+  String _formatDate(DateTime d) {
+    final y = d.year.toString().padLeft(4, '0');
+    final m = d.month.toString().padLeft(2, '0');
+    final day = d.day.toString().padLeft(2, '0');
+    return '$y-$m-$day';
+  }
+
+  int? _extractEventMillis(Map<dynamic, dynamic> m) {
+    // Prefer absolute datetime if available
+    final dt = m['datetime'];
+    if (dt is String) {
+      try {
+        return DateTime.parse(dt).millisecondsSinceEpoch;
+      } catch (_) {
+        // fallthrough
+      }
+    }
+    // Fallback to timestamp/ts if they look like epoch
+    dynamic raw = m['timestamp'];
+    raw ??= m['ts'];
+    if (raw != null) {
+      int? t;
+      if (raw is num) t = raw.toInt();
+      if (raw is String) t = int.tryParse(raw);
+      if (t != null) {
+        return t < 1000000000000 ? t * 1000 : t;
+      }
+    }
+    return null;
   }
 }

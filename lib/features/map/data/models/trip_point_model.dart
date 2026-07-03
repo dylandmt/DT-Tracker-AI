@@ -12,16 +12,42 @@ class TripPointModel extends TripPointEntity {
 
   /// Create from RTDB history data
   factory TripPointModel.fromRtdb(Map<dynamic, dynamic> data) {
+    int _normalizeTsFromAny(dynamic ts) {
+      if (ts == null) return 0;
+      int? t;
+      if (ts is num) t = ts.toInt();
+      if (ts is String) t = int.tryParse(ts);
+      t ??= 0;
+      // If value looks like seconds since epoch, convert to milliseconds
+      return t < 1000000000000 ? t * 1000 : t;
+    }
+
+    // Accept ts or timestamp
+    final tsMs = data.containsKey('ts')
+        ? _normalizeTsFromAny(data['ts'])
+        : _normalizeTsFromAny(data['timestamp']);
+
+    double _toDouble(dynamic v) {
+      if (v == null) return 0.0;
+      if (v is num) return v.toDouble();
+      if (v is String) return double.tryParse(v) ?? 0.0;
+      return 0.0;
+    }
+
+    int _toInt(dynamic v) {
+      if (v == null) return 0;
+      if (v is num) return v.toInt();
+      if (v is String) return int.tryParse(v) ?? 0;
+      return 0;
+    }
     return TripPointModel(
       timestamp: data['datetime'] != null
           ? DateTime.parse(data['datetime'] as String)
-          : DateTime.fromMillisecondsSinceEpoch(
-              (data['ts'] as num?)?.toInt() ?? 0,
-            ),
-      latitude: (data['lat'] as num?)?.toDouble() ?? 0.0,
-      longitude: (data['lng'] as num?)?.toDouble() ?? 0.0,
-      speed: (data['speed'] as num?)?.toDouble() ?? 0.0,
-      battery: (data['battery'] as num?)?.toInt() ?? 0,
+          : DateTime.fromMillisecondsSinceEpoch(tsMs),
+      latitude: _toDouble(data['lat']),
+      longitude: _toDouble(data['lng'] ?? data['lon']),
+      speed: _toDouble(data['speed']),
+      battery: _toInt(data['battery']),
     );
   }
 

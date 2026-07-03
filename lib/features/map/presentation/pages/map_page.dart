@@ -11,6 +11,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/extensions.dart';
 import '../../../../injection_container.dart';
 import '../../domain/entities/vehicle_location.dart';
+import '../../domain/entities/trip_point.dart';
 import '../bloc/map_bloc.dart';
 import '../widgets/map_controls.dart';
 import '../widgets/vehicle_info_card.dart';
@@ -33,7 +34,6 @@ class _MapPageState extends State<MapPage> with WidgetsBindingObserver {
   bool _isGettingLocation = false;
   bool _locationServicesEnabled = true;
   bool _servicesBannerDismissed = false;
-  bool _lastServicesEnabled = true;
 
   // Default camera position (Mexico City)
   static const _defaultPosition = LatLng(19.4326, -99.1332);
@@ -78,13 +78,23 @@ class _MapPageState extends State<MapPage> with WidgetsBindingObserver {
   Widget build(BuildContext context) {
     return Scaffold(
       body: BlocConsumer<MapBloc, MapState>(
-        listenWhen: (previous, current) =>
-            previous.errorMessage != current.errorMessage &&
-            current.errorMessage != null,
-        listener: (context, state) {
+        listenWhen: (previous, current) {
+          final errorChanged = previous.errorMessage != current.errorMessage && current.errorMessage != null;
+          final tripLoaded = previous.tripStatus != TripStatus.loaded && current.tripStatus == TripStatus.loaded;
+          return errorChanged || tripLoaded;
+        },
+        listener: (context, state) async {
           if (state.errorMessage != null) {
             context.showErrorSnackBar(state.errorMessage!);
             context.read<MapBloc>().add(const ClearMapError());
+          }
+          if (state.tripStatus == TripStatus.loaded) {
+            if (state.tripPoints.isNotEmpty) {
+              context.showSuccessSnackBar('Loaded ${state.tripPoints.length} points');
+              await _fitTripBounds(state.tripPoints);
+            } else {
+              context.showSnackBar('No trip points for selected range');
+            }
           }
         },
         builder: (context, state) {
@@ -209,11 +219,7 @@ class _MapPageState extends State<MapPage> with WidgetsBindingObserver {
       // Show toast when services become enabled after being disabled
       final wasEnabled = _locationServicesEnabled;
       setState(() {
-        _lastServicesEnabled = _locationServicesEnabled;
         _locationServicesEnabled = enabled;
-        if (!enabled) {
-          // if services are off, re-show banner unless user explicitly dismisses
-        }
       });
       if (!wasEnabled && enabled) {
         // Services transitioned to enabled
@@ -226,6 +232,7 @@ class _MapPageState extends State<MapPage> with WidgetsBindingObserver {
 
   Widget _buildMap(BuildContext context, MapState state) {
     final markers = _buildMarkers(state.vehicleLocations, state.selectedVehicle);
+    final polylines = _buildTripPolylines(state.tripPoints);
 
     return SizedBox.expand(
       child: GoogleMap(
@@ -245,6 +252,7 @@ class _MapPageState extends State<MapPage> with WidgetsBindingObserver {
         }
       },
         markers: markers,
+        polylines: polylines,
         mapType: _getGoogleMapType(state.mapType),
         trafficEnabled: state.showTraffic,
         myLocationEnabled: _locationPermissionGranted,
@@ -258,6 +266,20 @@ class _MapPageState extends State<MapPage> with WidgetsBindingObserver {
         },
       ),
     );
+  }
+
+  Set<Polyline> _buildTripPolylines(List<TripPointEntity> points) {
+    if (points.length < 2) return const {};
+    final polylinePoints = points
+        .map((p) => LatLng(p.latitude, p.longitude))
+        .toList(growable: false);
+    final polyline = Polyline(
+      polylineId: const PolylineId('trip'),
+      points: polylinePoints,
+      color: AppColors.routeColor,
+      width: 4,
+    );
+    return {polyline};
   }
 
   Widget _buildTopBar(BuildContext context, MapState state) {
@@ -566,6 +588,29 @@ class _MapPageState extends State<MapPage> with WidgetsBindingObserver {
       northeast: LatLng(maxLat, maxLng),
     );
 
+    await _mapController?.animateCamera(
+      CameraUpdate.newLatLngBounds(bounds, 50),
+    );
+  }
+
+  Future<void> _fitTripBounds(List<TripPointEntity> points) async {
+    if (points.isEmpty) return;
+    double minLat = points.first.latitude;
+    double maxLat = points.first.latitude;
+    double minLng = points.first.longitude;
+    double maxLng = points.first.longitude;
+
+    for (final p in points) {
+      if (p.latitude < minLat) minLat = p.latitude;
+      if (p.latitude > maxLat) maxLat = p.latitude;
+      if (p.longitude < minLng) minLng = p.longitude;
+      if (p.longitude > maxLng) maxLng = p.longitude;
+    }
+
+    final bounds = LatLngBounds(
+      southwest: LatLng(minLat, minLng),
+      northeast: LatLng(maxLat, maxLng),
+    );
     await _mapController?.animateCamera(
       CameraUpdate.newLatLngBounds(bounds, 50),
     );

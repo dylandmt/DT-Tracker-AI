@@ -116,20 +116,19 @@ class MapRepositoryImpl implements MapRepository {
     }
 
     try {
-      // First get the vehicle to get the tracker ID
-      final vehicleLocation =
-          await mapDataSource.getVehicleLocation(vehicleId);
+      // Get tracker ID directly from Firestore (not dependent on live data)
+      final trackerId = await mapDataSource.getVehicleTrackerId(vehicleId);
 
       // Get trip points
       final points = await mapDataSource.getTripPoints(
-        trackerId: vehicleLocation.trackerId,
+        trackerId: trackerId,
         startDate: startDate,
         endDate: endDate,
       );
 
       final trip = TripModel.fromPoints(
         vehicleId: vehicleId,
-        trackerId: vehicleLocation.trackerId,
+        trackerId: trackerId,
         points: points,
       );
 
@@ -153,9 +152,8 @@ class MapRepositoryImpl implements MapRepository {
     }
 
     try {
-      // First get the vehicle to get the tracker ID
-      final vehicleLocation =
-          await mapDataSource.getVehicleLocation(vehicleId);
+      // Get tracker ID from Firestore
+      final trackerId = await mapDataSource.getVehicleTrackerId(vehicleId);
 
       // Set date range to full day
       final startDate = DateTime(date.year, date.month, date.day);
@@ -163,7 +161,7 @@ class MapRepositoryImpl implements MapRepository {
 
       // Get trip points
       final points = await mapDataSource.getTripPoints(
-        trackerId: vehicleLocation.trackerId,
+        trackerId: trackerId,
         startDate: startDate,
         endDate: endDate,
       );

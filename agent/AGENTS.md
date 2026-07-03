@@ -29,11 +29,29 @@ This section captures the latest mobile app changes and how they affect workflow
 - Setup Permissions gate before dashboard
   - New route: /setup. Users must grant Location (When in Use) and Notifications before entering /home.
   - Splash routing: after auth, checks Location permission, Notifications permission, and OS Location Services (via Geolocator). If any missing/off, navigates to /setup.
-  - SetupPermissionsPage lets users request permissions individually, batch-request both, and open OS settings. It also shows a Location Services tile with an Open Settings action.
+  - SetupPermissionsPage:
+    - Request individually or "Request All"
+    - Explainer modal (why permissions are needed)
+    - Location Services tile with "Open Settings"
+    - Continue is enabled only when permissions granted AND services are ON
 
 - Map page UX for Location Services
-  - Shows a dismissible banner when OS Location Services are off, with an Enable button that opens system settings and refreshes state on resume.
-  - The "My Location" action prompts to enable services if off and opens settings.
+  - Dismissible banner when OS Location Services are off, with an Enable action (opens system settings, refreshes on resume)
+  - Success toast when services turn ON
+  - "My Location" action shows dialog to enable services if off and opens settings
+
+- Trip History behavior and data
+  - Data shape (per-day buckets): trackers_history/{IMEI}/{yyyy-MM-dd}/{nodeId}
+    - Keys include: datetime (ISO), ts (device-relative), lat, lng, speed, battery
+  - History retrieval:
+    - Uses vehicle trackerId from Firestore (does not depend on trackers_live)
+    - Queries per-day buckets; primary filter is datetime in selected range
+    - Falls back to full-day read and client-side filtering if indexed query returns empty or index is missing
+  - UI behavior on load:
+    - Snackbar: "Loaded N points" or "No trip points for selected range"
+    - Draws route polyline and auto-zooms to fit
+  - RTDB rule optimization (recommended): per-day index on ts at /trackers_history/$imei/$date { 
+    ".indexOn": ["ts"] }
 
 - Vehicle detail UX fixes
   - After returning from edit or link pages, the Vehicle Detail page auto-reloads the vehicle and restarts tracker status watching.
@@ -64,6 +82,7 @@ Key code references
   - test/permission_gate_test.dart
 - Map UX
   - lib/features/map/presentation/pages/map_page.dart (banner + dialog)
+  - Polyline draw + auto-fit on trip load; snackbars for success/empty
 - Vehicles UX
   - lib/features/vehicles/presentation/pages/vehicle_detail_page.dart (auto-refresh on return)
   - lib/features/vehicles/presentation/widgets/tracker_status_card.dart (overflow fix)

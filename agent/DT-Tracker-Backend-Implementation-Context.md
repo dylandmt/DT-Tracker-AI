@@ -1714,3 +1714,36 @@ Use GitHub Actions for automatic deployment.
 - RTDB rules protect Flutter direct reads.
 - Device writes must go through the backend.
 - Firestore database ID must match the environment.
+
+---
+
+## 28. Updated Mobile Integration (Jul 2026)
+
+This summarizes the current Flutter app behavior and expectations for backend integration:
+
+- Linking/Unlinking (client → backend)
+  - Mobile calls:
+    - POST /api/v1/trackers/validate
+    - POST /api/v1/vehicles/:vehicleId/link
+    - POST /api/v1/vehicles/:vehicleId/unlink
+  - Backend sets RTDB ownership (trackers_info/{imei}/ownerId, linkedAt) and users/{uid}/devices/{imei} = true, and updates Firestore vehicle.trackerId.
+
+- Trip History (per-day buckets)
+  - RTDB path: trackers_history/{imei}/{yyyy-MM-dd}/{pushId}
+  - Each node: datetime (ISO), ts (device-relative), lat, lng, speed, battery
+  - Mobile filters by datetime range. If a per-day index on ts exists, mobile uses indexed range queries; otherwise it reads the full day and filters client-side.
+  - Recommended RTDB rule index (no backend code changes required):
+    ```json
+    "trackers_history": {
+      "$imei": {
+        "$date": {
+          ".read": "auth != null && root.child('users').child(auth.uid).child('devices').child($imei).val() === true",
+          ".write": false,
+          ".indexOn": ["ts"]
+        }
+      }
+    }
+    ```
+
+- Client reads guarded by mapping
+  - All client reads of trackers_live/status/history require users/{uid}/devices/{imei} = true; backend link endpoint ensures this mapping is created.

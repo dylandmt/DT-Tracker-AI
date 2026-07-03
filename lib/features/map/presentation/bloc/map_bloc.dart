@@ -78,12 +78,14 @@ class MapBloc extends Bloc<MapEvent, MapState> {
     Emitter<MapState> emit,
   ) {
     // Update selected vehicle if it exists in the new locations
-    VehicleLocationEntity? updatedSelectedVehicle;
+    VehicleLocationEntity? updatedSelectedVehicle = state.selectedVehicle;
     if (state.selectedVehicle != null) {
-      updatedSelectedVehicle = event.locations.firstWhere(
-        (v) => v.vehicleId == state.selectedVehicle!.vehicleId,
-        orElse: () => state.selectedVehicle!,
-      );
+      for (final v in event.locations) {
+        if (v.vehicleId == state.selectedVehicle!.vehicleId) {
+          updatedSelectedVehicle = v; // VehicleLocationModel is a subtype
+          break;
+        }
+      }
     }
 
     emit(state.copyWith(

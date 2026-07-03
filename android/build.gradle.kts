@@ -3,6 +3,14 @@ allprojects {
         google()
         mavenCentral()
     }
+    
+    // Force compatible versions for AGP 8.9.1
+    configurations.all {
+        resolutionStrategy {
+            // Pin maps-utils to 4.0.0 - has updateData method, built with Kotlin 1.9.x
+            force("com.google.maps.android:android-maps-utils:4.0.0")
+        }
+    }
 }
 
 val newBuildDir: Directory =

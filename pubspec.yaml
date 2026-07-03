@@ -34,7 +34,7 @@ dependencies:
 
   # Background Services
   flutter_background_service: ^5.1.0
-  workmanager: ^0.5.2
+  workmanager: ^0.7.0
 
   # Networking & Functional
   dartz: ^0.10.1
@@ -51,6 +51,10 @@ dependencies:
   cached_network_image: ^3.4.1
   shimmer: ^3.0.0
   flutter_spinkit: ^5.2.1
+
+  # Image handling
+  image_picker: ^1.0.7
+  flutter_image_compress: ^2.1.0
 
   # Utils
   intl: ^0.20.2

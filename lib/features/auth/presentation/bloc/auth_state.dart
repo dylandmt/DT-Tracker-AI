@@ -8,6 +8,7 @@ enum AuthStatus {
   unauthenticated,
   error,
   passwordResetSent,
+  profileUpdated,
 }
 
 /// Auth state class
@@ -34,10 +35,7 @@ class AuthState extends Equatable {
 
   /// Authenticated state
   factory AuthState.authenticated(UserEntity user) {
-    return AuthState(
-      status: AuthStatus.authenticated,
-      user: user,
-    );
+    return AuthState(status: AuthStatus.authenticated, user: user);
   }
 
   /// Unauthenticated state
@@ -46,9 +44,10 @@ class AuthState extends Equatable {
   }
 
   /// Error state
-  factory AuthState.error(String message) {
+  factory AuthState.error(String message, {UserEntity? user}) {
     return AuthState(
       status: AuthStatus.error,
+      user: user,
       errorMessage: message,
     );
   }
@@ -56,6 +55,11 @@ class AuthState extends Equatable {
   /// Password reset sent state
   factory AuthState.passwordResetSent() {
     return const AuthState(status: AuthStatus.passwordResetSent);
+  }
+
+  /// Profile update completed successfully.
+  factory AuthState.profileUpdated(UserEntity user) {
+    return AuthState(status: AuthStatus.profileUpdated, user: user);
   }
 
   /// Create a copy with modified fields
@@ -82,6 +86,9 @@ class AuthState extends Equatable {
 
   /// Check if there's an error
   bool get hasError => status == AuthStatus.error;
+
+  /// Check if a profile update completed successfully.
+  bool get isProfileUpdated => status == AuthStatus.profileUpdated;
 
   @override
   List<Object?> get props => [status, user, errorMessage];

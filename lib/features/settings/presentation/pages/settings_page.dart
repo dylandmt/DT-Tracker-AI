@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/route_constants.dart';
 import '../../../../core/utils/extensions.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
+import '../widgets/profile_photo_preview.dart';
 
 /// Settings page with user info and sign out
 class SettingsPage extends StatelessWidget {
@@ -16,9 +17,7 @@ class SettingsPage extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Settings'),
-      ),
+      appBar: AppBar(title: const Text('Settings')),
       body: BlocConsumer<AuthBloc, AuthState>(
         listener: (context, state) {
           if (state.isUnauthenticated) {
@@ -42,16 +41,27 @@ class SettingsPage extends StatelessWidget {
                     CircleAvatar(
                       radius: 32,
                       backgroundColor: colorScheme.primary,
-                      child: user?.photoUrl != null
-                          ? ClipOval(
-                              child: Image.network(
-                                user!.photoUrl!,
-                                width: 64,
-                                height: 64,
-                                fit: BoxFit.cover,
-                                errorBuilder: (_, __, ___) => _buildAvatarText(
-                                  user.displayName ?? user.email,
-                                  colorScheme,
+                      child: user != null && user.photoUrl != null
+                          ? GestureDetector(
+                              onTap: () => showProfilePhotoPreview(
+                                context,
+                                imageProvider: NetworkImage(user.photoUrl!),
+                                heroTag: 'profile-photo-${user.id}',
+                              ),
+                              child: Hero(
+                                tag: 'profile-photo-${user.id}',
+                                child: ClipOval(
+                                  child: Image.network(
+                                    user.photoUrl!,
+                                    width: 64,
+                                    height: 64,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (_, __, ___) =>
+                                        _buildAvatarText(
+                                          user.displayName ?? user.email,
+                                          colorScheme,
+                                        ),
+                                  ),
                                 ),
                               ),
                             )
@@ -95,8 +105,7 @@ class SettingsPage extends StatelessWidget {
                 title: 'Profile',
                 subtitle: 'Edit your profile information',
                 onTap: () {
-                  // TODO: Navigate to profile page
-                  context.showSnackBar('Profile editing coming soon');
+                  context.push(RouteConstants.profile);
                 },
               ),
               _buildListTile(

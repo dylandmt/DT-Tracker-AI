@@ -20,6 +20,7 @@ class MapBloc extends Bloc<MapEvent, MapState> {
   final GetDayTripPoints getDayTripPoints;
 
   StreamSubscription? _locationsSubscription;
+  Timer? _playbackTimer;
 
   MapBloc({
     required this.getVehicleLocations,
@@ -39,6 +40,7 @@ class MapBloc extends Bloc<MapEvent, MapState> {
     on<PauseTripPlayback>(_onPauseTripPlayback);
     on<StopTripPlayback>(_onStopTripPlayback);
     on<UpdatePlaybackPosition>(_onUpdatePlaybackPosition);
+    on<ChangePlaybackSpeed>(_onChangePlaybackSpeed);
     on<ClearMapError>(_onClearMapError);
     on<ToggleTrafficLayer>(_onToggleTrafficLayer);
     on<ChangeMapType>(_onChangeMapType);
@@ -73,10 +75,7 @@ class MapBloc extends Bloc<MapEvent, MapState> {
     _locationsSubscription = null;
   }
 
-  void _onLocationsUpdated(
-    LocationsUpdated event,
-    Emitter<MapState> emit,
-  ) {
+  void _onLocationsUpdated(LocationsUpdated event, Emitter<MapState> emit) {
     // Update selected vehicle if it exists in the new locations
     VehicleLocationEntity? updatedSelectedVehicle;
     if (state.selectedVehicle != null) {
@@ -86,49 +85,48 @@ class MapBloc extends Bloc<MapEvent, MapState> {
       );
     }
 
-    emit(state.copyWith(
-      status: MapStatus.loaded,
-      vehicleLocations: event.locations,
-      selectedVehicle: updatedSelectedVehicle,
-      errorMessage: null,
-    ));
+    emit(
+      state.copyWith(
+        status: MapStatus.loaded,
+        vehicleLocations: event.locations,
+        selectedVehicle: updatedSelectedVehicle,
+        errorMessage: null,
+      ),
+    );
   }
 
-  void _onLocationsError(
-    LocationsError event,
-    Emitter<MapState> emit,
-  ) {
-    emit(state.copyWith(
-      status: MapStatus.error,
-      errorMessage: event.message,
-    ));
+  void _onLocationsError(LocationsError event, Emitter<MapState> emit) {
+    emit(state.copyWith(status: MapStatus.error, errorMessage: event.message));
   }
 
-  void _onSelectVehicle(
-    SelectVehicle event,
-    Emitter<MapState> emit,
-  ) {
-    emit(state.copyWith(
-      selectedVehicle: event.vehicle,
-      // Clear any trip data when selecting a new vehicle
-      tripHistory: null,
-      tripPoints: const [],
-      playbackStatus: PlaybackStatus.idle,
-      playbackPosition: 0,
-    ));
+  void _onSelectVehicle(SelectVehicle event, Emitter<MapState> emit) {
+    _stopPlaybackTimer();
+    emit(
+      state.copyWith(
+        selectedVehicle: event.vehicle,
+        // Clear any trip data when selecting a new vehicle
+        tripHistory: null,
+        tripPoints: const [],
+        playbackStatus: PlaybackStatus.idle,
+        playbackPosition: 0,
+      ),
+    );
   }
 
   void _onClearVehicleSelection(
     ClearVehicleSelection event,
     Emitter<MapState> emit,
   ) {
-    emit(state.copyWith(
-      clearSelectedVehicle: true,
-      tripHistory: null,
-      tripPoints: const [],
-      playbackStatus: PlaybackStatus.idle,
-      playbackPosition: 0,
-    ));
+    _stopPlaybackTimer();
+    emit(
+      state.copyWith(
+        clearSelectedVehicle: true,
+        tripHistory: null,
+        tripPoints: const [],
+        playbackStatus: PlaybackStatus.idle,
+        playbackPosition: 0,
+      ),
+    );
   }
 
   Future<void> _onLoadTripHistory(
@@ -137,68 +135,77 @@ class MapBloc extends Bloc<MapEvent, MapState> {
   ) async {
     if (state.selectedVehicle == null) return;
 
+    _stopPlaybackTimer();
     emit(state.copyWith(tripStatus: TripStatus.loading));
 
-    final result = await getTripHistory(TripHistoryParams(
-      vehicleId: state.selectedVehicle!.vehicleId,
-      startDate: event.startDate,
-      endDate: event.endDate,
-    ));
+    final result = await getTripHistory(
+      TripHistoryParams(
+        vehicleId: state.selectedVehicle!.vehicleId,
+        startDate: event.startDate,
+        endDate: event.endDate,
+      ),
+    );
 
     result.fold(
       (failure) {
-        emit(state.copyWith(
-          tripStatus: TripStatus.error,
-          errorMessage: failure.message,
-        ));
+        emit(
+          state.copyWith(
+            tripStatus: TripStatus.error,
+            errorMessage: failure.message,
+          ),
+        );
       },
       (trip) {
-        emit(state.copyWith(
-          tripStatus: TripStatus.loaded,
-          tripHistory: trip,
-          tripPoints: trip.points,
-          playbackPosition: 0,
-        ));
+        emit(
+          state.copyWith(
+            tripStatus: TripStatus.loaded,
+            tripHistory: trip,
+            tripPoints: trip.points,
+            playbackPosition: 0,
+          ),
+        );
       },
     );
   }
 
-  void _onClearTripHistory(
-    ClearTripHistory event,
-    Emitter<MapState> emit,
-  ) {
-    emit(state.copyWith(
-      tripHistory: null,
-      tripPoints: const [],
-      tripStatus: TripStatus.initial,
-      playbackStatus: PlaybackStatus.idle,
-      playbackPosition: 0,
-    ));
+  void _onClearTripHistory(ClearTripHistory event, Emitter<MapState> emit) {
+    _stopPlaybackTimer();
+    emit(
+      state.copyWith(
+        tripHistory: null,
+        tripPoints: const [],
+        tripStatus: TripStatus.initial,
+        playbackStatus: PlaybackStatus.idle,
+        playbackPosition: 0,
+      ),
+    );
   }
 
-  void _onStartTripPlayback(
-    StartTripPlayback event,
-    Emitter<MapState> emit,
-  ) {
+  void _onStartTripPlayback(StartTripPlayback event, Emitter<MapState> emit) {
     if (state.tripPoints.isEmpty) return;
-    emit(state.copyWith(playbackStatus: PlaybackStatus.playing));
+
+    final position = state.playbackPosition >= state.tripPoints.length - 1
+        ? 0
+        : state.playbackPosition;
+    emit(
+      state.copyWith(
+        playbackStatus: PlaybackStatus.playing,
+        playbackPosition: position,
+      ),
+    );
+    _startPlaybackTimer();
   }
 
-  void _onPauseTripPlayback(
-    PauseTripPlayback event,
-    Emitter<MapState> emit,
-  ) {
+  void _onPauseTripPlayback(PauseTripPlayback event, Emitter<MapState> emit) {
+    _stopPlaybackTimer();
     emit(state.copyWith(playbackStatus: PlaybackStatus.paused));
   }
 
-  void _onStopTripPlayback(
-    StopTripPlayback event,
-    Emitter<MapState> emit,
-  ) {
-    emit(state.copyWith(
-      playbackStatus: PlaybackStatus.idle,
-      playbackPosition: 0,
-    ));
+  void _onStopTripPlayback(StopTripPlayback event, Emitter<MapState> emit) {
+    _stopPlaybackTimer();
+    emit(
+      state.copyWith(playbackStatus: PlaybackStatus.idle, playbackPosition: 0),
+    );
   }
 
   void _onUpdatePlaybackPosition(
@@ -213,41 +220,68 @@ class MapBloc extends Bloc<MapEvent, MapState> {
         ? PlaybackStatus.idle
         : state.playbackStatus;
 
-    emit(state.copyWith(
-      playbackPosition: newPosition,
-      playbackStatus: playbackStatus,
-    ));
+    if (playbackStatus == PlaybackStatus.idle) {
+      _stopPlaybackTimer();
+    }
+
+    emit(
+      state.copyWith(
+        playbackPosition: newPosition,
+        playbackStatus: playbackStatus,
+      ),
+    );
   }
 
-  void _onClearMapError(
-    ClearMapError event,
+  void _onChangePlaybackSpeed(
+    ChangePlaybackSpeed event,
     Emitter<MapState> emit,
   ) {
-    emit(state.copyWith(
-      status: state.vehicleLocations.isEmpty
-          ? MapStatus.initial
-          : MapStatus.loaded,
-      errorMessage: null,
-    ));
+    emit(state.copyWith(playbackSpeed: event.speed));
+    if (state.isPlaying) {
+      _startPlaybackTimer();
+    }
   }
 
-  void _onToggleTrafficLayer(
-    ToggleTrafficLayer event,
-    Emitter<MapState> emit,
-  ) {
+  void _startPlaybackTimer() {
+    _stopPlaybackTimer();
+    final interval = Duration(
+      milliseconds: (500 / state.playbackSpeed).round(),
+    );
+    _playbackTimer = Timer.periodic(interval, (_) {
+      if (state.isPlaying) {
+        add(UpdatePlaybackPosition(state.playbackPosition + 1));
+      }
+    });
+  }
+
+  void _stopPlaybackTimer() {
+    _playbackTimer?.cancel();
+    _playbackTimer = null;
+  }
+
+  void _onClearMapError(ClearMapError event, Emitter<MapState> emit) {
+    emit(
+      state.copyWith(
+        status: state.vehicleLocations.isEmpty
+            ? MapStatus.initial
+            : MapStatus.loaded,
+        errorMessage: null,
+      ),
+    );
+  }
+
+  void _onToggleTrafficLayer(ToggleTrafficLayer event, Emitter<MapState> emit) {
     emit(state.copyWith(showTraffic: !state.showTraffic));
   }
 
-  void _onChangeMapType(
-    ChangeMapType event,
-    Emitter<MapState> emit,
-  ) {
+  void _onChangeMapType(ChangeMapType event, Emitter<MapState> emit) {
     emit(state.copyWith(mapType: event.mapType));
   }
 
   @override
   Future<void> close() {
     _locationsSubscription?.cancel();
+    _stopPlaybackTimer();
     return super.close();
   }
 }

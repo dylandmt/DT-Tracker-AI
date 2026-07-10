@@ -1,35 +1,16 @@
 part of 'map_bloc.dart';
 
 /// Status of the map data loading
-enum MapStatus {
-  initial,
-  loading,
-  loaded,
-  error,
-}
+enum MapStatus { initial, loading, loaded, error }
 
 /// Status of trip history loading
-enum TripStatus {
-  initial,
-  loading,
-  loaded,
-  error,
-}
+enum TripStatus { initial, loading, loaded, error }
 
 /// Status of trip playback
-enum PlaybackStatus {
-  idle,
-  playing,
-  paused,
-}
+enum PlaybackStatus { idle, playing, paused }
 
 /// Map view type
-enum MapViewType {
-  normal,
-  satellite,
-  terrain,
-  hybrid,
-}
+enum MapViewType { normal, satellite, terrain, hybrid }
 
 /// State for the MapBloc
 class MapState extends Equatable {
@@ -57,6 +38,9 @@ class MapState extends Equatable {
   /// Playback status
   final PlaybackStatus playbackStatus;
 
+  /// Point advancement multiplier for trip playback.
+  final double playbackSpeed;
+
   /// Error message
   final String? errorMessage;
 
@@ -75,6 +59,7 @@ class MapState extends Equatable {
     this.tripPoints = const [],
     this.playbackPosition = 0,
     this.playbackStatus = PlaybackStatus.idle,
+    this.playbackSpeed = 1,
     this.errorMessage,
     this.showTraffic = false,
     this.mapType = MapViewType.normal,
@@ -114,7 +99,7 @@ class MapState extends Equatable {
 
   /// Playback progress (0.0 - 1.0)
   double get playbackProgress {
-    if (tripPoints.isEmpty) return 0;
+    if (tripPoints.length < 2) return 0;
     return playbackPosition / (tripPoints.length - 1);
   }
 
@@ -139,6 +124,7 @@ class MapState extends Equatable {
     List<TripPointEntity>? tripPoints,
     int? playbackPosition,
     PlaybackStatus? playbackStatus,
+    double? playbackSpeed,
     String? errorMessage,
     bool? showTraffic,
     MapViewType? mapType,
@@ -146,13 +132,15 @@ class MapState extends Equatable {
     return MapState(
       status: status ?? this.status,
       vehicleLocations: vehicleLocations ?? this.vehicleLocations,
-      selectedVehicle:
-          clearSelectedVehicle ? null : selectedVehicle ?? this.selectedVehicle,
+      selectedVehicle: clearSelectedVehicle
+          ? null
+          : selectedVehicle ?? this.selectedVehicle,
       tripStatus: tripStatus ?? this.tripStatus,
       tripHistory: tripHistory ?? this.tripHistory,
       tripPoints: tripPoints ?? this.tripPoints,
       playbackPosition: playbackPosition ?? this.playbackPosition,
       playbackStatus: playbackStatus ?? this.playbackStatus,
+      playbackSpeed: playbackSpeed ?? this.playbackSpeed,
       errorMessage: errorMessage,
       showTraffic: showTraffic ?? this.showTraffic,
       mapType: mapType ?? this.mapType,
@@ -161,16 +149,17 @@ class MapState extends Equatable {
 
   @override
   List<Object?> get props => [
-        status,
-        vehicleLocations,
-        selectedVehicle,
-        tripStatus,
-        tripHistory,
-        tripPoints,
-        playbackPosition,
-        playbackStatus,
-        errorMessage,
-        showTraffic,
-        mapType,
-      ];
+    status,
+    vehicleLocations,
+    selectedVehicle,
+    tripStatus,
+    tripHistory,
+    tripPoints,
+    playbackPosition,
+    playbackStatus,
+    playbackSpeed,
+    errorMessage,
+    showTraffic,
+    mapType,
+  ];
 }

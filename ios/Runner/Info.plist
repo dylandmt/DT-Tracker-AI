@@ -51,6 +51,10 @@
 	<string>DT Tracker needs continuous access to your location to track vehicles even when the app is in the background.</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
 	<string>DT Tracker needs continuous access to your location to track vehicles and send alerts even when the app is in the background.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>DT Tracker uses the camera to add vehicle and profile photos.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>DT Tracker uses your photo library to select vehicle and profile photos.</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>location</string>

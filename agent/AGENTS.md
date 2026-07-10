@@ -132,6 +132,11 @@ Google Maps API key placeholders in:
 - `android/app/src/main/AndroidManifest.xml`
 - `ios/Runner/Info.plist`
 
+Image capture and selection platform requirements:
+- Android declares `<uses-permission android:name="android.permission.CAMERA" />` in `android/app/src/main/AndroidManifest.xml`.
+- iOS declares `NSCameraUsageDescription` and `NSPhotoLibraryUsageDescription` in `ios/Runner/Info.plist`.
+- Rebuild and reinstall after changing these files. Without the Android manifest declaration, camera requests are denied immediately and Android does not show its first-request permission dialog.
+
 ## Current State
 
 - **Phase 1-5 Complete**: Project setup, auth feature, vehicles feature, real-time map tracking with My Location
@@ -694,7 +699,17 @@ TrackerStatusEntity {
 }
 ```
 
-**Firebase Storage Path**: `vehicles/{userId}/{vehicleId}/{uuid}.jpg`
+**Firebase Storage Path**: `users/{userId}/vehicles/{vehicleId}/images/{uuid}.jpg`
+
+**Profile Image Storage Path**: `users/{userId}/profile/images/{uuid}.jpg`
+
+Firebase Storage rules must allow an authenticated user to access only their
+own vehicle and profile image paths. Profile photos use the same image size and
+content-type validation as vehicle images.
+
+```text
+match /users/{uid}/profile/images/{fileName}
+```
 
 **RTDB Structure** (tracker data from external GPS):
 ```
@@ -820,6 +835,7 @@ StartTripPlayback()          // Start trip replay
 PauseTripPlayback()          // Pause replay
 StopTripPlayback()           // Stop and reset replay
 UpdatePlaybackPosition(position)  // Seek to position
+ChangePlaybackSpeed(speed)        // Set 1x, 2x, or 4x replay speed
 ClearMapError()              // Clear error state
 ToggleTrafficLayer()         // Toggle traffic overlay
 ChangeMapType(mapType)       // Switch map type
@@ -914,14 +930,15 @@ TripEntity {
 **Data Flow**:
 1. `MapRemoteDataSource` combines Firestore vehicle data with RTDB tracker live data
 2. Streams Firestore `vehicles` collection + RTDB `trackers_live/{imei}` for each vehicle
-3. Trip history reads from RTDB `trackers_history/{imei}` with timestamp range query
+3. Trip history reads from RTDB `trackers_history/{imei}/{YYYY-MM-DD}` and
+   filters points by their `datetime` field
 
 **RTDB Structure** (referenced from Phase 4):
 ```
 trackers_live/{imei}/
   battery, lat, lng, speed, online, datetime, ts
 
-trackers_history/{imei}/{timestamp}/
+trackers_history/{imei}/{YYYY-MM-DD}/{pushId}/
   battery, lat, lng, speed, datetime, ts
 ```
 
@@ -975,8 +992,9 @@ MapControls(
 - Map controls: zoom, map type selector, traffic toggle, fit all vehicles
 - **My Location button** - Gets current GPS position with permission handling
 - Blue dot overlay showing user's current location (when permission granted)
-- Trip history date picker (loads from RTDB)
-- Playback controls for trip replay (pending full implementation)
+- Trip history date picker with route polyline and automatic bounds fitting
+- Trip presentation replay: car marker, camera follow, route progress, seek,
+  pause/restart, and 1x/2x/4x speed controls
 
 ### My Location Implementation
 The "My Location" button uses `geolocator` package with the reusable permission system:
@@ -997,7 +1015,6 @@ Future<void> _goToMyLocation() async {
 - `_isGettingLocation` - Prevents multiple simultaneous requests
 
 ### Next Steps (Phase 6)
-- Full trip playback with polyline animation
 - Navigation integration (Google Maps / Apple Maps)
 - Geofencing zones on map
 
@@ -1019,6 +1036,10 @@ Future<bool> isGranted(permission)
 Future<bool> openSettings()
 Future<bool> ensurePermission(permission)  // Check + request if needed
 ```
+
+`AppPermission.camera` is used before taking vehicle or profile photos.
+`AppPermission.photos` is used when selecting an existing image. Both require
+their respective platform declarations above before an OS prompt can be shown.
 
 **PermissionDeniedWidget** - Full-screen permission denied UI
 **PermissionDeniedBanner** - Compact inline banner

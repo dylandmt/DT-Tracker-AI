@@ -7,7 +7,6 @@ import '../../../../core/errors/failures.dart';
 import '../../../../core/network/network_info.dart';
 import '../../domain/entities/vehicle.dart';
 import '../../domain/repositories/vehicle_repository.dart';
-import '../datasources/tracker_remote_datasource.dart';
 import '../datasources/vehicle_image_datasource.dart';
 import '../datasources/tracker_backend_datasource.dart';
 import '../datasources/vehicle_remote_datasource.dart';
@@ -17,7 +16,6 @@ import '../models/vehicle_model.dart';
 class VehicleRepositoryImpl implements VehicleRepository {
   final VehicleRemoteDataSource vehicleDataSource;
   final VehicleImageDataSource imageDataSource;
-  final TrackerRemoteDataSource trackerDataSource;
   final TrackerBackendDataSource backendDataSource;
   final FirebaseAuth firebaseAuth;
   final NetworkInfo networkInfo;
@@ -26,7 +24,6 @@ class VehicleRepositoryImpl implements VehicleRepository {
   VehicleRepositoryImpl({
     required this.vehicleDataSource,
     required this.imageDataSource,
-    required this.trackerDataSource,
     required this.backendDataSource,
     required this.firebaseAuth,
     required this.networkInfo,
@@ -185,14 +182,9 @@ class VehicleRepositoryImpl implements VehicleRepository {
       // Get vehicle to check for tracker
       final vehicle = await vehicleDataSource.getVehicleById(_userId, id);
 
-      // Unlink tracker if linked
+      // Tracker ownership is managed exclusively by the backend.
       if (vehicle.trackerId != null) {
-        try {
-          await backendDataSource.unlinkTracker(vehicleId: id);
-        } catch (_) {
-          // Fallback to legacy unlink if backend unavailable
-          await trackerDataSource.setTrackerOwner(vehicle.trackerId!, null);
-        }
+        await backendDataSource.unlinkTracker(vehicleId: id);
       }
 
       // Delete all images from storage

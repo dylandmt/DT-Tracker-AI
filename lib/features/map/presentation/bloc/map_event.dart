@@ -58,10 +58,7 @@ class LoadTripHistory extends MapEvent {
   final DateTime startDate;
   final DateTime endDate;
 
-  const LoadTripHistory({
-    required this.startDate,
-    required this.endDate,
-  });
+  const LoadTripHistory({required this.startDate, required this.endDate});
 
   @override
   List<Object?> get props => [startDate, endDate];
@@ -95,6 +92,16 @@ class UpdatePlaybackPosition extends MapEvent {
 
   @override
   List<Object?> get props => [position];
+}
+
+/// Change the trip replay speed multiplier.
+class ChangePlaybackSpeed extends MapEvent {
+  final double speed;
+
+  const ChangePlaybackSpeed(this.speed);
+
+  @override
+  List<Object?> get props => [speed];
 }
 
 /// Clear map error

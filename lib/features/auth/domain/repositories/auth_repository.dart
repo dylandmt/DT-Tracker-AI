@@ -36,6 +36,14 @@ abstract class AuthRepository {
     String? photoUrl,
   });
 
+  /// Upload the current user's profile image and return its download URL.
+  Future<Either<Failure, String>> uploadProfileImage({
+    required String filePath,
+  });
+
+  /// Delete a previous profile image after its replacement is saved.
+  Future<Either<Failure, void>> deleteProfileImage({required String imageUrl});
+
   /// Update user settings
   Future<Either<Failure, UserEntity>> updateUserSettings({
     required UserSettings settings,

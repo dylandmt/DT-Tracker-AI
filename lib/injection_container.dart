@@ -13,15 +13,19 @@ import 'core/permissions/permission_handler.dart';
 import 'core/permissions/permission_handler_impl.dart';
 import 'core/utils/image_compressor.dart';
 import 'features/auth/data/datasources/auth_remote_data_source.dart';
+import 'features/auth/data/datasources/profile_image_data_source.dart';
 import 'features/auth/data/datasources/user_remote_data_source.dart';
 import 'features/auth/data/repositories/auth_repository_impl.dart';
 import 'features/auth/domain/repositories/auth_repository.dart';
 import 'features/auth/domain/usecases/auth_state_changes.dart';
+import 'features/auth/domain/usecases/delete_profile_image.dart';
 import 'features/auth/domain/usecases/get_current_user.dart';
 import 'features/auth/domain/usecases/send_password_reset.dart';
 import 'features/auth/domain/usecases/sign_in_with_email.dart';
 import 'features/auth/domain/usecases/sign_out.dart';
 import 'features/auth/domain/usecases/sign_up_with_email.dart';
+import 'features/auth/domain/usecases/update_user_profile.dart';
+import 'features/auth/domain/usecases/upload_profile_image.dart';
 import 'features/auth/presentation/bloc/auth_bloc.dart';
 import 'features/vehicles/data/datasources/tracker_remote_datasource.dart';
 import 'features/vehicles/data/datasources/tracker_backend_datasource.dart';
@@ -62,8 +66,12 @@ Future<void> initializeDependencies() async {
 
   // Firebase
   sl.registerLazySingleton<FirebaseAuth>(() => FirebaseAuth.instance);
-  sl.registerLazySingleton<FirebaseFirestore>(() => FirebaseConfig.getFirestore());
-  sl.registerLazySingleton<FirebaseDatabase>(() => FirebaseConfig.getRealtimeDatabase());
+  sl.registerLazySingleton<FirebaseFirestore>(
+    () => FirebaseConfig.getFirestore(),
+  );
+  sl.registerLazySingleton<FirebaseDatabase>(
+    () => FirebaseConfig.getRealtimeDatabase(),
+  );
   sl.registerLazySingleton<FirebaseStorage>(() => FirebaseConfig.getStorage());
 
   // Connectivity
@@ -85,9 +93,7 @@ Future<void> initializeDependencies() async {
     () => AppPermissionHandlerImpl(),
   );
 
-  sl.registerLazySingleton<ImageCompressor>(
-    () => ImageCompressorImpl(),
-  );
+  sl.registerLazySingleton<ImageCompressor>(() => ImageCompressorImpl());
 
   //============================================================================
   // Features - Auth
@@ -102,11 +108,16 @@ Future<void> initializeDependencies() async {
     () => UserRemoteDataSourceImpl(firestore: sl()),
   );
 
+  sl.registerLazySingleton<ProfileImageDataSource>(
+    () => ProfileImageDataSourceImpl(storage: sl(), imageCompressor: sl()),
+  );
+
   // Repositories
   sl.registerLazySingleton<AuthRepository>(
     () => AuthRepositoryImpl(
       authRemoteDataSource: sl(),
       userRemoteDataSource: sl(),
+      profileImageDataSource: sl(),
       networkInfo: sl(),
     ),
   );
@@ -118,6 +129,9 @@ Future<void> initializeDependencies() async {
   sl.registerLazySingleton(() => GetCurrentUser(sl()));
   sl.registerLazySingleton(() => SendPasswordReset(sl()));
   sl.registerLazySingleton(() => AuthStateChanges(sl()));
+  sl.registerLazySingleton(() => UpdateUserProfile(sl()));
+  sl.registerLazySingleton(() => UploadProfileImage(sl()));
+  sl.registerLazySingleton(() => DeleteProfileImage(sl()));
 
   // BLoCs
   sl.registerFactory(
@@ -128,6 +142,9 @@ Future<void> initializeDependencies() async {
       getCurrentUser: sl(),
       sendPasswordReset: sl(),
       authStateChanges: sl(),
+      updateUserProfile: sl(),
+      uploadProfileImage: sl(),
+      deleteProfileImage: sl(),
     ),
   );
 
@@ -153,10 +170,7 @@ Future<void> initializeDependencies() async {
   );
 
   sl.registerLazySingleton<VehicleImageDataSource>(
-    () => VehicleImageDataSourceImpl(
-      storage: sl(),
-      imageCompressor: sl(),
-    ),
+    () => VehicleImageDataSourceImpl(storage: sl(), imageCompressor: sl()),
   );
 
   // Repositories
@@ -164,7 +178,6 @@ Future<void> initializeDependencies() async {
     () => VehicleRepositoryImpl(
       vehicleDataSource: sl(),
       imageDataSource: sl(),
-      trackerDataSource: sl(),
       backendDataSource: sl(),
       firebaseAuth: sl(),
       networkInfo: sl(),
@@ -240,10 +253,7 @@ Future<void> initializeDependencies() async {
 
   // Repositories
   sl.registerLazySingleton<MapRepository>(
-    () => MapRepositoryImpl(
-      mapDataSource: sl(),
-      networkInfo: sl(),
-    ),
+    () => MapRepositoryImpl(mapDataSource: sl(), networkInfo: sl()),
   );
 
   // Use Cases

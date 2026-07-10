@@ -6,6 +6,7 @@ import '../../../../core/network/network_info.dart';
 import '../../domain/entities/user.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../datasources/auth_remote_data_source.dart';
+import '../datasources/profile_image_data_source.dart';
 import '../datasources/user_remote_data_source.dart';
 import '../models/user_model.dart';
 
@@ -13,11 +14,13 @@ import '../models/user_model.dart';
 class AuthRepositoryImpl implements AuthRepository {
   final AuthRemoteDataSource authRemoteDataSource;
   final UserRemoteDataSource userRemoteDataSource;
+  final ProfileImageDataSource profileImageDataSource;
   final NetworkInfo networkInfo;
 
   AuthRepositoryImpl({
     required this.authRemoteDataSource,
     required this.userRemoteDataSource,
+    required this.profileImageDataSource,
     required this.networkInfo,
   });
 
@@ -36,7 +39,9 @@ class AuthRepositoryImpl implements AuthRepository {
         password: password,
       );
 
-      UserModel? userModel = await userRemoteDataSource.getUser(firebaseUser.uid);
+      UserModel? userModel = await userRemoteDataSource.getUser(
+        firebaseUser.uid,
+      );
 
       if (userModel == null) {
         userModel = UserModel.newUser(
@@ -136,7 +141,9 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  Future<Either<Failure, void>> sendPasswordReset({required String email}) async {
+  Future<Either<Failure, void>> sendPasswordReset({
+    required String email,
+  }) async {
     if (!await networkInfo.isConnected) {
       return const Left(NetworkFailure());
     }
@@ -153,7 +160,9 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Stream<UserEntity?> authStateChanges() {
-    return authRemoteDataSource.authStateChanges().asyncMap((firebaseUser) async {
+    return authRemoteDataSource.authStateChanges().asyncMap((
+      firebaseUser,
+    ) async {
       if (firebaseUser == null) {
         return null;
       }
@@ -222,6 +231,45 @@ class AuthRepositoryImpl implements AuthRepository {
       return Right(userModel);
     } on AuthException catch (e) {
       return Left(AuthFailure(message: e.message));
+    } on ServerException catch (e) {
+      return Left(ServerFailure(message: e.message));
+    } catch (e) {
+      return Left(UnknownFailure(message: e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, String>> uploadProfileImage({
+    required String filePath,
+  }) async {
+    if (!await networkInfo.isConnected) {
+      return const Left(NetworkFailure());
+    }
+
+    try {
+      final firebaseUser = authRemoteDataSource.getCurrentUser();
+      if (firebaseUser == null) {
+        return const Left(AuthFailure(message: 'No user is signed in'));
+      }
+      final imageUrl = await profileImageDataSource.uploadImage(
+        userId: firebaseUser.uid,
+        filePath: filePath,
+      );
+      return Right(imageUrl);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(message: e.message));
+    } catch (e) {
+      return Left(UnknownFailure(message: e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> deleteProfileImage({
+    required String imageUrl,
+  }) async {
+    try {
+      await profileImageDataSource.deleteImage(imageUrl);
+      return const Right(null);
     } on ServerException catch (e) {
       return Left(ServerFailure(message: e.message));
     } catch (e) {

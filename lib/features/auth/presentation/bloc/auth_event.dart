@@ -16,10 +16,7 @@ class SignInRequested extends AuthEvent {
   final String email;
   final String password;
 
-  const SignInRequested({
-    required this.email,
-    required this.password,
-  });
+  const SignInRequested({required this.email, required this.password});
 
   @override
   List<Object?> get props => [email, password];
@@ -52,6 +49,17 @@ class PasswordResetRequested extends AuthEvent {
 
   @override
   List<Object?> get props => [email];
+}
+
+/// Update the display name and optionally replace the profile image.
+class ProfileUpdateRequested extends AuthEvent {
+  final String displayName;
+  final String? imagePath;
+
+  const ProfileUpdateRequested({required this.displayName, this.imagePath});
+
+  @override
+  List<Object?> get props => [displayName, imagePath];
 }
 
 /// Event when auth state changes (from stream)

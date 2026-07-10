@@ -36,7 +36,7 @@ class RouteConstants {
 
   // Settings Routes
   static const String settings = '/settings';
-  static const String profile = '/settings/profile';
+  static const String profile = '/home/settings/profile';
 
   // Route Names
   static const String splashName = 'splash';

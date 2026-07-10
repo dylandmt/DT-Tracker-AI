@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -10,10 +11,12 @@ import '../../../../core/permissions/permission_status.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/extensions.dart';
 import '../../../../injection_container.dart';
+import '../../domain/entities/trip_point.dart';
 import '../../domain/entities/vehicle_location.dart';
 import '../../domain/entities/trip_point.dart';
 import '../bloc/map_bloc.dart';
 import '../widgets/map_controls.dart';
+import '../widgets/trip_playback_controls.dart';
 import '../widgets/vehicle_info_card.dart';
 import '../widgets/vehicle_list_panel.dart';
 
@@ -52,11 +55,14 @@ class _MapPageState extends State<MapPage> with WidgetsBindingObserver {
 
   Future<void> _checkLocationPermission() async {
     final permissionHandler = sl<AppPermissionHandler>();
-    final status = await permissionHandler.checkPermission(AppPermission.location);
-    if (mounted) {
-      setState(() {
-        _locationPermissionGranted = status == AppPermissionStatus.granted;
-      });
+    final status = await permissionHandler.checkPermission(
+      AppPermission.location,
+    );
+    if (!mounted) return;
+
+    setState(() => _locationPermissionGranted = status.isGranted);
+    if (status.isGranted) {
+      _centerOnCurrentLocationIfPermitted();
     }
   }
 
@@ -78,23 +84,28 @@ class _MapPageState extends State<MapPage> with WidgetsBindingObserver {
   Widget build(BuildContext context) {
     return Scaffold(
       body: BlocConsumer<MapBloc, MapState>(
-        listenWhen: (previous, current) {
-          final errorChanged = previous.errorMessage != current.errorMessage && current.errorMessage != null;
-          final tripLoaded = previous.tripStatus != TripStatus.loaded && current.tripStatus == TripStatus.loaded;
-          return errorChanged || tripLoaded;
-        },
-        listener: (context, state) async {
+        listenWhen: (previous, current) =>
+            (previous.errorMessage != current.errorMessage &&
+                current.errorMessage != null) ||
+            (previous.tripStatus != current.tripStatus &&
+                current.tripStatus == TripStatus.loaded) ||
+            (previous.playbackPosition != current.playbackPosition &&
+                current.currentPlaybackPoint != null),
+        listener: (context, state) {
           if (state.errorMessage != null) {
             context.showErrorSnackBar(state.errorMessage!);
             context.read<MapBloc>().add(const ClearMapError());
           }
           if (state.tripStatus == TripStatus.loaded) {
-            if (state.tripPoints.isNotEmpty) {
-              context.showSuccessSnackBar('Loaded ${state.tripPoints.length} points');
-              await _fitTripBounds(state.tripPoints);
+            if (state.hasTripHistory) {
+              _fitTripPoints(state.tripPoints);
             } else {
-              context.showSnackBar('No trip points for selected range');
+              context.showSnackBar('No trip data for this date');
             }
+          }
+          if (state.currentPlaybackPoint != null &&
+              (state.isPlaying || state.isPaused)) {
+            _followPlaybackPoint(state.tripPoints, state.playbackPosition);
           }
         },
         builder: (context, state) {
@@ -110,10 +121,9 @@ class _MapPageState extends State<MapPage> with WidgetsBindingObserver {
                 right: 0,
                 child: Container(
                   height: MediaQuery.of(context).padding.top,
-                  color: Theme.of(context)
-                      .colorScheme
-                      .surface
-                      .withValues(alpha: 0.8),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.surface.withValues(alpha: 0.8),
                 ),
               ),
 
@@ -174,7 +184,7 @@ class _MapPageState extends State<MapPage> with WidgetsBindingObserver {
                 ),
 
               // Selected vehicle info card (bottom)
-              if (state.hasSelectedVehicle)
+              if (state.hasSelectedVehicle && !state.hasTripHistory)
                 Positioned(
                   left: 0,
                   right: 0,
@@ -182,9 +192,9 @@ class _MapPageState extends State<MapPage> with WidgetsBindingObserver {
                   child: VehicleInfoCard(
                     vehicle: state.selectedVehicle!,
                     onClose: () {
-                      context
-                          .read<MapBloc>()
-                          .add(const ClearVehicleSelection());
+                      context.read<MapBloc>().add(
+                        const ClearVehicleSelection(),
+                      );
                     },
                     onViewHistory: () {
                       // TODO: Navigate to trip history page
@@ -196,14 +206,46 @@ class _MapPageState extends State<MapPage> with WidgetsBindingObserver {
                   ),
                 ),
 
+              if (state.hasTripHistory && state.currentPlaybackPoint != null)
+                Positioned(
+                  left: 16,
+                  right: 16,
+                  bottom: 24,
+                  child: SafeArea(
+                    top: false,
+                    child: TripPlaybackControls(
+                      currentPoint: state.currentPlaybackPoint!,
+                      position: state.playbackPosition,
+                      pointCount: state.tripPoints.length,
+                      isPlaying: state.isPlaying,
+                      speed: state.playbackSpeed,
+                      onPlayPause: () {
+                        context.read<MapBloc>().add(
+                          state.isPlaying
+                              ? const PauseTripPlayback()
+                              : const StartTripPlayback(),
+                        );
+                      },
+                      onStop: () =>
+                          context.read<MapBloc>().add(const StopTripPlayback()),
+                      onSeek: (position) => context.read<MapBloc>().add(
+                        UpdatePlaybackPosition(position),
+                      ),
+                      onSpeedChanged: (speed) => context.read<MapBloc>().add(
+                        ChangePlaybackSpeed(speed),
+                      ),
+                      onClose: () =>
+                          context.read<MapBloc>().add(const ClearTripHistory()),
+                    ),
+                  ),
+                ),
+
               // Loading overlay
               if (state.isLoading)
                 const Positioned.fill(
                   child: ColoredBox(
                     color: Colors.black26,
-                    child: Center(
-                      child: CircularProgressIndicator(),
-                    ),
+                    child: Center(child: CircularProgressIndicator()),
                   ),
                 ),
             ],
@@ -231,8 +273,12 @@ class _MapPageState extends State<MapPage> with WidgetsBindingObserver {
   }
 
   Widget _buildMap(BuildContext context, MapState state) {
-    final markers = _buildMarkers(state.vehicleLocations, state.selectedVehicle);
-    final polylines = _buildTripPolylines(state.tripPoints);
+    final markers = _buildMarkers(
+      state.vehicleLocations,
+      state.selectedVehicle,
+      playbackPoint: state.hasTripHistory ? state.currentPlaybackPoint : null,
+    );
+    final polylines = _buildTripPolylines(state);
 
     return SizedBox.expand(
       child: GoogleMap(
@@ -246,11 +292,15 @@ class _MapPageState extends State<MapPage> with WidgetsBindingObserver {
             _controllerCompleter.complete(controller);
           }
 
-        // Fit to show all vehicles once map is loaded
-        if (state.vehicleLocations.isNotEmpty) {
-          _fitAllVehicles(state.vehicleLocations);
-        }
-      },
+          if (_locationPermissionGranted) {
+            _centerOnCurrentLocationIfPermitted();
+          }
+
+          // Fit to show all vehicles once map is loaded
+          if (state.vehicleLocations.isNotEmpty) {
+            _fitAllVehicles(state.vehicleLocations);
+          }
+        },
         markers: markers,
         polylines: polylines,
         mapType: _getGoogleMapType(state.mapType),
@@ -351,9 +401,10 @@ class _MapPageState extends State<MapPage> with WidgetsBindingObserver {
 
   Set<Marker> _buildMarkers(
     List<VehicleLocationEntity> vehicles,
-    VehicleLocationEntity? selectedVehicle,
-  ) {
-    return vehicles.map((vehicle) {
+    VehicleLocationEntity? selectedVehicle, {
+    TripPointEntity? playbackPoint,
+  }) {
+    final markers = vehicles.map((vehicle) {
       final markerColor = _getMarkerColor(vehicle.status);
 
       return Marker(
@@ -362,12 +413,80 @@ class _MapPageState extends State<MapPage> with WidgetsBindingObserver {
         icon: BitmapDescriptor.defaultMarkerWithHue(markerColor),
         infoWindow: InfoWindow(
           title: vehicle.vehicleName,
-          snippet:
-              '${vehicle.plateNumber} • ${vehicle.formattedSpeed}',
+          snippet: '${vehicle.plateNumber} • ${vehicle.formattedSpeed}',
         ),
         onTap: () => _selectVehicle(context, vehicle),
       );
     }).toSet();
+
+    if (playbackPoint != null) {
+      markers.add(
+        Marker(
+          markerId: const MarkerId('trip-playback'),
+          position: LatLng(playbackPoint.latitude, playbackPoint.longitude),
+          icon: BitmapDescriptor.defaultMarkerWithHue(
+            BitmapDescriptor.hueAzure,
+          ),
+          infoWindow: InfoWindow(
+            title: 'Trip replay',
+            snippet: playbackPoint.timestamp.formattedDateTime,
+          ),
+          zIndexInt: 2,
+        ),
+      );
+    }
+
+    return markers;
+  }
+
+  Set<Polyline> _buildTripPolylines(MapState state) {
+    final tripPoints = state.tripPoints;
+    if (tripPoints.length < 2) return const {};
+
+    if (!state.isPlaying && !state.isPaused) {
+      return {
+        Polyline(
+          polylineId: const PolylineId('trip-history'),
+          points: tripPoints
+              .map((point) => LatLng(point.latitude, point.longitude))
+              .toList(),
+          color: AppColors.routeColor,
+          width: 5,
+        ),
+      };
+    }
+
+    final playedPoints = tripPoints.take(state.playbackPosition + 1).toList();
+    final remainingPoints = tripPoints.skip(state.playbackPosition).toList();
+    final polylines = <Polyline>{};
+
+    if (playedPoints.length > 1) {
+      polylines.add(
+        Polyline(
+          polylineId: const PolylineId('trip-played'),
+          points: playedPoints
+              .map((point) => LatLng(point.latitude, point.longitude))
+              .toList(),
+          color: AppColors.routeColor,
+          width: 6,
+        ),
+      );
+    }
+
+    if (remainingPoints.length > 1) {
+      polylines.add(
+        Polyline(
+          polylineId: const PolylineId('trip-remaining'),
+          points: remainingPoints
+              .map((point) => LatLng(point.latitude, point.longitude))
+              .toList(),
+          color: Colors.blueGrey,
+          width: 4,
+        ),
+      );
+    }
+
+    return polylines;
   }
 
   double _getMarkerColor(VehicleStatus status) {
@@ -398,6 +517,58 @@ class _MapPageState extends State<MapPage> with WidgetsBindingObserver {
     );
   }
 
+  void _followPlaybackPoint(List<TripPointEntity> points, int position) {
+    final point = points[position];
+    final bearing = position == 0
+        ? 0.0
+        : _bearingBetween(points[position - 1], point);
+    _mapController?.animateCamera(
+      CameraUpdate.newCameraPosition(
+        CameraPosition(
+          target: LatLng(point.latitude, point.longitude),
+          zoom: 17,
+          tilt: 45,
+          bearing: bearing,
+        ),
+      ),
+    );
+  }
+
+  double _bearingBetween(TripPointEntity from, TripPointEntity to) {
+    final lat1 = from.latitude * math.pi / 180;
+    final lat2 = to.latitude * math.pi / 180;
+    final deltaLng = (to.longitude - from.longitude) * math.pi / 180;
+    final y = math.sin(deltaLng) * math.cos(lat2);
+    final x =
+        math.cos(lat1) * math.sin(lat2) -
+        math.sin(lat1) * math.cos(lat2) * math.cos(deltaLng);
+    return (math.atan2(y, x) * 180 / math.pi + 360) % 360;
+  }
+
+  /// Center the map at startup only when location access was granted earlier.
+  Future<void> _centerOnCurrentLocationIfPermitted() async {
+    if (_mapController == null) return;
+
+    try {
+      if (!await Geolocator.isLocationServiceEnabled()) return;
+
+      final position = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+          timeLimit: Duration(seconds: 10),
+        ),
+      );
+      if (!mounted) return;
+
+      await _animateToPosition(
+        LatLng(position.latitude, position.longitude),
+        zoom: 16,
+      );
+    } catch (_) {
+      // Keep the default camera position when automatic centering is unavailable.
+    }
+  }
+
   void _zoomIn() {
     _mapController?.animateCamera(CameraUpdate.zoomIn());
   }
@@ -417,12 +588,16 @@ class _MapPageState extends State<MapPage> with WidgetsBindingObserver {
 
     try {
       final permissionHandler = sl<AppPermissionHandler>();
-      
+
       // Check and request permission if needed
-      var status = await permissionHandler.checkPermission(AppPermission.location);
-      
+      var status = await permissionHandler.checkPermission(
+        AppPermission.location,
+      );
+
       if (status != AppPermissionStatus.granted) {
-        status = await permissionHandler.requestPermission(AppPermission.location);
+        status = await permissionHandler.requestPermission(
+          AppPermission.location,
+        );
       }
 
       if (status == AppPermissionStatus.granted) {
@@ -593,26 +768,41 @@ class _MapPageState extends State<MapPage> with WidgetsBindingObserver {
     );
   }
 
-  Future<void> _fitTripBounds(List<TripPointEntity> points) async {
+  Future<void> _fitTripPoints(List<TripPointEntity> points) async {
     if (points.isEmpty) return;
-    double minLat = points.first.latitude;
-    double maxLat = points.first.latitude;
-    double minLng = points.first.longitude;
-    double maxLng = points.first.longitude;
 
-    for (final p in points) {
-      if (p.latitude < minLat) minLat = p.latitude;
-      if (p.latitude > maxLat) maxLat = p.latitude;
-      if (p.longitude < minLng) minLng = p.longitude;
-      if (p.longitude > maxLng) maxLng = p.longitude;
+    if (points.length == 1) {
+      await _animateToPosition(
+        LatLng(points.first.latitude, points.first.longitude),
+      );
+      return;
     }
 
-    final bounds = LatLngBounds(
-      southwest: LatLng(minLat, minLng),
-      northeast: LatLng(maxLat, maxLng),
-    );
+    var minLat = points.first.latitude;
+    var maxLat = points.first.latitude;
+    var minLng = points.first.longitude;
+    var maxLng = points.first.longitude;
+
+    for (final point in points.skip(1)) {
+      if (point.latitude < minLat) minLat = point.latitude;
+      if (point.latitude > maxLat) maxLat = point.latitude;
+      if (point.longitude < minLng) minLng = point.longitude;
+      if (point.longitude > maxLng) maxLng = point.longitude;
+    }
+
+    if (minLat == maxLat && minLng == maxLng) {
+      await _animateToPosition(LatLng(minLat, minLng));
+      return;
+    }
+
     await _mapController?.animateCamera(
-      CameraUpdate.newLatLngBounds(bounds, 50),
+      CameraUpdate.newLatLngBounds(
+        LatLngBounds(
+          southwest: LatLng(minLat, minLng),
+          northeast: LatLng(maxLat, maxLng),
+        ),
+        50,
+      ),
     );
   }
 
@@ -620,38 +810,45 @@ class _MapPageState extends State<MapPage> with WidgetsBindingObserver {
     BuildContext context,
     VehicleLocationEntity vehicle,
   ) {
-    // Simple date picker for now
+    final now = DateTime.now();
+    final firstDate = now.subtract(const Duration(days: 30));
+    final lastUpdate = vehicle.lastUpdate.toLocal();
+    final initialDate =
+        lastUpdate.isBefore(firstDate) || lastUpdate.isAfter(now)
+        ? now
+        : lastUpdate;
+
     showDatePicker(
       context: context,
-      initialDate: DateTime.now(),
-      firstDate: DateTime.now().subtract(const Duration(days: 30)),
-      lastDate: DateTime.now(),
+      initialDate: initialDate,
+      firstDate: firstDate,
+      lastDate: now,
     ).then((selectedDate) {
       if (selectedDate != null) {
-        context.read<MapBloc>().add(LoadTripHistory(
-              startDate: DateTime(
-                selectedDate.year,
-                selectedDate.month,
-                selectedDate.day,
-              ),
-              endDate: DateTime(
-                selectedDate.year,
-                selectedDate.month,
-                selectedDate.day,
-                23,
-                59,
-                59,
-              ),
-            ));
+        context.read<MapBloc>().add(
+          LoadTripHistory(
+            startDate: DateTime(
+              selectedDate.year,
+              selectedDate.month,
+              selectedDate.day,
+            ),
+            endDate: DateTime(
+              selectedDate.year,
+              selectedDate.month,
+              selectedDate.day,
+              23,
+              59,
+              59,
+            ),
+          ),
+        );
       }
     });
   }
 
   void _openNavigation(VehicleLocationEntity vehicle) {
     // TODO: Open Google Maps or Apple Maps for navigation
-    context.showSnackBar(
-      'Opening navigation to ${vehicle.vehicleName}...',
-    );
+    context.showSnackBar('Opening navigation to ${vehicle.vehicleName}...');
   }
 }
 

@@ -10,7 +10,7 @@ import '../../../../core/utils/image_compressor.dart';
 abstract class VehicleImageDataSource {
   /// Upload an image to Firebase Storage
   ///
-  /// Path: vehicles/{userId}/{vehicleId}/{uuid}.{ext}
+  /// Path: users/{userId}/vehicles/{vehicleId}/images/{uuid}.{ext}
   /// Returns the download URL
   Future<String> uploadImage({
     required String userId,
@@ -55,7 +55,9 @@ class VehicleImageDataSourceImpl implements VehicleImageDataSource {
       final filename = '${_uuid.v4()}.$extension';
 
       // Create storage reference
-      final ref = storage.ref('vehicles/$userId/$vehicleId/$filename');
+      final ref = storage.ref(
+        'users/$userId/vehicles/$vehicleId/images/$filename',
+      );
 
       // Upload file
       final file = File(compressedPath);

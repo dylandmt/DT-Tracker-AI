@@ -9,9 +9,9 @@ import '../models/trip_point_model.dart';
 import '../models/vehicle_location_model.dart';
 
 /// Abstract interface for map remote data source
-  abstract class MapRemoteDataSource {
-    /// Get all vehicle locations for the current user
-    Future<List<VehicleLocationModel>> getVehicleLocations();
+abstract class MapRemoteDataSource {
+  /// Get all vehicle locations for the current user
+  Future<List<VehicleLocationModel>> getVehicleLocations();
 
   /// Stream of all vehicle locations for real-time updates
   Stream<List<VehicleLocationModel>> watchVehicleLocations();
@@ -22,16 +22,13 @@ import '../models/vehicle_location_model.dart';
   /// Stream of single vehicle location
   Stream<VehicleLocationModel> watchVehicleLocation(String vehicleId);
 
-    /// Get trip history points for a date range
-    Future<List<TripPointModel>> getTripPoints({
-      required String trackerId,
-      required DateTime startDate,
-      required DateTime endDate,
-    });
-
-    /// Get vehicle's trackerId from Firestore (no dependency on live data)
-    Future<String> getVehicleTrackerId(String vehicleId);
-  }
+  /// Get trip history points for a date range
+  Future<List<TripPointModel>> getTripPoints({
+    required String trackerId,
+    required DateTime startDate,
+    required DateTime endDate,
+  });
+}
 
 /// Implementation of [MapRemoteDataSource]
 class MapRemoteDataSourceImpl implements MapRemoteDataSource {
@@ -84,6 +81,13 @@ class MapRemoteDataSourceImpl implements MapRemoteDataSource {
     return database.ref('trackers_history/$imei');
   }
 
+  String _historyDayKey(DateTime date) {
+    final utc = date.toUtc();
+    final month = utc.month.toString().padLeft(2, '0');
+    final day = utc.day.toString().padLeft(2, '0');
+    return '${utc.year}-$month-$day';
+  }
+
   @override
   Future<List<VehicleLocationModel>> getVehicleLocations() async {
     try {
@@ -109,20 +113,22 @@ class MapRemoteDataSourceImpl implements MapRemoteDataSource {
           final trackerSnapshot = await _trackerLiveRef(trackerId).get();
 
           if (trackerSnapshot.exists && trackerSnapshot.value != null) {
-            final trackerData =
-                trackerSnapshot.value as Map<dynamic, dynamic>;
+            final trackerData = trackerSnapshot.value as Map<dynamic, dynamic>;
 
-            locations.add(VehicleLocationModel.fromVehicleAndTracker(
-              vehicleId: vehicleDoc.id,
-              vehicleName: vehicleData['name'] as String? ?? 'Unknown',
-              plateNumber: vehicleData['plateNumber'] as String? ?? '',
-              color: vehicleData['color'] as String?,
-              imageUrl: (vehicleData['imageUrls'] as List?)?.isNotEmpty == true
-                  ? (vehicleData['imageUrls'] as List).first as String?
-                  : null,
-              trackerId: trackerId,
-              trackerLiveData: trackerData,
-            ));
+            locations.add(
+              VehicleLocationModel.fromVehicleAndTracker(
+                vehicleId: vehicleDoc.id,
+                vehicleName: vehicleData['name'] as String? ?? 'Unknown',
+                plateNumber: vehicleData['plateNumber'] as String? ?? '',
+                color: vehicleData['color'] as String?,
+                imageUrl:
+                    (vehicleData['imageUrls'] as List?)?.isNotEmpty == true
+                    ? (vehicleData['imageUrls'] as List).first as String?
+                    : null,
+                trackerId: trackerId,
+                trackerLiveData: trackerData,
+              ),
+            );
           }
         } catch (e) {
           // Skip this tracker if there's an error
@@ -149,84 +155,85 @@ class MapRemoteDataSourceImpl implements MapRemoteDataSource {
         .where('trackerId', isNull: false)
         .snapshots()
         .listen(
-      (vehiclesSnapshot) {
-        // Cancel old tracker subscriptions
-        for (final sub in subscriptions) {
-          sub.cancel();
-        }
-        subscriptions.clear();
-        vehicleLocations.clear();
-        vehicleInfoCache.clear();
+          (vehiclesSnapshot) {
+            // Cancel old tracker subscriptions
+            for (final sub in subscriptions) {
+              sub.cancel();
+            }
+            subscriptions.clear();
+            vehicleLocations.clear();
+            vehicleInfoCache.clear();
 
-        if (vehiclesSnapshot.docs.isEmpty) {
-          controller.add([]);
-          return;
-        }
+            if (vehiclesSnapshot.docs.isEmpty) {
+              controller.add([]);
+              return;
+            }
 
-        // Cache vehicle info and subscribe to each tracker
-        for (final vehicleDoc in vehiclesSnapshot.docs) {
-          final vehicleData = vehicleDoc.data();
-          final trackerId = vehicleData['trackerId'] as String?;
+            // Cache vehicle info and subscribe to each tracker
+            for (final vehicleDoc in vehiclesSnapshot.docs) {
+              final vehicleData = vehicleDoc.data();
+              final trackerId = vehicleData['trackerId'] as String?;
 
-          if (trackerId == null || trackerId.isEmpty) continue;
+              if (trackerId == null || trackerId.isEmpty) continue;
 
-          // Cache vehicle info
-          vehicleInfoCache[trackerId] = {
-            'vehicleId': vehicleDoc.id,
-            'vehicleName': vehicleData['name'] as String? ?? 'Unknown',
-            'plateNumber': vehicleData['plateNumber'] as String? ?? '',
-            'color': vehicleData['color'] as String?,
-            'imageUrl':
-                (vehicleData['imageUrls'] as List?)?.isNotEmpty == true
+              // Cache vehicle info
+              vehicleInfoCache[trackerId] = {
+                'vehicleId': vehicleDoc.id,
+                'vehicleName': vehicleData['name'] as String? ?? 'Unknown',
+                'plateNumber': vehicleData['plateNumber'] as String? ?? '',
+                'color': vehicleData['color'] as String?,
+                'imageUrl':
+                    (vehicleData['imageUrls'] as List?)?.isNotEmpty == true
                     ? (vehicleData['imageUrls'] as List).first as String?
                     : null,
-            'trackerId': trackerId,
-          };
+                'trackerId': trackerId,
+              };
 
-          // Subscribe to tracker live data
-          final subscription = _trackerLiveRef(trackerId).onValue.listen(
-            (event) {
-              if (event.snapshot.exists && event.snapshot.value != null) {
-                final trackerData =
-                    event.snapshot.value as Map<dynamic, dynamic>;
-                final vehicleInfo = vehicleInfoCache[trackerId];
+              // Subscribe to tracker live data
+              final subscription = _trackerLiveRef(trackerId).onValue.listen(
+                (event) {
+                  if (event.snapshot.exists && event.snapshot.value != null) {
+                    final trackerData =
+                        event.snapshot.value as Map<dynamic, dynamic>;
+                    final vehicleInfo = vehicleInfoCache[trackerId];
 
-                if (vehicleInfo != null) {
-                  final location = VehicleLocationModel.fromVehicleAndTracker(
-                    vehicleId: vehicleInfo['vehicleId'] as String,
-                    vehicleName: vehicleInfo['vehicleName'] as String,
-                    plateNumber: vehicleInfo['plateNumber'] as String,
-                    color: vehicleInfo['color'] as String?,
-                    imageUrl: vehicleInfo['imageUrl'] as String?,
-                    trackerId: trackerId,
-                    trackerLiveData: trackerData,
-                  );
+                    if (vehicleInfo != null) {
+                      final location =
+                          VehicleLocationModel.fromVehicleAndTracker(
+                            vehicleId: vehicleInfo['vehicleId'] as String,
+                            vehicleName: vehicleInfo['vehicleName'] as String,
+                            plateNumber: vehicleInfo['plateNumber'] as String,
+                            color: vehicleInfo['color'] as String?,
+                            imageUrl: vehicleInfo['imageUrl'] as String?,
+                            trackerId: trackerId,
+                            trackerLiveData: trackerData,
+                          );
 
-                  vehicleLocations[vehicleInfo['vehicleId'] as String] =
-                      location;
-                  controller.add(vehicleLocations.values.toList());
-                }
-              }
-            },
-            onError: (error) {
-              // Remove from locations on error
-              final vehicleInfo = vehicleInfoCache[trackerId];
-              if (vehicleInfo != null) {
-                vehicleLocations.remove(vehicleInfo['vehicleId'] as String);
-                controller.add(vehicleLocations.values.toList());
-              }
-            },
-          );
+                      vehicleLocations[vehicleInfo['vehicleId'] as String] =
+                          location;
+                      controller.add(vehicleLocations.values.toList());
+                    }
+                  }
+                },
+                onError: (error) {
+                  // Remove from locations on error
+                  final vehicleInfo = vehicleInfoCache[trackerId];
+                  if (vehicleInfo != null) {
+                    vehicleLocations.remove(vehicleInfo['vehicleId'] as String);
+                    controller.add(vehicleLocations.values.toList());
+                  }
+                },
+              );
 
-          subscriptions.add(subscription);
-        }
-      },
-      onError: (error) {
-        controller.addError(
-          ServerException(message: 'Failed to watch vehicles: $error'),
+              subscriptions.add(subscription);
+            }
+          },
+          onError: (error) {
+            controller.addError(
+              ServerException(message: 'Failed to watch vehicles: $error'),
+            );
+          },
         );
-      },
-    );
 
     controller.onCancel = () {
       for (final sub in subscriptions) {
@@ -287,73 +294,81 @@ class MapRemoteDataSourceImpl implements MapRemoteDataSource {
     Map<String, dynamic>? vehicleInfo;
 
     // First get and watch vehicle data
-    _vehiclesCollection.doc(vehicleId).snapshots().listen(
-      (vehicleDoc) {
-        if (!vehicleDoc.exists) {
-          controller.addError(
-            const ServerException(message: 'Vehicle not found'),
-          );
-          return;
-        }
-
-        final vehicleData = vehicleDoc.data()!;
-        final trackerId = vehicleData['trackerId'] as String?;
-
-        if (trackerId == null || trackerId.isEmpty) {
-          controller.addError(
-            const ServerException(message: 'Vehicle has no linked tracker'),
-          );
-          return;
-        }
-
-        // Update vehicle info
-        vehicleInfo = {
-          'vehicleId': vehicleDoc.id,
-          'vehicleName': vehicleData['name'] as String? ?? 'Unknown',
-          'plateNumber': vehicleData['plateNumber'] as String? ?? '',
-          'color': vehicleData['color'] as String?,
-          'imageUrl': (vehicleData['imageUrls'] as List?)?.isNotEmpty == true
-              ? (vehicleData['imageUrls'] as List).first as String?
-              : null,
-          'trackerId': trackerId,
-        };
-
-        // Cancel old subscription if tracker changed
-        trackerSubscription?.cancel();
-
-        // Subscribe to new tracker
-        trackerSubscription = _trackerLiveRef(trackerId).onValue.listen(
-          (event) {
-            if (event.snapshot.exists &&
-                event.snapshot.value != null &&
-                vehicleInfo != null) {
-              final trackerData =
-                  event.snapshot.value as Map<dynamic, dynamic>;
-
-              controller.add(VehicleLocationModel.fromVehicleAndTracker(
-                vehicleId: vehicleInfo!['vehicleId'] as String,
-                vehicleName: vehicleInfo!['vehicleName'] as String,
-                plateNumber: vehicleInfo!['plateNumber'] as String,
-                color: vehicleInfo!['color'] as String?,
-                imageUrl: vehicleInfo!['imageUrl'] as String?,
-                trackerId: trackerId,
-                trackerLiveData: trackerData,
-              ));
+    _vehiclesCollection
+        .doc(vehicleId)
+        .snapshots()
+        .listen(
+          (vehicleDoc) {
+            if (!vehicleDoc.exists) {
+              controller.addError(
+                const ServerException(message: 'Vehicle not found'),
+              );
+              return;
             }
+
+            final vehicleData = vehicleDoc.data()!;
+            final trackerId = vehicleData['trackerId'] as String?;
+
+            if (trackerId == null || trackerId.isEmpty) {
+              controller.addError(
+                const ServerException(message: 'Vehicle has no linked tracker'),
+              );
+              return;
+            }
+
+            // Update vehicle info
+            vehicleInfo = {
+              'vehicleId': vehicleDoc.id,
+              'vehicleName': vehicleData['name'] as String? ?? 'Unknown',
+              'plateNumber': vehicleData['plateNumber'] as String? ?? '',
+              'color': vehicleData['color'] as String?,
+              'imageUrl':
+                  (vehicleData['imageUrls'] as List?)?.isNotEmpty == true
+                  ? (vehicleData['imageUrls'] as List).first as String?
+                  : null,
+              'trackerId': trackerId,
+            };
+
+            // Cancel old subscription if tracker changed
+            trackerSubscription?.cancel();
+
+            // Subscribe to new tracker
+            trackerSubscription = _trackerLiveRef(trackerId).onValue.listen(
+              (event) {
+                if (event.snapshot.exists &&
+                    event.snapshot.value != null &&
+                    vehicleInfo != null) {
+                  final trackerData =
+                      event.snapshot.value as Map<dynamic, dynamic>;
+
+                  controller.add(
+                    VehicleLocationModel.fromVehicleAndTracker(
+                      vehicleId: vehicleInfo!['vehicleId'] as String,
+                      vehicleName: vehicleInfo!['vehicleName'] as String,
+                      plateNumber: vehicleInfo!['plateNumber'] as String,
+                      color: vehicleInfo!['color'] as String?,
+                      imageUrl: vehicleInfo!['imageUrl'] as String?,
+                      trackerId: trackerId,
+                      trackerLiveData: trackerData,
+                    ),
+                  );
+                }
+              },
+              onError: (error) {
+                controller.addError(
+                  ServerException(
+                    message: 'Failed to get tracker data: $error',
+                  ),
+                );
+              },
+            );
           },
           onError: (error) {
             controller.addError(
-              ServerException(message: 'Failed to get tracker data: $error'),
+              ServerException(message: 'Failed to watch vehicle: $error'),
             );
           },
         );
-      },
-      onError: (error) {
-        controller.addError(
-          ServerException(message: 'Failed to watch vehicle: $error'),
-        );
-      },
-    );
 
     controller.onCancel = () {
       trackerSubscription?.cancel();
@@ -369,91 +384,33 @@ class MapRemoteDataSourceImpl implements MapRemoteDataSource {
     required DateTime endDate,
   }) async {
     try {
-      // RTDB structure (from backend ingest): trackers_history/{imei}/{yyyy-MM-dd}/{pushId}
-      // We query per-day buckets within the requested range to avoid wide scans
+      // The backend partitions history by UTC day:
+      // trackers_history/{imei}/{YYYY-MM-DD}/{pushId}
+      final startUtc = startDate.toUtc();
+      final endUtc = endDate.toUtc();
+      var day = DateTime.utc(startUtc.year, startUtc.month, startUtc.day);
+      final lastDay = DateTime.utc(endUtc.year, endUtc.month, endUtc.day);
       final points = <TripPointModel>[];
 
-      DateTime cursor = DateTime(startDate.year, startDate.month, startDate.day);
-      final last = DateTime(endDate.year, endDate.month, endDate.day);
+      while (!day.isAfter(lastDay)) {
+        final snapshot = await _trackerHistoryRef(
+          trackerId,
+        ).child(_historyDayKey(day)).get();
 
-      while (!cursor.isAfter(last)) {
-        final dateStr = _formatDate(cursor);
-
-        // Clamp per-day start/end timestamps
-        final dayStart = DateTime(cursor.year, cursor.month, cursor.day);
-        final dayEnd = DateTime(cursor.year, cursor.month, cursor.day, 23, 59, 59, 999);
-        final startTs = cursor.isAtSameMomentAs(dayStart)
-            ? startDate.millisecondsSinceEpoch
-            : dayStart.millisecondsSinceEpoch;
-        final endTs = cursor.isAtSameMomentAs(last)
-            ? endDate.millisecondsSinceEpoch
-            : dayEnd.millisecondsSinceEpoch;
-
-        final dayRef = _trackerHistoryRef(trackerId).child(dateStr);
-        try {
-          // Preferred: indexed range query by 'ts' using a single-value stream read
-          final query = dayRef
-              .orderByChild('ts')
-              .startAt(startTs)
-              .endAt(endTs);
-          final event = await query.onValue.first;
-          final daySnap = event.snapshot;
-
-          bool loadedAny = false;
-          if (daySnap.exists && daySnap.value != null) {
-            final data = daySnap.value as Map<dynamic, dynamic>;
-            for (final entry in data.entries) {
-              if (entry.value is Map) {
-                final m = entry.value as Map<dynamic, dynamic>;
-                final ev = _extractEventMillis(m);
-                if (ev == null || (ev >= startTs && ev <= endTs)) {
-                  points.add(TripPointModel.fromRtdb(m));
-                  loadedAny = true;
-                }
+        if (snapshot.exists && snapshot.value is Map) {
+          final data = snapshot.value as Map<dynamic, dynamic>;
+          for (final entry in data.entries) {
+            if (entry.value is Map) {
+              final point = TripPointModel.fromRtdb(entry.value as Map);
+              if (!point.timestamp.isBefore(startDate) &&
+                  !point.timestamp.isAfter(endDate)) {
+                points.add(point);
               }
             }
-          }
-
-          // Fallback when indexed query returns empty (ts might be seconds) → read full day and filter with normalization
-          if (!loadedAny) {
-            final fullEvent = await dayRef.onValue.first;
-            final fullSnap = fullEvent.snapshot;
-            if (fullSnap.exists && fullSnap.value != null) {
-              final data = fullSnap.value as Map<dynamic, dynamic>;
-              for (final entry in data.entries) {
-                if (entry.value is Map) {
-                  final m = entry.value as Map<dynamic, dynamic>;
-                  final ev = _extractEventMillis(m);
-                  if (ev == null || (ev >= startTs && ev <= endTs)) {
-                    points.add(TripPointModel.fromRtdb(m));
-                  }
-                }
-              }
-            }
-          }
-        } catch (e) {
-          // Fallback: no index defined on 'ts' for this day. Read full day via stream and filter client-side.
-          try {
-            final event = await dayRef.onValue.first;
-            final daySnap = event.snapshot;
-            if (daySnap.exists && daySnap.value != null) {
-              final data = daySnap.value as Map<dynamic, dynamic>;
-              for (final entry in data.entries) {
-                if (entry.value is Map) {
-                  final m = entry.value as Map<dynamic, dynamic>;
-                  final ev = _extractEventMillis(m);
-                  if (ev == null || (ev >= startTs && ev <= endTs)) {
-                    points.add(TripPointModel.fromRtdb(m));
-                  }
-                }
-              }
-            }
-          } catch (_) {
-            // Ignore day-level errors and continue
           }
         }
 
-        cursor = cursor.add(const Duration(days: 1));
+        day = day.add(const Duration(days: 1));
       }
 
       points.sort((a, b) => a.timestamp.compareTo(b.timestamp));

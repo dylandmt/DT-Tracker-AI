@@ -6,11 +6,14 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/usecases/usecase.dart';
 import '../../domain/entities/user.dart';
 import '../../domain/usecases/auth_state_changes.dart';
+import '../../domain/usecases/delete_profile_image.dart';
 import '../../domain/usecases/get_current_user.dart';
 import '../../domain/usecases/send_password_reset.dart';
 import '../../domain/usecases/sign_in_with_email.dart';
 import '../../domain/usecases/sign_out.dart';
 import '../../domain/usecases/sign_up_with_email.dart';
+import '../../domain/usecases/update_user_profile.dart';
+import '../../domain/usecases/upload_profile_image.dart';
 
 part 'auth_event.dart';
 part 'auth_state.dart';
@@ -23,6 +26,9 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final GetCurrentUser getCurrentUser;
   final SendPasswordReset sendPasswordReset;
   final AuthStateChanges authStateChanges;
+  final UpdateUserProfile updateUserProfile;
+  final UploadProfileImage uploadProfileImage;
+  final DeleteProfileImage deleteProfileImage;
 
   StreamSubscription<UserEntity?>? _authStateSubscription;
 
@@ -33,12 +39,16 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     required this.getCurrentUser,
     required this.sendPasswordReset,
     required this.authStateChanges,
+    required this.updateUserProfile,
+    required this.uploadProfileImage,
+    required this.deleteProfileImage,
   }) : super(AuthState.initial()) {
     on<CheckAuthStatus>(_onCheckAuthStatus);
     on<SignInRequested>(_onSignInRequested);
     on<SignUpRequested>(_onSignUpRequested);
     on<SignOutRequested>(_onSignOutRequested);
     on<PasswordResetRequested>(_onPasswordResetRequested);
+    on<ProfileUpdateRequested>(_onProfileUpdateRequested);
     on<AuthStateChanged>(_onAuthStateChanged);
     on<ClearAuthError>(_onClearAuthError);
   }
@@ -151,10 +161,63 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     );
   }
 
-  void _onAuthStateChanged(
-    AuthStateChanged event,
+  Future<void> _onProfileUpdateRequested(
+    ProfileUpdateRequested event,
     Emitter<AuthState> emit,
-  ) {
+  ) async {
+    final currentUser = state.user;
+    if (currentUser == null) {
+      emit(AuthState.error('No user is signed in'));
+      return;
+    }
+
+    emit(state.copyWith(status: AuthStatus.loading, errorMessage: null));
+
+    var photoUrl = currentUser.photoUrl;
+    if (event.imagePath != null) {
+      final uploadResult = await uploadProfileImage(
+        UploadProfileImageParams(filePath: event.imagePath!),
+      );
+      final uploadFailure = uploadResult.fold(
+        (failure) => failure,
+        (_) => null,
+      );
+      if (uploadFailure != null) {
+        emit(AuthState.error(uploadFailure.message, user: currentUser));
+        return;
+      }
+      photoUrl = uploadResult.getOrElse(() => photoUrl!);
+    }
+
+    final updateResult = await updateUserProfile(
+      UpdateUserProfileParams(
+        displayName: event.displayName,
+        photoUrl: event.imagePath != null ? photoUrl : null,
+      ),
+    );
+
+    await updateResult.fold(
+      (failure) async {
+        if (event.imagePath != null && photoUrl != currentUser.photoUrl) {
+          await deleteProfileImage(
+            DeleteProfileImageParams(imageUrl: photoUrl!),
+          );
+        }
+        emit(AuthState.error(failure.message, user: currentUser));
+      },
+      (updatedUser) async {
+        if (currentUser.photoUrl != null &&
+            currentUser.photoUrl != updatedUser.photoUrl) {
+          await deleteProfileImage(
+            DeleteProfileImageParams(imageUrl: currentUser.photoUrl!),
+          );
+        }
+        emit(AuthState.profileUpdated(updatedUser));
+      },
+    );
+  }
+
+  void _onAuthStateChanged(AuthStateChanged event, Emitter<AuthState> emit) {
     if (event.user != null) {
       emit(AuthState.authenticated(event.user!));
     } else {
@@ -162,21 +225,22 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     }
   }
 
-  void _onClearAuthError(
-    ClearAuthError event,
-    Emitter<AuthState> emit,
-  ) {
-    emit(state.copyWith(
-      status: state.user != null ? AuthStatus.authenticated : AuthStatus.unauthenticated,
-      errorMessage: null,
-    ));
+  void _onClearAuthError(ClearAuthError event, Emitter<AuthState> emit) {
+    emit(
+      state.copyWith(
+        status: state.user != null
+            ? AuthStatus.authenticated
+            : AuthStatus.unauthenticated,
+        errorMessage: null,
+      ),
+    );
   }
 
   void _startListeningToAuthChanges() {
     _authStateSubscription?.cancel();
-    _authStateSubscription = authStateChanges(const NoParams()).listen(
-      (user) => add(AuthStateChanged(user: user)),
-    );
+    _authStateSubscription = authStateChanges(
+      const NoParams(),
+    ).listen((user) => add(AuthStateChanged(user: user)));
   }
 
   void _stopListeningToAuthChanges() {

@@ -13,6 +13,7 @@ import '../../features/home/presentation/pages/home_page.dart';
 import '../../features/map/presentation/bloc/map_bloc.dart';
 import '../../features/map/presentation/pages/map_page.dart';
 import '../../features/settings/presentation/pages/settings_page.dart';
+import '../../features/settings/presentation/pages/profile_page.dart';
 import '../../features/vehicles/presentation/bloc/tracker_link_bloc.dart';
 import '../../features/vehicles/presentation/bloc/vehicle_form_bloc.dart';
 import '../../features/vehicles/presentation/bloc/vehicles_bloc.dart';
@@ -178,9 +179,15 @@ class AppRouter {
           GoRoute(
             path: RouteConstants.homeSettings,
             name: RouteConstants.homeSettingsName,
-            pageBuilder: (context, state) => const NoTransitionPage(
-              child: SettingsPage(),
-            ),
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(child: SettingsPage()),
+            routes: [
+              GoRoute(
+                path: 'profile',
+                name: RouteConstants.profileName,
+                builder: (context, state) => const ProfilePage(),
+              ),
+            ],
           ),
         ],
       ),

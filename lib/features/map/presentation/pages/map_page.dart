@@ -13,7 +13,6 @@ import '../../../../core/utils/extensions.dart';
 import '../../../../injection_container.dart';
 import '../../domain/entities/trip_point.dart';
 import '../../domain/entities/vehicle_location.dart';
-import '../../domain/entities/trip_point.dart';
 import '../bloc/map_bloc.dart';
 import '../widgets/map_controls.dart';
 import '../widgets/trip_playback_controls.dart';
@@ -316,20 +315,6 @@ class _MapPageState extends State<MapPage> with WidgetsBindingObserver {
         },
       ),
     );
-  }
-
-  Set<Polyline> _buildTripPolylines(List<TripPointEntity> points) {
-    if (points.length < 2) return const {};
-    final polylinePoints = points
-        .map((p) => LatLng(p.latitude, p.longitude))
-        .toList(growable: false);
-    final polyline = Polyline(
-      polylineId: const PolylineId('trip'),
-      points: polylinePoints,
-      color: AppColors.routeColor,
-      width: 4,
-    );
-    return {polyline};
   }
 
   Widget _buildTopBar(BuildContext context, MapState state) {

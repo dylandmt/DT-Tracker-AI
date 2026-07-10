@@ -22,6 +22,9 @@ abstract class MapRemoteDataSource {
   /// Stream of single vehicle location
   Stream<VehicleLocationModel> watchVehicleLocation(String vehicleId);
 
+  /// Get the linked tracker ID for a vehicle.
+  Future<String> getVehicleTrackerId(String vehicleId);
+
   /// Get trip history points for a date range
   Future<List<TripPointModel>> getTripPoints({
     required String trackerId,

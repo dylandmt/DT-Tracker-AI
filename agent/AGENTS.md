@@ -195,8 +195,8 @@ Environment is set at **build time** via `--dart-define=ENV=dev|prod`.
 ## Android Build Gotchas
 
 **Pinned versions in `android/settings.gradle.kts`** - required for compatibility:
-- AGP 8.9.1, Kotlin 2.1.0
-- Gradle 8.11.1 (in `gradle-wrapper.properties`)
+- AGP 8.11.1, Kotlin 2.2.20
+- Gradle 8.14 (in `gradle-wrapper.properties`)
 - `android-maps-utils` pinned to 4.0.0 (in `build.gradle.kts`)
 
 If build fails with version conflicts, check these pins first.

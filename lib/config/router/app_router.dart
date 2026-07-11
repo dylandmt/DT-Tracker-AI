@@ -125,6 +125,7 @@ class AppRouter {
                   final vehicleId = state.pathParameters['id']!;
                   return MultiBlocProvider(
                     providers: [
+                      BlocProvider(create: (_) => sl<VehiclesBloc>()),
                       BlocProvider(create: (_) => sl<VehicleFormBloc>()),
                       BlocProvider(create: (_) => sl<TrackerLinkBloc>()),
                     ],

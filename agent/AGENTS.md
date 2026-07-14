@@ -17,7 +17,7 @@ This section captures the latest mobile app changes and how they affect workflow
 
 - Strict RTDB rules supported
   - Client reads of trackers_live/status/history are allowed only when users/{uid}/devices/{imei} = true.
-  - The backend link endpoint writes the users/{uid}/devices mapping and sets trackers_info/{imei}/ownerId.
+  - The backend link endpoint writes the users/{uid}/devices mapping and updates ownership in trackers_registry/{imei}.
 
 - Environment config adds API Base URL
   - EnvironmentConfig.apiBaseUrl:

@@ -11,6 +11,8 @@ import '../../../../core/permissions/permission_status.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/extensions.dart';
 import '../../../../injection_container.dart';
+import '../../../geofences/domain/entities/geofence.dart';
+import '../../../geofences/presentation/bloc/geofence_bloc.dart';
 import '../../domain/entities/trip_point.dart';
 import '../../domain/entities/vehicle_location.dart';
 import '../bloc/map_bloc.dart';
@@ -108,10 +110,11 @@ class _MapPageState extends State<MapPage> with WidgetsBindingObserver {
           }
         },
         builder: (context, state) {
+          final geofences = context.watch<GeofenceBloc>().state.geofences;
           return Stack(
             children: [
               // Google Map
-              _buildMap(context, state),
+              _buildMap(context, state, geofences),
 
               // Safe area overlay for status bar
               Positioned(
@@ -271,7 +274,11 @@ class _MapPageState extends State<MapPage> with WidgetsBindingObserver {
     }
   }
 
-  Widget _buildMap(BuildContext context, MapState state) {
+  Widget _buildMap(
+    BuildContext context,
+    MapState state,
+    List<GeofenceEntity> geofences,
+  ) {
     final markers = _buildMarkers(
       state.vehicleLocations,
       state.selectedVehicle,
@@ -302,6 +309,7 @@ class _MapPageState extends State<MapPage> with WidgetsBindingObserver {
         },
         markers: markers,
         polylines: polylines,
+        circles: _buildGeofenceCircles(geofences),
         mapType: _getGoogleMapType(state.mapType),
         trafficEnabled: state.showTraffic,
         myLocationEnabled: _locationPermissionGranted,
@@ -473,6 +481,20 @@ class _MapPageState extends State<MapPage> with WidgetsBindingObserver {
 
     return polylines;
   }
+
+  Set<Circle> _buildGeofenceCircles(List<GeofenceEntity> geofences) => geofences
+      .where((geofence) => geofence.isActive)
+      .map(
+        (geofence) => Circle(
+          circleId: CircleId('geofence-${geofence.id}'),
+          center: LatLng(geofence.latitude, geofence.longitude),
+          radius: geofence.radiusMeters,
+          fillColor: AppColors.geofenceFill,
+          strokeColor: AppColors.geofenceStroke,
+          strokeWidth: 2,
+        ),
+      )
+      .toSet();
 
   double _getMarkerColor(VehicleStatus status) {
     return switch (status) {

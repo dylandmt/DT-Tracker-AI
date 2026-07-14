@@ -71,10 +71,10 @@ class VehicleFormState extends Equatable {
 
   @override
   List<Object?> get props => [
-        status,
-        vehicle,
-        isEditing,
-        errorMessage,
-        uploadingImageIndex,
-      ];
+    status,
+    vehicle,
+    isEditing,
+    errorMessage,
+    uploadingImageIndex,
+  ];
 }

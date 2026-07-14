@@ -25,6 +25,7 @@ import 'features/auth/domain/usecases/sign_in_with_email.dart';
 import 'features/auth/domain/usecases/sign_out.dart';
 import 'features/auth/domain/usecases/sign_up_with_email.dart';
 import 'features/auth/domain/usecases/update_user_profile.dart';
+import 'features/auth/domain/usecases/update_user_settings.dart';
 import 'features/auth/domain/usecases/upload_profile_image.dart';
 import 'features/auth/presentation/bloc/auth_bloc.dart';
 import 'features/vehicles/data/datasources/tracker_remote_datasource.dart';
@@ -56,6 +57,16 @@ import 'features/map/domain/usecases/get_vehicle_locations.dart';
 import 'features/map/domain/usecases/get_vehicle_location.dart';
 import 'features/map/domain/usecases/get_trip_history.dart';
 import 'features/map/presentation/bloc/map_bloc.dart';
+import 'features/geofences/data/datasources/geofence_remote_datasource.dart';
+import 'features/geofences/data/repositories/geofence_repository_impl.dart';
+import 'features/geofences/domain/repositories/geofence_repository.dart';
+import 'features/geofences/domain/usecases/geofence_usecases.dart';
+import 'features/geofences/presentation/bloc/geofence_bloc.dart';
+import 'features/events/data/datasources/event_remote_datasource.dart';
+import 'features/events/data/repositories/event_repository_impl.dart';
+import 'features/events/domain/repositories/event_repository.dart';
+import 'features/events/domain/usecases/event_usecases.dart';
+import 'features/events/presentation/bloc/events_bloc.dart';
 
 final sl = GetIt.instance;
 
@@ -132,6 +143,7 @@ Future<void> initializeDependencies() async {
   sl.registerLazySingleton(() => UpdateUserProfile(sl()));
   sl.registerLazySingleton(() => UploadProfileImage(sl()));
   sl.registerLazySingleton(() => DeleteProfileImage(sl()));
+  sl.registerLazySingleton(() => UpdateUserSettings(sl()));
 
   // BLoCs
   sl.registerFactory(
@@ -145,6 +157,7 @@ Future<void> initializeDependencies() async {
       updateUserProfile: sl(),
       uploadProfileImage: sl(),
       deleteProfileImage: sl(),
+      updateUserSettings: sl(),
     ),
   );
 
@@ -271,6 +284,62 @@ Future<void> initializeDependencies() async {
       watchVehicleLocations: sl(),
       getTripHistory: sl(),
       getDayTripPoints: sl(),
+    ),
+  );
+
+  //============================================================================
+  // Features - Geofences
+  //============================================================================
+
+  sl.registerLazySingleton<GeofenceRemoteDataSource>(
+    () => GeofenceRemoteDataSourceImpl(firestore: sl()),
+  );
+  sl.registerLazySingleton<GeofenceRepository>(
+    () => GeofenceRepositoryImpl(
+      dataSource: sl(),
+      firebaseAuth: sl(),
+      networkInfo: sl(),
+    ),
+  );
+  sl.registerLazySingleton(() => GetGeofences(sl()));
+  sl.registerLazySingleton(() => GetGeofenceById(sl()));
+  sl.registerLazySingleton(() => WatchGeofences(sl()));
+  sl.registerLazySingleton(() => CreateGeofence(sl()));
+  sl.registerLazySingleton(() => UpdateGeofence(sl()));
+  sl.registerLazySingleton(() => DeleteGeofence(sl()));
+  sl.registerFactory(
+    () => GeofenceBloc(
+      getGeofences: sl(),
+      getGeofenceById: sl(),
+      watchGeofences: sl(),
+      createGeofence: sl(),
+      updateGeofence: sl(),
+      deleteGeofence: sl(),
+    ),
+  );
+
+  //============================================================================
+  // Features - Events
+  //============================================================================
+
+  sl.registerLazySingleton<EventRemoteDataSource>(
+    () => EventRemoteDataSourceImpl(firestore: sl()),
+  );
+  sl.registerLazySingleton<EventRepository>(
+    () => EventRepositoryImpl(
+      dataSource: sl(),
+      firebaseAuth: sl(),
+      networkInfo: sl(),
+    ),
+  );
+  sl.registerLazySingleton(() => WatchEvents(sl()));
+  sl.registerLazySingleton(() => MarkEventAsRead(sl()));
+  sl.registerLazySingleton(() => ArchiveEvent(sl()));
+  sl.registerFactory(
+    () => EventsBloc(
+      watchEvents: sl(),
+      markEventAsRead: sl(),
+      archiveEvent: sl(),
     ),
   );
 }

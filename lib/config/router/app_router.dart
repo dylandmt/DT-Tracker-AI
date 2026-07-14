@@ -12,6 +12,11 @@ import '../../features/setup/presentation/pages/setup_permissions_page.dart';
 import '../../features/home/presentation/pages/home_page.dart';
 import '../../features/map/presentation/bloc/map_bloc.dart';
 import '../../features/map/presentation/pages/map_page.dart';
+import '../../features/geofences/presentation/bloc/geofence_bloc.dart';
+import '../../features/geofences/presentation/pages/geofence_form_page.dart';
+import '../../features/geofences/presentation/pages/geofences_page.dart';
+import '../../features/events/presentation/bloc/events_bloc.dart';
+import '../../features/events/presentation/pages/events_page.dart';
 import '../../features/settings/presentation/pages/settings_page.dart';
 import '../../features/settings/presentation/pages/profile_page.dart';
 import '../../features/vehicles/presentation/bloc/tracker_link_bloc.dart';
@@ -82,6 +87,42 @@ class AppRouter {
         path: RouteConstants.home,
         name: RouteConstants.homeName,
         redirect: (_, __) => RouteConstants.homeVehicles,
+      ),
+
+      // Full-screen routes outside the home navigation shell.
+      GoRoute(
+        path: RouteConstants.geofences,
+        name: RouteConstants.geofencesName,
+        builder: (context, state) => BlocProvider(
+          create: (_) => sl<GeofenceBloc>(),
+          child: const GeofencesPage(),
+        ),
+        routes: [
+          GoRoute(
+            path: 'add',
+            name: RouteConstants.geofenceAddName,
+            builder: (context, state) => BlocProvider(
+              create: (_) => sl<GeofenceBloc>(),
+              child: const GeofenceFormPage(),
+            ),
+          ),
+          GoRoute(
+            path: ':id/edit',
+            name: RouteConstants.geofenceEditName,
+            builder: (context, state) => BlocProvider(
+              create: (_) => sl<GeofenceBloc>(),
+              child: GeofenceFormPage(geofenceId: state.pathParameters['id']!),
+            ),
+          ),
+        ],
+      ),
+      GoRoute(
+        path: RouteConstants.alerts,
+        name: RouteConstants.alertsName,
+        builder: (context, state) => BlocProvider(
+          create: (_) => sl<EventsBloc>(),
+          child: const EventsPage(),
+        ),
       ),
 
       // Shell route with bottom navigation
@@ -169,8 +210,15 @@ class AppRouter {
             path: RouteConstants.homeMap,
             name: RouteConstants.homeMapName,
             pageBuilder: (context, state) => NoTransitionPage(
-              child: BlocProvider(
-                create: (_) => sl<MapBloc>(),
+              child: MultiBlocProvider(
+                providers: [
+                  BlocProvider(create: (_) => sl<MapBloc>()),
+                  BlocProvider(
+                    create: (_) =>
+                        sl<GeofenceBloc>()
+                          ..add(const WatchGeofencesRequested()),
+                  ),
+                ],
                 child: const MapPage(),
               ),
             ),

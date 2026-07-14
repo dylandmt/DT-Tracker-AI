@@ -37,11 +37,11 @@ class _LoginPageState extends State<LoginPage> {
   void _onLogin() {
     if (_formKey.currentState?.validate() ?? false) {
       context.read<AuthBloc>().add(
-            SignInRequested(
-              email: _emailController.text.trim(),
-              password: _passwordController.text,
-            ),
-          );
+        SignInRequested(
+          email: _emailController.text.trim(),
+          password: _passwordController.text,
+        ),
+      );
     }
   }
 
@@ -85,10 +85,8 @@ class _LoginPageState extends State<LoginPage> {
                       PasswordTextField(
                         controller: _passwordController,
                         focusNode: _passwordFocusNode,
-                        validator: (value) => Validators.validateRequired(
-                          value,
-                          'Password',
-                        ),
+                        validator: (value) =>
+                            Validators.validateRequired(value, 'Password'),
                         enabled: !state.isLoading,
                         onFieldSubmitted: (_) => _onLogin(),
                       ),

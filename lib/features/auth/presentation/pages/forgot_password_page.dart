@@ -31,10 +31,8 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
   void _onSendReset() {
     if (_formKey.currentState?.validate() ?? false) {
       context.read<AuthBloc>().add(
-            PasswordResetRequested(
-              email: _emailController.text.trim(),
-            ),
-          );
+        PasswordResetRequested(email: _emailController.text.trim()),
+      );
     }
   }
 
@@ -140,9 +138,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
         const SizedBox(height: 8),
         Text(
           _emailController.text.trim(),
-          style: textTheme.bodyLarge?.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
+          style: textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold),
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: 24),
@@ -173,10 +169,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
           ),
         ),
         const SizedBox(height: 32),
-        AuthButton(
-          text: 'Back to Sign In',
-          onPressed: () => context.pop(),
-        ),
+        AuthButton(text: 'Back to Sign In', onPressed: () => context.pop()),
         const SizedBox(height: 16),
         AuthButton(
           text: 'Resend Email',

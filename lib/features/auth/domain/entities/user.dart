@@ -39,13 +39,13 @@ class UserEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        email,
-        displayName,
-        photoUrl,
-        createdAt,
-        settings,
-      ];
+    id,
+    email,
+    displayName,
+    photoUrl,
+    createdAt,
+    settings,
+  ];
 }
 
 /// User settings/preferences
@@ -85,9 +85,9 @@ class UserSettings extends Equatable {
 
   @override
   List<Object?> get props => [
-        speedAlertEnabled,
-        speedLimitKmh,
-        geofenceAlertEnabled,
-        pushNotificationsEnabled,
-      ];
+    speedAlertEnabled,
+    speedLimitKmh,
+    geofenceAlertEnabled,
+    pushNotificationsEnabled,
+  ];
 }

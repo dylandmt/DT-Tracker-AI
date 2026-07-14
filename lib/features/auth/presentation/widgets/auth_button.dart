@@ -23,9 +23,7 @@ class AuthButton extends StatelessWidget {
         ? const SizedBox(
             height: 20,
             width: 20,
-            child: CircularProgressIndicator(
-              strokeWidth: 2,
-            ),
+            child: CircularProgressIndicator(strokeWidth: 2),
           )
         : Row(
             mainAxisSize: MainAxisSize.min,
@@ -104,8 +102,8 @@ class AuthLinkButton extends StatelessWidget {
         Text(
           prefixText,
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
         ),
         TextButton(
           onPressed: onPressed,

@@ -162,9 +162,7 @@ class VehicleFormFields extends StatelessWidget {
 
     return DropdownButtonFormField<String>(
       initialValue: selectedColor,
-      decoration: const InputDecoration(
-        labelText: 'Color',
-      ),
+      decoration: const InputDecoration(labelText: 'Color'),
       items: _vehicleColors.map((color) {
         return DropdownMenuItem(
           value: color.name,

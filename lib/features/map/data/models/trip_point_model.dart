@@ -40,6 +40,7 @@ class TripPointModel extends TripPointEntity {
       if (v is String) return int.tryParse(v) ?? 0;
       return 0;
     }
+
     return TripPointModel(
       timestamp: data['datetime'] != null
           ? DateTime.parse(data['datetime'] as String)

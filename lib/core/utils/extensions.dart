@@ -117,10 +117,7 @@ extension ContextExtensions on BuildContext {
   /// Show a success snackbar
   void showSuccessSnackBar(String message) {
     ScaffoldMessenger.of(this).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Colors.green,
-      ),
+      SnackBar(content: Text(message), backgroundColor: Colors.green),
     );
   }
 

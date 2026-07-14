@@ -138,17 +138,17 @@ class VehicleEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        name,
-        plateNumber,
-        brand,
-        model,
-        year,
-        color,
-        imageUrls,
-        trackerId,
-        trackerLinkedAt,
-        createdAt,
-        updatedAt,
-      ];
+    id,
+    name,
+    plateNumber,
+    brand,
+    model,
+    year,
+    color,
+    imageUrls,
+    trackerId,
+    trackerLinkedAt,
+    createdAt,
+    updatedAt,
+  ];
 }

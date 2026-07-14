@@ -23,10 +23,7 @@ class LinkTrackerToVehicle extends TrackerLinkEvent {
   final String vehicleId;
   final String imei;
 
-  const LinkTrackerToVehicle({
-    required this.vehicleId,
-    required this.imei,
-  });
+  const LinkTrackerToVehicle({required this.vehicleId, required this.imei});
 
   @override
   List<Object?> get props => [vehicleId, imei];

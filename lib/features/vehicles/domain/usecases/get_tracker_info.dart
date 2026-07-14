@@ -77,7 +77,8 @@ class GetTrackerStatus implements UseCase<TrackerStatusEntity, ImeiParams> {
 }
 
 /// Use case to watch tracker status for real-time updates
-class WatchTrackerStatus implements StreamUseCase<TrackerStatusEntity, ImeiParams> {
+class WatchTrackerStatus
+    implements StreamUseCase<TrackerStatusEntity, ImeiParams> {
   final TrackerRepository repository;
 
   WatchTrackerStatus(this.repository);

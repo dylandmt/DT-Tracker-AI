@@ -103,19 +103,19 @@ class VehicleLocationEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-        vehicleId,
-        vehicleName,
-        plateNumber,
-        color,
-        imageUrl,
-        trackerId,
-        latitude,
-        longitude,
-        speed,
-        battery,
-        isOnline,
-        lastUpdate,
-      ];
+    vehicleId,
+    vehicleName,
+    plateNumber,
+    color,
+    imageUrl,
+    trackerId,
+    latitude,
+    longitude,
+    speed,
+    battery,
+    isOnline,
+    lastUpdate,
+  ];
 }
 
 /// Vehicle status enumeration

@@ -14,14 +14,11 @@ class MapRepositoryImpl implements MapRepository {
   final MapRemoteDataSource mapDataSource;
   final NetworkInfo networkInfo;
 
-  MapRepositoryImpl({
-    required this.mapDataSource,
-    required this.networkInfo,
-  });
+  MapRepositoryImpl({required this.mapDataSource, required this.networkInfo});
 
   @override
   Future<Either<Failure, List<VehicleLocationEntity>>>
-      getVehicleLocations() async {
+  getVehicleLocations() async {
     if (!await networkInfo.isConnected) {
       return const Left(NetworkFailure(message: 'No internet connection'));
     }
@@ -40,25 +37,25 @@ class MapRepositoryImpl implements MapRepository {
 
   @override
   Stream<Either<Failure, List<VehicleLocationEntity>>>
-      watchVehicleLocations() async* {
+  watchVehicleLocations() async* {
     if (!await networkInfo.isConnected) {
       yield const Left(NetworkFailure(message: 'No internet connection'));
       return;
     }
 
-    yield* mapDataSource.watchVehicleLocations().map<
-        Either<Failure, List<VehicleLocationEntity>>>(
-      (locations) => Right(locations),
-    ).handleError(
-      (error) {
-        if (error is AuthException) {
-          return Left(AuthFailure(message: error.message));
-        } else if (error is ServerException) {
-          return Left(ServerFailure(message: error.message));
-        }
-        return Left(UnknownFailure(message: error.toString()));
-      },
-    );
+    yield* mapDataSource
+        .watchVehicleLocations()
+        .map<Either<Failure, List<VehicleLocationEntity>>>(
+          (locations) => Right(locations),
+        )
+        .handleError((error) {
+          if (error is AuthException) {
+            return Left(AuthFailure(message: error.message));
+          } else if (error is ServerException) {
+            return Left(ServerFailure(message: error.message));
+          }
+          return Left(UnknownFailure(message: error.toString()));
+        });
   }
 
   @override
@@ -90,19 +87,19 @@ class MapRepositoryImpl implements MapRepository {
       return;
     }
 
-    yield* mapDataSource.watchVehicleLocation(vehicleId).map<
-        Either<Failure, VehicleLocationEntity>>(
-      (location) => Right(location),
-    ).handleError(
-      (error) {
-        if (error is AuthException) {
-          return Left(AuthFailure(message: error.message));
-        } else if (error is ServerException) {
-          return Left(ServerFailure(message: error.message));
-        }
-        return Left(UnknownFailure(message: error.toString()));
-      },
-    );
+    yield* mapDataSource
+        .watchVehicleLocation(vehicleId)
+        .map<Either<Failure, VehicleLocationEntity>>(
+          (location) => Right(location),
+        )
+        .handleError((error) {
+          if (error is AuthException) {
+            return Left(AuthFailure(message: error.message));
+          } else if (error is ServerException) {
+            return Left(ServerFailure(message: error.message));
+          }
+          return Left(UnknownFailure(message: error.toString()));
+        });
   }
 
   @override

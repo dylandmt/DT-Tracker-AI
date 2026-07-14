@@ -6,10 +6,7 @@ import '../../domain/entities/vehicle.dart';
 class DeleteVehicleDialog extends StatelessWidget {
   final VehicleEntity vehicle;
 
-  const DeleteVehicleDialog({
-    super.key,
-    required this.vehicle,
-  });
+  const DeleteVehicleDialog({super.key, required this.vehicle});
 
   @override
   Widget build(BuildContext context) {
@@ -19,10 +16,7 @@ class DeleteVehicleDialog extends StatelessWidget {
     return AlertDialog(
       title: Row(
         children: [
-          Icon(
-            Icons.warning_amber_rounded,
-            color: colorScheme.error,
-          ),
+          Icon(Icons.warning_amber_rounded, color: colorScheme.error),
           const SizedBox(width: 12),
           const Text('Delete Vehicle'),
         ],

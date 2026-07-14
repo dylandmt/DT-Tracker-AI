@@ -10,10 +10,7 @@ class DeleteImageParams extends Equatable {
   final String vehicleId;
   final String imageUrl;
 
-  const DeleteImageParams({
-    required this.vehicleId,
-    required this.imageUrl,
-  });
+  const DeleteImageParams({required this.vehicleId, required this.imageUrl});
 
   @override
   List<Object?> get props => [vehicleId, imageUrl];

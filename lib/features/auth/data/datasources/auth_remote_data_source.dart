@@ -96,7 +96,10 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     try {
       await firebaseAuth.signOut();
     } on FirebaseAuthException catch (e) {
-      throw AuthException(message: e.message ?? 'Sign out failed', code: e.code);
+      throw AuthException(
+        message: e.message ?? 'Sign out failed',
+        code: e.code,
+      );
     } catch (e) {
       throw AuthException(message: e.toString());
     }

@@ -43,14 +43,15 @@ class VehiclesBloc extends Bloc<VehiclesEvent, VehiclesState> {
     final result = await getVehicles(const NoParams());
 
     result.fold(
-      (failure) => emit(state.copyWith(
-        status: VehiclesStatus.error,
-        errorMessage: failure.message,
-      )),
-      (vehicles) => emit(state.copyWith(
-        status: VehiclesStatus.loaded,
-        vehicles: vehicles,
-      )),
+      (failure) => emit(
+        state.copyWith(
+          status: VehiclesStatus.error,
+          errorMessage: failure.message,
+        ),
+      ),
+      (vehicles) => emit(
+        state.copyWith(status: VehiclesStatus.loaded, vehicles: vehicles),
+      ),
     );
   }
 
@@ -65,18 +66,14 @@ class VehiclesBloc extends Bloc<VehiclesEvent, VehiclesState> {
     _vehiclesSubscription = watchVehicles(const NoParams()).listen(
       (result) {
         result.fold(
-          (failure) => add(VehiclesUpdated(
-            vehicles: state.vehicles,
-            error: failure.message,
-          )),
+          (failure) => add(
+            VehiclesUpdated(vehicles: state.vehicles, error: failure.message),
+          ),
           (vehicles) => add(VehiclesUpdated(vehicles: vehicles)),
         );
       },
       onError: (error) {
-        add(VehiclesUpdated(
-          vehicles: state.vehicles,
-          error: error.toString(),
-        ));
+        add(VehiclesUpdated(vehicles: state.vehicles, error: error.toString()));
       },
     );
   }
@@ -89,20 +86,15 @@ class VehiclesBloc extends Bloc<VehiclesEvent, VehiclesState> {
     _vehiclesSubscription = null;
   }
 
-  void _onVehiclesUpdated(
-    VehiclesUpdated event,
-    Emitter<VehiclesState> emit,
-  ) {
+  void _onVehiclesUpdated(VehiclesUpdated event, Emitter<VehiclesState> emit) {
     if (event.error != null) {
-      emit(state.copyWith(
-        status: VehiclesStatus.error,
-        errorMessage: event.error,
-      ));
+      emit(
+        state.copyWith(status: VehiclesStatus.error, errorMessage: event.error),
+      );
     } else {
-      emit(state.copyWith(
-        status: VehiclesStatus.loaded,
-        vehicles: event.vehicles,
-      ));
+      emit(
+        state.copyWith(status: VehiclesStatus.loaded, vehicles: event.vehicles),
+      );
     }
   }
 
@@ -115,19 +107,23 @@ class VehiclesBloc extends Bloc<VehiclesEvent, VehiclesState> {
     final result = await deleteVehicle(IdParams(id: event.vehicleId));
 
     result.fold(
-      (failure) => emit(state.copyWith(
-        status: VehiclesStatus.error,
-        errorMessage: failure.message,
-      )),
+      (failure) => emit(
+        state.copyWith(
+          status: VehiclesStatus.error,
+          errorMessage: failure.message,
+        ),
+      ),
       (_) {
         // Remove vehicle from local list
         final updatedVehicles = state.vehicles
             .where((v) => v.id != event.vehicleId)
             .toList();
-        emit(state.copyWith(
-          status: VehiclesStatus.deleted,
-          vehicles: updatedVehicles,
-        ));
+        emit(
+          state.copyWith(
+            status: VehiclesStatus.deleted,
+            vehicles: updatedVehicles,
+          ),
+        );
       },
     );
   }
@@ -139,14 +135,15 @@ class VehiclesBloc extends Bloc<VehiclesEvent, VehiclesState> {
     final result = await getVehicles(const NoParams());
 
     result.fold(
-      (failure) => emit(state.copyWith(
-        status: VehiclesStatus.error,
-        errorMessage: failure.message,
-      )),
-      (vehicles) => emit(state.copyWith(
-        status: VehiclesStatus.loaded,
-        vehicles: vehicles,
-      )),
+      (failure) => emit(
+        state.copyWith(
+          status: VehiclesStatus.error,
+          errorMessage: failure.message,
+        ),
+      ),
+      (vehicles) => emit(
+        state.copyWith(status: VehiclesStatus.loaded, vehicles: vehicles),
+      ),
     );
   }
 
@@ -154,10 +151,7 @@ class VehiclesBloc extends Bloc<VehiclesEvent, VehiclesState> {
     ClearVehiclesError event,
     Emitter<VehiclesState> emit,
   ) {
-    emit(state.copyWith(
-      status: VehiclesStatus.loaded,
-      errorMessage: null,
-    ));
+    emit(state.copyWith(status: VehiclesStatus.loaded, errorMessage: null));
   }
 
   @override

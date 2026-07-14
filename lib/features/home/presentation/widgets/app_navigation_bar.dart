@@ -1,11 +1,7 @@
 import 'package:flutter/material.dart';
 
 /// Navigation destinations for the app
-enum AppDestination {
-  vehicles,
-  map,
-  settings,
-}
+enum AppDestination { vehicles, map, settings }
 
 /// App bottom navigation bar using Material 3 NavigationBar
 class AppNavigationBar extends StatelessWidget {

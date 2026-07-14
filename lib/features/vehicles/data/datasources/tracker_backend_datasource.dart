@@ -16,8 +16,8 @@ class TrackerBackendDataSource {
   TrackerBackendDataSource({
     required FirebaseAuth firebaseAuth,
     String? baseUrl,
-  })  : _auth = firebaseAuth,
-        _baseUrl = baseUrl ?? EnvironmentConfig.apiBaseUrl;
+  }) : _auth = firebaseAuth,
+       _baseUrl = baseUrl ?? EnvironmentConfig.apiBaseUrl;
 
   Future<Map<String, dynamic>> _post(
     String path, {
@@ -60,10 +60,15 @@ class TrackerBackendDataSource {
       // Try parse error payload
       try {
         final decoded = jsonDecode(responseBody) as Map<String, dynamic>;
-        final msg = decoded['message'] as String? ?? decoded['error']?.toString() ?? 'HTTP ${response.statusCode}';
+        final msg =
+            decoded['message'] as String? ??
+            decoded['error']?.toString() ??
+            'HTTP ${response.statusCode}';
         throw ServerException(message: msg);
       } catch (_) {
-        throw ServerException(message: 'HTTP ${response.statusCode}: $responseBody');
+        throw ServerException(
+          message: 'HTTP ${response.statusCode}: $responseBody',
+        );
       }
     } finally {
       client.close();
@@ -89,7 +94,10 @@ class TrackerBackendDataSource {
   }
 
   /// Link tracker to vehicle
-  Future<void> linkTracker({required String vehicleId, required String imei}) async {
+  Future<void> linkTracker({
+    required String vehicleId,
+    required String imei,
+  }) async {
     try {
       await _post('/vehicles/$vehicleId/link', body: {'imei': imei});
     } on ServerException {

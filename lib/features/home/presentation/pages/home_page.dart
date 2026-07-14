@@ -8,10 +8,7 @@ class HomePage extends StatelessWidget {
   /// The child widget to display (current tab content)
   final Widget child;
 
-  const HomePage({
-    super.key,
-    required this.child,
-  });
+  const HomePage({super.key, required this.child});
 
   @override
   Widget build(BuildContext context) {
@@ -19,7 +16,8 @@ class HomePage extends StatelessWidget {
       body: child,
       bottomNavigationBar: AppNavigationBar(
         currentIndex: _calculateSelectedIndex(context),
-        onDestinationSelected: (index) => _onDestinationSelected(context, index),
+        onDestinationSelected: (index) =>
+            _onDestinationSelected(context, index),
       ),
     );
   }

@@ -137,11 +137,7 @@ class VehicleCard extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              Icons.link_off,
-              size: 12,
-              color: colorScheme.onErrorContainer,
-            ),
+            Icon(Icons.link_off, size: 12, color: colorScheme.onErrorContainer),
             const SizedBox(width: 4),
             Text(
               'No GPS',

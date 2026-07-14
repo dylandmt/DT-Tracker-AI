@@ -197,10 +197,7 @@ class _VehicleListItem extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: statusColor,
                   shape: BoxShape.circle,
-                  border: Border.all(
-                    color: colorScheme.surface,
-                    width: 2,
-                  ),
+                  border: Border.all(color: colorScheme.surface, width: 2),
                 ),
               ),
             ),
@@ -208,9 +205,7 @@ class _VehicleListItem extends StatelessWidget {
         ),
         title: Text(
           vehicle.vehicleName,
-          style: textTheme.bodyMedium?.copyWith(
-            fontWeight: FontWeight.w500,
-          ),
+          style: textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),
@@ -239,9 +234,7 @@ class _VehicleListItem extends StatelessWidget {
                   vehicle.formattedSpeed,
                   style: textTheme.bodySmall?.copyWith(
                     fontWeight: FontWeight.w500,
-                    color: vehicle.speed > 100
-                        ? AppColors.statusAlert
-                        : null,
+                    color: vehicle.speed > 100 ? AppColors.statusAlert : null,
                   ),
                 ),
               ],
@@ -257,9 +250,7 @@ class _VehicleListItem extends StatelessWidget {
           ],
         ),
         onTap: onTap,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
     );
   }

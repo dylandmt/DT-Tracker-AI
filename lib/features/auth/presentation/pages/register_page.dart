@@ -46,14 +46,14 @@ class _RegisterPageState extends State<RegisterPage> {
   void _onRegister() {
     if (_formKey.currentState?.validate() ?? false) {
       context.read<AuthBloc>().add(
-            SignUpRequested(
-              email: _emailController.text.trim(),
-              password: _passwordController.text,
-              displayName: _nameController.text.trim().isNotEmpty
-                  ? _nameController.text.trim()
-                  : null,
-            ),
-          );
+        SignUpRequested(
+          email: _emailController.text.trim(),
+          password: _passwordController.text,
+          displayName: _nameController.text.trim().isNotEmpty
+              ? _nameController.text.trim()
+              : null,
+        ),
+      );
     }
   }
 
@@ -126,10 +126,11 @@ class _RegisterPageState extends State<RegisterPage> {
                         focusNode: _confirmPasswordFocusNode,
                         labelText: 'Confirm Password',
                         hintText: 'Confirm your password',
-                        validator: (value) => Validators.validateConfirmPassword(
-                          value,
-                          _passwordController.text,
-                        ),
+                        validator: (value) =>
+                            Validators.validateConfirmPassword(
+                              value,
+                              _passwordController.text,
+                            ),
                         enabled: !state.isLoading,
                         onFieldSubmitted: (_) => _onRegister(),
                       ),

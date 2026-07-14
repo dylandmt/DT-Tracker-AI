@@ -91,7 +91,9 @@ class TrackerRemoteDataSourceImpl implements TrackerRemoteDataSource {
 
       return ownerId == null; // Available if no owner
     } catch (e) {
-      throw ServerException(message: 'Failed to check tracker availability: $e');
+      throw ServerException(
+        message: 'Failed to check tracker availability: $e',
+      );
     }
   }
 

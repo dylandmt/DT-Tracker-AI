@@ -23,8 +23,7 @@ class _SetupPermissionsPageState extends State<SetupPermissionsPage>
   AppPermissionStatus _notification = AppPermissionStatus.unknown;
   bool _locationServicesEnabled = true;
 
-  bool get _allGranted =>
-      _location.isGranted && _notification.isGranted;
+  bool get _allGranted => _location.isGranted && _notification.isGranted;
 
   bool get _readyToContinue => _allGranted && _locationServicesEnabled;
 
@@ -146,10 +145,7 @@ class _SetupPermissionsPageState extends State<SetupPermissionsPage>
             child: const Text('Continue'),
           ),
           const SizedBox(height: 8),
-          TextButton(
-            onPressed: _refreshStatuses,
-            child: const Text('Refresh'),
-          ),
+          TextButton(onPressed: _refreshStatuses, child: const Text('Refresh')),
         ],
       ),
     );
@@ -210,34 +206,64 @@ class _PermissionTile extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, color: granted ? colorScheme.primary : colorScheme.onSurfaceVariant),
+          Icon(
+            icon,
+            color: granted ? colorScheme.primary : colorScheme.onSurfaceVariant,
+          ),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
+                Text(
+                  title,
+                  style: textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
                 const SizedBox(height: 4),
-                Text(subtitle, style: textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant)),
+                Text(
+                  subtitle,
+                  style: textTheme.bodySmall?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                ),
                 const SizedBox(height: 8),
                 Row(
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
-                        color: granted ? colorScheme.primary : colorScheme.error,
+                        color: granted
+                            ? colorScheme.primary
+                            : colorScheme.error,
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
-                        granted ? 'Granted' : (needsSettings ? 'Requires Settings' : 'Denied'),
-                        style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600),
+                        granted
+                            ? 'Granted'
+                            : (needsSettings ? 'Requires Settings' : 'Denied'),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
                     const Spacer(),
                     if (!granted && !needsSettings)
-                      OutlinedButton(onPressed: onRequest, child: const Text('Allow')),
+                      OutlinedButton(
+                        onPressed: onRequest,
+                        child: const Text('Allow'),
+                      ),
                     if (needsSettings)
-                      OutlinedButton(onPressed: onOpenSettings, child: const Text('Open Settings')),
+                      OutlinedButton(
+                        onPressed: onOpenSettings,
+                        child: const Text('Open Settings'),
+                      ),
                   ],
                 ),
               ],
@@ -253,10 +279,7 @@ class _ServicesTile extends StatelessWidget {
   final bool enabled;
   final VoidCallback onOpenSettings;
 
-  const _ServicesTile({
-    required this.enabled,
-    required this.onOpenSettings,
-  });
+  const _ServicesTile({required this.enabled, required this.onOpenSettings});
 
   @override
   Widget build(BuildContext context) {
@@ -283,25 +306,38 @@ class _ServicesTile extends StatelessWidget {
               children: [
                 Text(
                   'Location Services',
-                  style: textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+                  style: textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   'Must be enabled by the system to provide GPS updates.',
-                  style: textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant),
+                  style: textTheme.bodySmall?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                  ),
                 ),
                 const SizedBox(height: 8),
                 Row(
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
-                        color: enabled ? colorScheme.primary : colorScheme.error,
+                        color: enabled
+                            ? colorScheme.primary
+                            : colorScheme.error,
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
                         enabled ? 'On' : 'Off',
-                        style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
                     const Spacer(),

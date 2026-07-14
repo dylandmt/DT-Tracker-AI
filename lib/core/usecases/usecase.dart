@@ -4,7 +4,7 @@ import 'package:equatable/equatable.dart';
 import '../errors/failures.dart';
 
 /// Base UseCase class that all use cases should extend
-/// 
+///
 /// [T] is the return type of the use case
 /// [Params] is the parameter type required by the use case
 abstract class UseCase<T, Params> {
@@ -39,10 +39,7 @@ class PaginationParams extends Equatable {
   final int page;
   final int limit;
 
-  const PaginationParams({
-    this.page = 1,
-    this.limit = 20,
-  });
+  const PaginationParams({this.page = 1, this.limit = 20});
 
   @override
   List<Object?> get props => [page, limit];

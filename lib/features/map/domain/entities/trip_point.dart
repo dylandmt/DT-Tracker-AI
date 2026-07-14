@@ -36,13 +36,7 @@ class TripPointEntity extends Equatable {
   }
 
   @override
-  List<Object?> get props => [
-        timestamp,
-        latitude,
-        longitude,
-        speed,
-        battery,
-      ];
+  List<Object?> get props => [timestamp, latitude, longitude, speed, battery];
 }
 
 /// Represents a trip session with multiple points
@@ -133,7 +127,8 @@ class TripEntity extends Equatable {
     final dLat = _toRadians(lat2 - lat1);
     final dLon = _toRadians(lon2 - lon1);
 
-    final a = math.sin(dLat / 2) * math.sin(dLat / 2) +
+    final a =
+        math.sin(dLat / 2) * math.sin(dLat / 2) +
         math.cos(_toRadians(lat1)) *
             math.cos(_toRadians(lat2)) *
             math.sin(dLon / 2) *
@@ -147,11 +142,5 @@ class TripEntity extends Equatable {
   double _toRadians(double degrees) => degrees * (3.141592653589793 / 180);
 
   @override
-  List<Object?> get props => [
-        vehicleId,
-        trackerId,
-        startTime,
-        endTime,
-        points,
-      ];
+  List<Object?> get props => [vehicleId, trackerId, startTime, endTime, points];
 }

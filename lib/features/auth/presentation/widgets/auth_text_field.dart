@@ -59,9 +59,7 @@ class _AuthTextFieldState extends State<AuthTextField> {
       decoration: InputDecoration(
         labelText: widget.labelText,
         hintText: widget.hintText,
-        prefixIcon: widget.prefixIcon != null
-            ? Icon(widget.prefixIcon)
-            : null,
+        prefixIcon: widget.prefixIcon != null ? Icon(widget.prefixIcon) : null,
         suffixIcon: widget.obscureText
             ? IconButton(
                 icon: Icon(

@@ -28,10 +28,7 @@ class VehiclesUpdated extends VehiclesEvent {
   final List<VehicleEntity> vehicles;
   final String? error;
 
-  const VehiclesUpdated({
-    required this.vehicles,
-    this.error,
-  });
+  const VehiclesUpdated({required this.vehicles, this.error});
 
   @override
   List<Object?> get props => [vehicles, error];

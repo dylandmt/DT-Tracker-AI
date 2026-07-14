@@ -80,13 +80,16 @@ class VehicleRepositoryImpl implements VehicleRepository {
   @override
   Stream<Either<Failure, List<VehicleEntity>>> watchVehicles() {
     try {
-      return vehicleDataSource.watchVehicles(_userId).map((vehicles) {
-        return Right<Failure, List<VehicleEntity>>(vehicles);
-      }).handleError((error) {
-        return Left<Failure, List<VehicleEntity>>(
-          ServerFailure(message: error.toString()),
-        );
-      });
+      return vehicleDataSource
+          .watchVehicles(_userId)
+          .map((vehicles) {
+            return Right<Failure, List<VehicleEntity>>(vehicles);
+          })
+          .handleError((error) {
+            return Left<Failure, List<VehicleEntity>>(
+              ServerFailure(message: error.toString()),
+            );
+          });
     } on AuthException catch (e) {
       return Stream.value(Left(AuthFailure(message: e.message)));
     } catch (e) {
@@ -118,7 +121,10 @@ class VehicleRepositoryImpl implements VehicleRepository {
         color: color,
       );
 
-      final created = await vehicleDataSource.createVehicle(_userId, vehicleModel);
+      final created = await vehicleDataSource.createVehicle(
+        _userId,
+        vehicleModel,
+      );
       return Right(created);
     } on ServerException catch (e) {
       return Left(ServerFailure(message: e.message));
@@ -222,11 +228,14 @@ class VehicleRepositoryImpl implements VehicleRepository {
 
     try {
       // Check if vehicle exists and has room for more images
-      final vehicle = await vehicleDataSource.getVehicleById(_userId, vehicleId);
+      final vehicle = await vehicleDataSource.getVehicleById(
+        _userId,
+        vehicleId,
+      );
       if (!vehicle.canAddMoreImages) {
-        return const Left(ValidationFailure(
-          message: 'Maximum number of images (5) reached',
-        ));
+        return const Left(
+          ValidationFailure(message: 'Maximum number of images (5) reached'),
+        );
       }
 
       // Upload image
@@ -286,10 +295,16 @@ class VehicleRepositoryImpl implements VehicleRepository {
 
     try {
       // Perform secure link via backend (also updates Firestore)
-      await backendDataSource.linkTracker(vehicleId: vehicleId, imei: trackerId);
+      await backendDataSource.linkTracker(
+        vehicleId: vehicleId,
+        imei: trackerId,
+      );
 
       // Get updated vehicle
-      final vehicle = await vehicleDataSource.getVehicleById(_userId, vehicleId);
+      final vehicle = await vehicleDataSource.getVehicleById(
+        _userId,
+        vehicleId,
+      );
       return Right(vehicle);
     } on ServerException catch (e) {
       return Left(ServerFailure(message: e.message));
@@ -311,8 +326,10 @@ class VehicleRepositoryImpl implements VehicleRepository {
       await backendDataSource.unlinkTracker(vehicleId: vehicleId);
 
       // Get updated vehicle
-      final updatedVehicle =
-          await vehicleDataSource.getVehicleById(_userId, vehicleId);
+      final updatedVehicle = await vehicleDataSource.getVehicleById(
+        _userId,
+        vehicleId,
+      );
       return Right(updatedVehicle);
     } on ServerException catch (e) {
       return Left(ServerFailure(message: e.message));

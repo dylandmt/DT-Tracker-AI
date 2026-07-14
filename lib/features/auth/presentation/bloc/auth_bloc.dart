@@ -13,6 +13,7 @@ import '../../domain/usecases/sign_in_with_email.dart';
 import '../../domain/usecases/sign_out.dart';
 import '../../domain/usecases/sign_up_with_email.dart';
 import '../../domain/usecases/update_user_profile.dart';
+import '../../domain/usecases/update_user_settings.dart';
 import '../../domain/usecases/upload_profile_image.dart';
 
 part 'auth_event.dart';
@@ -29,6 +30,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final UpdateUserProfile updateUserProfile;
   final UploadProfileImage uploadProfileImage;
   final DeleteProfileImage deleteProfileImage;
+  final UpdateUserSettings updateUserSettings;
 
   StreamSubscription<UserEntity?>? _authStateSubscription;
 
@@ -42,6 +44,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     required this.updateUserProfile,
     required this.uploadProfileImage,
     required this.deleteProfileImage,
+    required this.updateUserSettings,
   }) : super(AuthState.initial()) {
     on<CheckAuthStatus>(_onCheckAuthStatus);
     on<SignInRequested>(_onSignInRequested);
@@ -49,8 +52,30 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<SignOutRequested>(_onSignOutRequested);
     on<PasswordResetRequested>(_onPasswordResetRequested);
     on<ProfileUpdateRequested>(_onProfileUpdateRequested);
+    on<GeofenceAlertPreferenceChanged>(_onGeofenceAlertPreferenceChanged);
     on<AuthStateChanged>(_onAuthStateChanged);
     on<ClearAuthError>(_onClearAuthError);
+  }
+
+  Future<void> _onGeofenceAlertPreferenceChanged(
+    GeofenceAlertPreferenceChanged event,
+    Emitter<AuthState> emit,
+  ) async {
+    final user = state.user;
+    if (user == null) {
+      emit(AuthState.error('No user is signed in'));
+      return;
+    }
+    emit(state.copyWith(status: AuthStatus.loading, errorMessage: null));
+    final result = await updateUserSettings(
+      UpdateUserSettingsParams(
+        settings: user.settings.copyWith(geofenceAlertEnabled: event.enabled),
+      ),
+    );
+    result.fold(
+      (failure) => emit(AuthState.error(failure.message, user: user)),
+      (updatedUser) => emit(AuthState.authenticated(updatedUser)),
+    );
   }
 
   Future<void> _onCheckAuthStatus(

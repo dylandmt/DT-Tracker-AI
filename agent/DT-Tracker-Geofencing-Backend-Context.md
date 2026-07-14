@@ -46,11 +46,11 @@ Relevant backend reference implementation:
 src/routes/ingest.js
 ```
 
-Tracker ownership is already stored in RTDB:
+Tracker ownership is stored in the tracker registry:
 
 ```text
-trackers_info/{imei}/ownerId = uid
-users/{uid}/devices/{imei} = true
+trackers_registry/{imei}/ownerId = uid
+trackers_registry/{imei}/vehicleId = vehicleId
 ```
 
 ## Firebase Data Model
@@ -110,19 +110,23 @@ within the same transaction.
 The backend writes immutable alert records here:
 
 ```text
-users/{uid}/alerts/{alertId}
+users/{uid}/events/{eventId}
 ```
 
 Example document:
 
 ```json
 {
+  "version": 1,
+  "source": "backend",
   "type": "geofence_enter",
+  "category": "geofence",
+  "severity": "info",
+  "status": "new",
   "vehicleId": "vehicle-id-1",
   "geofenceId": "geofence-id-1",
   "message": "Vehicle A entered Home",
-  "latitude": 19.4326,
-  "longitude": -99.1332,
+  "location": {"latitude": 19.4326, "longitude": -99.1332},
   "occurredAt": "Firestore Timestamp",
   "isRead": false
 }
@@ -135,13 +139,14 @@ Example document:
 Allow an authenticated user to read and create, update, or delete only their
 own geofence documents.
 
-Allow an authenticated user to read only their own alert documents.
+Allow an authenticated user to read and mark their own event documents as read
+or archived. All event fields other than `isRead` and `status` are immutable.
 
 Do not allow mobile clients to write either of these backend-owned paths:
 
 ```text
 users/{uid}/geofence_states/{stateId}
-users/{uid}/alerts/{alertId}
+users/{uid}/events/{eventId}
 ```
 
 The Firebase Admin SDK used by the backend bypasses Firestore rules.
@@ -203,7 +208,7 @@ async function evaluateGeofences({ imei, latitude, longitude, occurredAt }) {
 
 Evaluation sequence:
 
-1. Read `trackers_info/{imei}` from RTDB.
+1. Read `trackers_registry/{imei}` from RTDB.
 2. Return immediately if `ownerId` or `vehicleId` is absent.
 3. Load active geofences assigned to `vehicleId`.
 4. Calculate the current `isInside` value for each zone:
@@ -226,7 +231,7 @@ For every evaluated zone, use a Firestore transaction.
    - Determine `geofence_enter` or `geofence_exit`.
    - Respect `triggerOnEnter` or `triggerOnExit`.
    - Update the state document.
-   - Create one alert document in `users/{uid}/alerts` within the same
+    - Create one event document in `users/{uid}/events` within the same
      transaction when the trigger is enabled.
 
 Generating the alert within this transaction prevents duplicate alerts from
@@ -324,7 +329,7 @@ Required scenarios:
 After Firestore alerts work end-to-end:
 
 1. Register FCM device tokens per user/device.
-2. Send a push notification after a geofence alert is committed.
-3. Add an in-app alerts list with Firestore streaming.
+2. Send a push notification after a geofence event is committed.
+3. The Flutter app provides an in-app event list with Firestore streaming.
 4. Add schedules, dwell-time alerts, cooldown periods, and optional polygon
    zones.

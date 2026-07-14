@@ -23,8 +23,9 @@ class SplashPage extends StatelessWidget {
           // Gate by required permissions: location + notifications
           final handler = sl<AppPermissionHandler>();
           final hasLocation = await handler.isGranted(AppPermission.location);
-          final hasNotifications =
-              await handler.isGranted(AppPermission.notification);
+          final hasNotifications = await handler.isGranted(
+            AppPermission.notification,
+          );
 
           // Also ensure location services are enabled
           final servicesEnabled = await Geolocator.isLocationServiceEnabled();
@@ -61,16 +62,16 @@ class SplashPage extends StatelessWidget {
               Text(
                 AppConstants.appName,
                 style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
               ),
               const SizedBox(height: 8),
               Text(
                 'Real-time GPS Tracking',
                 style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
               ),
               const SizedBox(height: 48),
               const CircularProgressIndicator(),

@@ -62,6 +62,15 @@ class ProfileUpdateRequested extends AuthEvent {
   List<Object?> get props => [displayName, imagePath];
 }
 
+class GeofenceAlertPreferenceChanged extends AuthEvent {
+  final bool enabled;
+
+  const GeofenceAlertPreferenceChanged(this.enabled);
+
+  @override
+  List<Object?> get props => [enabled];
+}
+
 /// Event when auth state changes (from stream)
 class AuthStateChanged extends AuthEvent {
   final UserEntity? user;

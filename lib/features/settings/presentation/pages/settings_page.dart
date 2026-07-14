@@ -111,11 +111,10 @@ class SettingsPage extends StatelessWidget {
               _buildListTile(
                 context,
                 icon: Icons.notifications_outlined,
-                title: 'Notifications',
-                subtitle: 'Manage notification preferences',
+                title: 'Tracker events',
+                subtitle: 'View geofence and tracker activity',
                 onTap: () {
-                  // TODO: Navigate to notification settings
-                  context.showSnackBar('Notification settings coming soon');
+                  context.push(RouteConstants.alerts);
                 },
               ),
 
@@ -132,14 +131,26 @@ class SettingsPage extends StatelessWidget {
                   context.showSnackBar('Speed alerts coming soon');
                 },
               ),
+              SwitchListTile(
+                secondary: const Icon(Icons.fence_outlined),
+                title: const Text('Geofence alerts'),
+                subtitle: const Text(
+                  'Create events when vehicles enter or exit zones',
+                ),
+                value: user?.settings.geofenceAlertEnabled ?? true,
+                onChanged: state.isLoading || user == null
+                    ? null
+                    : (enabled) => context.read<AuthBloc>().add(
+                        GeofenceAlertPreferenceChanged(enabled),
+                      ),
+              ),
               _buildListTile(
                 context,
                 icon: Icons.fence_outlined,
                 title: 'Geofences',
                 subtitle: 'Manage geofence zones',
                 onTap: () {
-                  // TODO: Navigate to geofence management
-                  context.showSnackBar('Geofences coming soon');
+                  context.push(RouteConstants.geofences);
                 },
               ),
 

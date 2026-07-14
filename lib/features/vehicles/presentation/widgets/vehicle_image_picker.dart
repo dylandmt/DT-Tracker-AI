@@ -49,11 +49,14 @@ class _VehicleImagePickerState extends State<VehicleImagePicker> {
     // - Camera: always request camera permission
     // - Gallery: iOS -> photos permission; Android -> attempt directly and handle errors
     if (source == ImageSource.camera) {
-      final hasPermission = await _permissionHandler.ensurePermission(AppPermission.camera);
+      final hasPermission = await _permissionHandler.ensurePermission(
+        AppPermission.camera,
+      );
       if (!hasPermission) {
         if (mounted) {
-          final requiresSettings =
-              await _permissionHandler.requiresSettings(AppPermission.camera);
+          final requiresSettings = await _permissionHandler.requiresSettings(
+            AppPermission.camera,
+          );
           if (requiresSettings) {
             _showSettingsDialog(AppPermission.camera);
           } else {
@@ -67,11 +70,14 @@ class _VehicleImagePickerState extends State<VehicleImagePicker> {
     } else {
       // Gallery
       if (Platform.isIOS) {
-        final hasPermission = await _permissionHandler.ensurePermission(AppPermission.photos);
+        final hasPermission = await _permissionHandler.ensurePermission(
+          AppPermission.photos,
+        );
         if (!hasPermission) {
           if (mounted) {
-            final requiresSettings =
-                await _permissionHandler.requiresSettings(AppPermission.photos);
+            final requiresSettings = await _permissionHandler.requiresSettings(
+              AppPermission.photos,
+            );
             if (requiresSettings) {
               _showSettingsDialog(AppPermission.photos);
             } else {
@@ -99,9 +105,9 @@ class _VehicleImagePickerState extends State<VehicleImagePicker> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to pick image: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to pick image: $e')));
       }
     }
   }
@@ -136,8 +142,9 @@ class _VehicleImagePickerState extends State<VehicleImagePicker> {
   }
 
   void _showSettingsDialog(AppPermission permission) {
-    final permissionName =
-        permission == AppPermission.camera ? 'Camera' : 'Photo Library';
+    final permissionName = permission == AppPermission.camera
+        ? 'Camera'
+        : 'Photo Library';
 
     showDialog(
       context: context,
@@ -208,12 +215,7 @@ class _VehicleImagePickerState extends State<VehicleImagePicker> {
               final isUploading =
                   widget.isUploading && widget.uploadingIndex == index;
 
-              return _buildImageItem(
-                imageUrl,
-                index,
-                isUploading,
-                colorScheme,
-              );
+              return _buildImageItem(imageUrl, index, isUploading, colorScheme);
             },
           ),
         ),
@@ -331,11 +333,7 @@ class _VehicleImagePickerState extends State<VehicleImagePicker> {
                   color: colorScheme.error,
                   shape: BoxShape.circle,
                 ),
-                child: Icon(
-                  Icons.close,
-                  size: 14,
-                  color: colorScheme.onError,
-                ),
+                child: Icon(Icons.close, size: 14, color: colorScheme.onError),
               ),
             ),
           ),

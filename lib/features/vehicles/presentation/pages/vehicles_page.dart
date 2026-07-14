@@ -51,9 +51,7 @@ class _VehiclesPageState extends State<VehiclesPage> {
         },
         builder: (context, state) {
           if (state.isLoading && state.vehicles.isEmpty) {
-            return const Center(
-              child: CircularProgressIndicator(),
-            );
+            return const Center(child: CircularProgressIndicator());
           }
 
           if (state.isEmpty) {
@@ -80,7 +78,10 @@ class _VehiclesPageState extends State<VehiclesPage> {
                 return VehicleCard(
                   vehicle: vehicle,
                   onTap: () => context.push(
-                    RouteConstants.vehicleDetail.replaceFirst(':id', vehicle.id),
+                    RouteConstants.vehicleDetail.replaceFirst(
+                      ':id',
+                      vehicle.id,
+                    ),
                   ),
                   onLongPress: () => _showDeleteDialog(context, vehicle),
                 );
@@ -101,8 +102,8 @@ class _VehiclesPageState extends State<VehiclesPage> {
     final confirmed = await showDeleteVehicleDialog(context, vehicle);
     if (confirmed == true && mounted) {
       context.read<VehiclesBloc>().add(
-            DeleteVehicleRequested(vehicleId: vehicle.id),
-          );
+        DeleteVehicleRequested(vehicleId: vehicle.id),
+      );
     }
   }
 }

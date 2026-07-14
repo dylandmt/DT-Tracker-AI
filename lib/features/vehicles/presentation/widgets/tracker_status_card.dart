@@ -48,10 +48,7 @@ class TrackerStatusCard extends StatelessWidget {
           children: [
             Row(
               children: [
-                Icon(
-                  Icons.gps_off,
-                  color: colorScheme.error,
-                ),
+                Icon(Icons.gps_off, color: colorScheme.error),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
@@ -102,7 +99,9 @@ class TrackerStatusCard extends StatelessWidget {
     TextTheme textTheme,
   ) {
     final isOnline = trackerStatus?.online ?? false;
-    final statusColor = isOnline ? AppColors.statusOnline : AppColors.statusOffline;
+    final statusColor = isOnline
+        ? AppColors.statusOnline
+        : AppColors.statusOffline;
 
     return Card(
       color: colorScheme.primaryContainer.withValues(alpha: 0.3),
@@ -119,11 +118,7 @@ class TrackerStatusCard extends StatelessWidget {
                     color: statusColor.withValues(alpha: 0.2),
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(
-                    Icons.gps_fixed,
-                    color: statusColor,
-                    size: 20,
-                  ),
+                  child: Icon(Icons.gps_fixed, color: statusColor, size: 20),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -149,8 +144,10 @@ class TrackerStatusCard extends StatelessWidget {
                 ),
                 // Status badge
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: statusColor,
                     borderRadius: BorderRadius.circular(12),

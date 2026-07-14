@@ -1,0 +1,609 @@
+openapi: 3.0.3
+info:
+  title: DT Tracker Backend API
+  version: 1.0.0
+  description: |
+    REST API contract for DT Tracker. The Flutter application uses Firebase Authentication
+    ID tokens for protected user endpoints. Tracker provisioning uses an environment-specific
+    admin API key. Device telemetry currently uses an unauthenticated ingest endpoint.
+servers:
+  - url: https://dev.dt-tracker.com
+    description: Development
+  - url: https://staging.dt-tracker.com
+    description: Staging
+  - url: https://api.dt-tracker.com
+    description: Production
+
+tags:
+  - name: Operations
+  - name: Ingest
+  - name: Trackers
+  - name: Vehicles
+
+paths:
+  /:
+    get:
+      tags: [Operations]
+      summary: Backend information
+      operationId: getBackendInfo
+      responses:
+        '200':
+          description: Backend information
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BackendInfo'
+              example:
+                name: DT Tracker Backend
+                description: GPS Tracking Backend API
+                environment: dev
+                version: 1.0.0
+                status: UP
+
+  /health:
+    get:
+      tags: [Operations]
+      summary: Health check
+      operationId: getHealth
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Health'
+              example:
+                status: UP
+                environment: dev
+                uptime: 12345.67
+                timestamp: '2026-07-13T17:29:34.000Z'
+
+  /version:
+    get:
+      tags: [Operations]
+      summary: Runtime version information
+      operationId: getVersion
+      responses:
+        '200':
+          description: Runtime version
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VersionInfo'
+
+  /api/v1/ingest:
+    post:
+      tags: [Ingest]
+      summary: Receive tracker telemetry
+      description: |
+        Intended for DT Tracker firmware. The datetime field is UTC ISO-8601 and typically
+        comes from GNSS. The ts field is currently device uptime in milliseconds, not Unix time.
+        Telemetry persistence succeeds independently from geofence evaluation failures.
+      operationId: ingestTelemetry
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IngestRequest'
+            examples:
+              movingVehicle:
+                value:
+                  imei: '864643060618008'
+                  lat: 20.182058
+                  lng: -96.865013
+                  speed: 18.1
+                  battery: 90
+                  datetime: '2026-07-13T17:29:34Z'
+                  ts: 1234567
+      responses:
+        '200':
+          description: Telemetry accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OkResponse'
+              example:
+                ok: true
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /ingest:
+    post:
+      deprecated: true
+      tags: [Ingest]
+      summary: Legacy telemetry ingest
+      description: Legacy alias for `/api/v1/ingest`.
+      operationId: ingestTelemetryLegacy
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IngestRequest'
+      responses:
+        '200':
+          description: Telemetry accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OkResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/v1/trackers/register:
+    post:
+      tags: [Trackers]
+      summary: Register tracker inventory
+      description: Internal provisioning endpoint. Never call this endpoint from Flutter.
+      operationId: registerTracker
+      security:
+        - AdminApiKey: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterTrackerRequest'
+            example:
+              imei: '864643060618008'
+              model: SIM7670
+              provider: Telcel
+              firmware: 1.0.0
+              manufacturedAt: '2026-07-03T00:00:00Z'
+      responses:
+        '201':
+          description: Tracker registered
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegisterTrackerResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '409':
+          description: Tracker already registered
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: tracker_already_registered
+                message: Tracker is already registered
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/v1/trackers/validate:
+    post:
+      tags: [Trackers]
+      summary: Validate tracker availability
+      operationId: validateTracker
+      security:
+        - FirebaseIdToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ImeiRequest'
+            example:
+              imei: '864643060618008'
+      responses:
+        '200':
+          description: Tracker validation result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidateTrackerResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: Tracker not registered
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: tracker_not_found
+                message: Tracker is not registered
+        '409':
+          description: Tracker unavailable or already in use
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/v1/vehicles/{vehicleId}/link:
+    post:
+      tags: [Vehicles]
+      summary: Link a tracker to a user-owned vehicle
+      operationId: linkTrackerToVehicle
+      security:
+        - FirebaseIdToken: []
+      parameters:
+        - $ref: '#/components/parameters/VehicleId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ImeiRequest'
+            example:
+              imei: '864643060618008'
+      responses:
+        '200':
+          description: Tracker linked
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LinkResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: Vehicle or tracker not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Tracker conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/v1/vehicles/{vehicleId}/unlink:
+    post:
+      tags: [Vehicles]
+      summary: Unlink the current tracker from a user-owned vehicle
+      operationId: unlinkTrackerFromVehicle
+      security:
+        - FirebaseIdToken: []
+      parameters:
+        - $ref: '#/components/parameters/VehicleId'
+      responses:
+        '200':
+          description: Tracker unlinked or vehicle already had no tracker
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnlinkResponse'
+              examples:
+                unlinked:
+                  value:
+                    ok: true
+                    vehicleId: df25934b-c7fd-4581-8640-c2384e3e7d5d
+                    trackerId: '864643060618008'
+                idempotent:
+                  value:
+                    ok: true
+                    vehicleId: df25934b-c7fd-4581-8640-c2384e3e7d5d
+                    message: Vehicle has no linked tracker.
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: Vehicle not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Tracker ownership mismatch
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+components:
+  securitySchemes:
+    FirebaseIdToken:
+      type: http
+      scheme: bearer
+      bearerFormat: Firebase ID Token
+      description: "Obtain a current token from Firebase Authentication and send it as Authorization: Bearer <token>."
+    AdminApiKey:
+      type: apiKey
+      in: header
+      name: x-admin-api-key
+      description: Environment-specific internal provisioning key. Never embed in Flutter or firmware.
+
+  parameters:
+    VehicleId:
+      name: vehicleId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+      example: df25934b-c7fd-4581-8640-c2384e3e7d5d
+
+  responses:
+    ValidationError:
+      description: Request validation failed
+      content:
+        application/json:
+          schema:
+            oneOf:
+              - $ref: '#/components/schemas/ErrorResponse'
+              - $ref: '#/components/schemas/ValidationErrorResponse'
+    Unauthorized:
+      description: Missing or invalid authentication
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: unauthorized
+            message: Missing Firebase ID token
+    InternalError:
+      description: Internal processing error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: internal_error
+            message: Internal server error
+
+  schemas:
+    OkResponse:
+      type: object
+      required: [ok]
+      properties:
+        ok:
+          type: boolean
+          example: true
+
+    ErrorResponse:
+      type: object
+      required: [error, message]
+      properties:
+        error:
+          type: string
+          example: vehicle_not_found
+        message:
+          type: string
+          example: Vehicle was not found
+
+    ValidationDetail:
+      type: object
+      required: [field, message]
+      properties:
+        field:
+          type: string
+          example: imei
+        message:
+          type: string
+          example: IMEI must be exactly 15 digits
+
+    ValidationErrorResponse:
+      type: object
+      required: [error, details]
+      properties:
+        error:
+          type: string
+          example: invalid_imei
+        details:
+          type: array
+          items:
+            $ref: '#/components/schemas/ValidationDetail'
+
+    BackendInfo:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        environment:
+          type: string
+          enum: [dev, staging, prod]
+        version:
+          type: string
+        status:
+          type: string
+          example: UP
+
+    Health:
+      type: object
+      required: [status, environment, uptime, timestamp]
+      properties:
+        status:
+          type: string
+          example: UP
+        environment:
+          type: string
+        uptime:
+          type: number
+          format: double
+        timestamp:
+          type: string
+          format: date-time
+
+    VersionInfo:
+      type: object
+      properties:
+        version:
+          type: string
+          example: 1.0.0
+        node:
+          type: string
+          example: v22.22.1
+        environment:
+          type: string
+          example: dev
+
+    IngestRequest:
+      type: object
+      required: [imei, lat, lng, speed, battery, datetime, ts]
+      properties:
+        imei:
+          type: string
+          pattern: '^\\d{14,17}$'
+          example: '864643060618008'
+        lat:
+          type: number
+          format: double
+          minimum: -90
+          maximum: 90
+        lng:
+          type: number
+          format: double
+          minimum: -180
+          maximum: 180
+        speed:
+          type: number
+          format: float
+          minimum: 0
+          description: Speed in km/h in the current firmware contract.
+        battery:
+          type: integer
+          minimum: 0
+          maximum: 100
+        datetime:
+          type: string
+          format: date-time
+          description: UTC GNSS timestamp. The trailing Z denotes UTC.
+        ts:
+          type: integer
+          minimum: 0
+          description: Current firmware sends ESP32 uptime milliseconds, not Unix epoch time.
+
+    ImeiRequest:
+      type: object
+      required: [imei]
+      properties:
+        imei:
+          type: string
+          pattern: '^\\d{15}$'
+          example: '864643060618008'
+
+    RegisterTrackerRequest:
+      type: object
+      required: [imei, model, provider]
+      properties:
+        imei:
+          type: string
+          pattern: '^\\d{15}$'
+        model:
+          type: string
+          minLength: 2
+          maxLength: 50
+          example: SIM7670
+        provider:
+          type: string
+          minLength: 2
+          maxLength: 50
+          example: Telcel
+        firmware:
+          type: string
+          default: unknown
+          example: 1.0.0
+        manufacturedAt:
+          type: string
+          format: date-time
+
+    Tracker:
+      type: object
+      required: [imei, status]
+      properties:
+        imei:
+          type: string
+        model:
+          type: string
+          nullable: true
+        provider:
+          type: string
+          nullable: true
+        firmware:
+          type: string
+          nullable: true
+        manufacturedAt:
+          type: string
+          format: date-time
+          nullable: true
+        registeredAt:
+          type: string
+          format: date-time
+          nullable: true
+        status:
+          type: string
+          enum: [available, linked]
+        ownerId:
+          type: string
+          nullable: true
+        vehicleId:
+          type: string
+          format: uuid
+          nullable: true
+        linkedAt:
+          type: string
+          format: date-time
+          nullable: true
+
+    RegisterTrackerResponse:
+      type: object
+      required: [ok, tracker]
+      properties:
+        ok:
+          type: boolean
+          example: true
+        tracker:
+          $ref: '#/components/schemas/Tracker'
+
+    ValidateTrackerResponse:
+      type: object
+      required: [tracker, isAvailable]
+      properties:
+        tracker:
+          $ref: '#/components/schemas/Tracker'
+        isAvailable:
+          type: boolean
+
+    LinkResponse:
+      type: object
+      required: [ok, vehicleId, imei]
+      properties:
+        ok:
+          type: boolean
+          example: true
+        vehicleId:
+          type: string
+          format: uuid
+        imei:
+          type: string
+          example: '864643060618008'
+
+    UnlinkResponse:
+      type: object
+      required: [ok, vehicleId]
+      properties:
+        ok:
+          type: boolean
+          example: true
+        vehicleId:
+          type: string
+          format: uuid
+        trackerId:
+          type: string
+          nullable: true
+        message:
+          type: string
+          nullable: true

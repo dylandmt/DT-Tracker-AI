@@ -119,9 +119,7 @@ class PermissionDeniedWidget extends StatelessWidget {
           const SizedBox(height: 24),
           Text(
             title ?? _defaultTitle,
-            style: textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
+            style: textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 12),
@@ -147,10 +145,7 @@ class PermissionDeniedWidget extends StatelessWidget {
             ),
           if (isPermanentlyDenied && showSettingsButton && onRetry != null) ...[
             const SizedBox(height: 12),
-            TextButton(
-              onPressed: onRetry,
-              child: const Text('Try Again'),
-            ),
+            TextButton(onPressed: onRetry, child: const Text('Try Again')),
           ],
         ],
       ),

@@ -35,7 +35,8 @@ class VehicleModel extends VehicleEntity {
       model: json['model'] as String?,
       year: json['year'] as int?,
       color: json['color'] as String?,
-      imageUrls: (json['imageUrls'] as List<dynamic>?)
+      imageUrls:
+          (json['imageUrls'] as List<dynamic>?)
               ?.map((e) => e as String)
               .toList() ??
           [],
@@ -108,8 +109,9 @@ class VehicleModel extends VehicleEntity {
       'color': color,
       'imageUrls': imageUrls,
       'trackerId': trackerId,
-      'trackerLinkedAt':
-          trackerLinkedAt != null ? Timestamp.fromDate(trackerLinkedAt!) : null,
+      'trackerLinkedAt': trackerLinkedAt != null
+          ? Timestamp.fromDate(trackerLinkedAt!)
+          : null,
       'createdAt': Timestamp.fromDate(createdAt),
       'updatedAt': Timestamp.fromDate(updatedAt),
     };
@@ -126,8 +128,9 @@ class VehicleModel extends VehicleEntity {
       'color': color,
       'imageUrls': imageUrls,
       'trackerId': trackerId,
-      'trackerLinkedAt':
-          trackerLinkedAt != null ? Timestamp.fromDate(trackerLinkedAt!) : null,
+      'trackerLinkedAt': trackerLinkedAt != null
+          ? Timestamp.fromDate(trackerLinkedAt!)
+          : null,
       'updatedAt': Timestamp.fromDate(DateTime.now()),
     };
   }

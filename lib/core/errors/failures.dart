@@ -98,10 +98,7 @@ class AuthFailure extends Failure {
           code: 'invalid-credential',
         );
       default:
-        return AuthFailure(
-          message: 'Authentication failed: $code',
-          code: code,
-        );
+        return AuthFailure(message: 'Authentication failed: $code', code: code);
     }
   }
 }

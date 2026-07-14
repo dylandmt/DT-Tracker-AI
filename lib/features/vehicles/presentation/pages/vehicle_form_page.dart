@@ -11,10 +11,7 @@ import '../widgets/vehicle_image_picker.dart';
 class VehicleFormPage extends StatefulWidget {
   final String? vehicleId;
 
-  const VehicleFormPage({
-    super.key,
-    this.vehicleId,
-  });
+  const VehicleFormPage({super.key, this.vehicleId});
 
   bool get isEditing => vehicleId != null;
 
@@ -44,8 +41,8 @@ class _VehicleFormPageState extends State<VehicleFormPage> {
     // Load vehicle if editing
     if (widget.isEditing) {
       context.read<VehicleFormBloc>().add(
-            LoadVehicleForEdit(vehicleId: widget.vehicleId!),
-          );
+        LoadVehicleForEdit(vehicleId: widget.vehicleId!),
+      );
     } else {
       // Default color is White
       _selectedColor = 'White';
@@ -77,21 +74,21 @@ class _VehicleFormPageState extends State<VehicleFormPage> {
   void _submitForm() {
     if (_formKey.currentState?.validate() ?? false) {
       context.read<VehicleFormBloc>().add(
-            SubmitVehicleForm(
-              name: _nameController.text.trim(),
-              plateNumber: _plateNumberController.text.trim(),
-              brand: _brandController.text.trim().isNotEmpty
-                  ? _brandController.text.trim()
-                  : null,
-              model: _modelController.text.trim().isNotEmpty
-                  ? _modelController.text.trim()
-                  : null,
-              year: _yearController.text.isNotEmpty
-                  ? int.tryParse(_yearController.text)
-                  : null,
-              color: _selectedColor,
-            ),
-          );
+        SubmitVehicleForm(
+          name: _nameController.text.trim(),
+          plateNumber: _plateNumberController.text.trim(),
+          brand: _brandController.text.trim().isNotEmpty
+              ? _brandController.text.trim()
+              : null,
+          model: _modelController.text.trim().isNotEmpty
+              ? _modelController.text.trim()
+              : null,
+          year: _yearController.text.isNotEmpty
+              ? int.tryParse(_yearController.text)
+              : null,
+          color: _selectedColor,
+        ),
+      );
     }
   }
 
@@ -129,7 +126,8 @@ class _VehicleFormPageState extends State<VehicleFormPage> {
             return const Center(child: CircularProgressIndicator());
           }
 
-          final isProcessing = state.isSubmitting ||
+          final isProcessing =
+              state.isSubmitting ||
               state.isUploadingImage ||
               state.isDeletingImage;
 
@@ -164,30 +162,29 @@ class _VehicleFormPageState extends State<VehicleFormPage> {
                     enabled: !isProcessing,
                     onImageAdded: (path) {
                       context.read<VehicleFormBloc>().add(
-                            AddVehicleImage(filePath: path),
-                          );
+                        AddVehicleImage(filePath: path),
+                      );
                     },
                     onImageRemoved: (url) {
                       context.read<VehicleFormBloc>().add(
-                            RemoveVehicleImage(imageUrl: url),
-                          );
+                        RemoveVehicleImage(imageUrl: url),
+                      );
                     },
                   ),
                   const SizedBox(height: 16),
                   Text(
                     'You can add images after creating the vehicle.',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
                   ),
                 ] else if (!widget.isEditing) ...[
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: Theme.of(context)
-                          .colorScheme
-                          .secondaryContainer
-                          .withValues(alpha: 0.3),
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.secondaryContainer.withValues(alpha: 0.3),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Row(
@@ -200,12 +197,12 @@ class _VehicleFormPageState extends State<VehicleFormPage> {
                         Expanded(
                           child: Text(
                             'You can add photos after creating the vehicle.',
-                            style:
-                                Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .onSecondaryContainer,
-                                    ),
+                            style: Theme.of(context).textTheme.bodyMedium
+                                ?.copyWith(
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSecondaryContainer,
+                                ),
                           ),
                         ),
                       ],
@@ -227,7 +224,9 @@ class _VehicleFormPageState extends State<VehicleFormPage> {
                             color: Colors.white,
                           ),
                         )
-                      : Text(widget.isEditing ? 'Save Changes' : 'Create Vehicle'),
+                      : Text(
+                          widget.isEditing ? 'Save Changes' : 'Create Vehicle',
+                        ),
                 ),
 
                 const SizedBox(height: 16),

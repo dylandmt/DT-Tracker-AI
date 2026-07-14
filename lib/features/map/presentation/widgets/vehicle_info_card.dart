@@ -63,7 +63,8 @@ class VehicleInfoCard extends StatelessWidget {
                 width: 56,
                 height: 56,
                 decoration: BoxDecoration(
-                  color: _getVehicleColor(vehicle.color)?.withValues(alpha: 0.2) ??
+                  color:
+                      _getVehicleColor(vehicle.color)?.withValues(alpha: 0.2) ??
                       colorScheme.primaryContainer,
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -82,7 +83,8 @@ class VehicleInfoCard extends StatelessWidget {
                       )
                     : Icon(
                         Icons.directions_car,
-                        color: _getVehicleColor(vehicle.color) ??
+                        color:
+                            _getVehicleColor(vehicle.color) ??
                             colorScheme.primary,
                         size: 28,
                       ),
@@ -169,11 +171,7 @@ class VehicleInfoCard extends StatelessWidget {
             ),
             child: Row(
               children: [
-                Icon(
-                  Icons.location_on,
-                  size: 16,
-                  color: colorScheme.primary,
-                ),
+                Icon(Icons.location_on, size: 16, color: colorScheme.primary),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
@@ -252,9 +250,17 @@ class _StatusBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (color, label, icon) = switch (status) {
-      VehicleStatus.moving => (AppColors.statusMoving, 'Moving', Icons.play_arrow),
+      VehicleStatus.moving => (
+        AppColors.statusMoving,
+        'Moving',
+        Icons.play_arrow,
+      ),
       VehicleStatus.idle => (AppColors.statusIdle, 'Idle', Icons.pause),
-      VehicleStatus.offline => (AppColors.statusOffline, 'Offline', Icons.cloud_off),
+      VehicleStatus.offline => (
+        AppColors.statusOffline,
+        'Offline',
+        Icons.cloud_off,
+      ),
     };
 
     return Container(

@@ -10,10 +10,7 @@ import '../bloc/tracker_link_bloc.dart';
 class LinkTrackerPage extends StatefulWidget {
   final String vehicleId;
 
-  const LinkTrackerPage({
-    super.key,
-    required this.vehicleId,
-  });
+  const LinkTrackerPage({super.key, required this.vehicleId});
 
   @override
   State<LinkTrackerPage> createState() => _LinkTrackerPageState();
@@ -41,18 +38,18 @@ class _LinkTrackerPageState extends State<LinkTrackerPage> {
   void _validateImei() {
     if (_formKey.currentState?.validate() ?? false) {
       context.read<TrackerLinkBloc>().add(
-            ValidateImei(imei: _imeiController.text.trim()),
-          );
+        ValidateImei(imei: _imeiController.text.trim()),
+      );
     }
   }
 
   void _linkTracker() {
     context.read<TrackerLinkBloc>().add(
-          LinkTrackerToVehicle(
-            vehicleId: widget.vehicleId,
-            imei: _imeiController.text.trim(),
-          ),
-        );
+      LinkTrackerToVehicle(
+        vehicleId: widget.vehicleId,
+        imei: _imeiController.text.trim(),
+      ),
+    );
   }
 
   @override
@@ -61,9 +58,7 @@ class _LinkTrackerPageState extends State<LinkTrackerPage> {
     final textTheme = Theme.of(context).textTheme;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Link GPS Tracker'),
-      ),
+      appBar: AppBar(title: const Text('Link GPS Tracker')),
       body: BlocConsumer<TrackerLinkBloc, TrackerLinkState>(
         listener: (context, state) {
           if (state.hasError && state.errorMessage != null) {
@@ -92,10 +87,7 @@ class _LinkTrackerPageState extends State<LinkTrackerPage> {
                   children: [
                     Row(
                       children: [
-                        Icon(
-                          Icons.info_outline,
-                          color: colorScheme.primary,
-                        ),
+                        Icon(Icons.info_outline, color: colorScheme.primary),
                         const SizedBox(width: 12),
                         Text(
                           'How to link a tracker',
@@ -134,8 +126,8 @@ class _LinkTrackerPageState extends State<LinkTrackerPage> {
                     suffixIcon: state.isValid
                         ? Icon(Icons.check_circle, color: colorScheme.primary)
                         : state.isInvalid
-                            ? Icon(Icons.error, color: colorScheme.error)
-                            : null,
+                        ? Icon(Icons.error, color: colorScheme.error)
+                        : null,
                   ),
                   keyboardType: TextInputType.number,
                   inputFormatters: [
@@ -192,10 +184,9 @@ class _LinkTrackerPageState extends State<LinkTrackerPage> {
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
-                          state.errorMessage ?? 'Tracker not found or already in use',
-                          style: TextStyle(
-                            color: colorScheme.onErrorContainer,
-                          ),
+                          state.errorMessage ??
+                              'Tracker not found or already in use',
+                          style: TextStyle(color: colorScheme.onErrorContainer),
                         ),
                       ),
                     ],
@@ -209,22 +200,18 @@ class _LinkTrackerPageState extends State<LinkTrackerPage> {
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: colorScheme.secondaryContainer.withValues(alpha: 0.5),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: colorScheme.primary,
-                      width: 2,
+                    color: colorScheme.secondaryContainer.withValues(
+                      alpha: 0.5,
                     ),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: colorScheme.primary, width: 2),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(
                         children: [
-                          Icon(
-                            Icons.check_circle,
-                            color: colorScheme.primary,
-                          ),
+                          Icon(Icons.check_circle, color: colorScheme.primary),
                           const SizedBox(width: 12),
                           Text(
                             'Tracker Found',
@@ -236,11 +223,7 @@ class _LinkTrackerPageState extends State<LinkTrackerPage> {
                         ],
                       ),
                       const SizedBox(height: 16),
-                      _buildInfoRow(
-                        context,
-                        'IMEI',
-                        state.trackerInfo!.imei,
-                      ),
+                      _buildInfoRow(context, 'IMEI', state.trackerInfo!.imei),
                       if (state.trackerInfo!.model != null)
                         _buildInfoRow(
                           context,

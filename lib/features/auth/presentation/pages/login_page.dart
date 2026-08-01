@@ -68,9 +68,9 @@ class _LoginPageState extends State<LoginPage> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      const AuthHeader(
-                        title: 'Welcome Back',
-                        subtitle: 'Sign in to continue tracking',
+                      AuthHeader(
+                        title: context.l10n.welcomeBack,
+                        subtitle: context.l10n.signInToContinueTracking,
                       ),
                       EmailTextField(
                         controller: _emailController,
@@ -85,8 +85,10 @@ class _LoginPageState extends State<LoginPage> {
                       PasswordTextField(
                         controller: _passwordController,
                         focusNode: _passwordFocusNode,
-                        validator: (value) =>
-                            Validators.validateRequired(value, 'Password'),
+                        validator: (value) => Validators.validateRequired(
+                          value,
+                          context.l10n.password,
+                        ),
                         enabled: !state.isLoading,
                         onFieldSubmitted: (_) => _onLogin(),
                       ),
@@ -94,7 +96,7 @@ class _LoginPageState extends State<LoginPage> {
                       Align(
                         alignment: Alignment.centerRight,
                         child: AuthTextButton(
-                          text: 'Forgot Password?',
+                          text: context.l10n.forgotPassword,
                           onPressed: () {
                             context.push(RouteConstants.forgotPassword);
                           },
@@ -102,14 +104,14 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                       const SizedBox(height: 24),
                       AuthButton(
-                        text: 'Sign In',
+                        text: context.l10n.signIn,
                         onPressed: _onLogin,
                         isLoading: state.isLoading,
                       ),
                       const SizedBox(height: 24),
                       AuthLinkButton(
-                        prefixText: "Don't have an account?",
-                        linkText: 'Sign Up',
+                        prefixText: context.l10n.dontHaveAccount,
+                        linkText: context.l10n.signUp,
                         onPressed: () {
                           context.push(RouteConstants.register);
                         },

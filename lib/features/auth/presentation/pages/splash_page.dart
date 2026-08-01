@@ -6,6 +6,7 @@ import '../../../../core/constants/app_constants.dart';
 import '../../../../core/constants/route_constants.dart';
 import '../../../../core/permissions/permission_handler.dart';
 import '../../../../core/permissions/permission_status.dart';
+import '../../../../core/utils/extensions.dart';
 import 'package:geolocator/geolocator.dart';
 import '../../utils/permission_gate.dart';
 import '../../../../injection_container.dart';
@@ -68,7 +69,7 @@ class SplashPage extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               Text(
-                'Real-time GPS Tracking',
+                context.l10n.realTimeGpsTracking,
                 style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),

@@ -15,5 +15,33 @@
       "rules": "firestore.rules",
       "indexes": "firestore.indexes.json"
     }
+  ],
+  "database": [
+    {
+      "target": "dev",
+      "rules": "database.rules.json"
+    },
+    {
+      "target": "staging",
+      "rules": "database.rules.json"
+    },
+    {
+      "target": "prod",
+      "rules": "database.rules.json"
+    }
+  ],
+  "storage": [
+    {
+      "target": "dev",
+      "rules": "storage.rules"
+    },
+    {
+      "target": "staging",
+      "rules": "storage.rules"
+    },
+    {
+      "target": "prod",
+      "rules": "storage.rules"
+    }
   ]
 }

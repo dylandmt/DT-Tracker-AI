@@ -100,7 +100,7 @@ class _VehicleDetailPageState extends State<VehicleDetailPage> {
             builder: (context, state) {
               if (state.isLoading) {
                 return Scaffold(
-                  appBar: AppBar(title: const Text('Vehicle Details')),
+                  appBar: AppBar(title: Text(context.l10n.vehicleDetails)),
                   body: const Center(child: CircularProgressIndicator()),
                 );
               }
@@ -108,8 +108,8 @@ class _VehicleDetailPageState extends State<VehicleDetailPage> {
               final vehicle = state.vehicle;
               if (vehicle == null) {
                 return Scaffold(
-                  appBar: AppBar(title: const Text('Vehicle Details')),
-                  body: const Center(child: Text('Vehicle not found')),
+                  appBar: AppBar(title: Text(context.l10n.vehicleDetails)),
+                  body: Center(child: Text(context.l10n.vehicleNotFound)),
                 );
               }
 
@@ -200,7 +200,7 @@ class _VehicleDetailPageState extends State<VehicleDetailPage> {
                               _buildDetailRow(
                                 context,
                                 Icons.directions_car,
-                                'Vehicle',
+                                context.l10n.vehicle,
                                 vehicle.fullDescription!,
                               ),
                               const SizedBox(height: 12),
@@ -209,7 +209,7 @@ class _VehicleDetailPageState extends State<VehicleDetailPage> {
                               _buildDetailRow(
                                 context,
                                 Icons.palette_outlined,
-                                'Color',
+                                context.l10n.color,
                                 vehicle.color!,
                               ),
                               const SizedBox(height: 12),
@@ -217,7 +217,7 @@ class _VehicleDetailPageState extends State<VehicleDetailPage> {
                             _buildDetailRow(
                               context,
                               Icons.calendar_today_outlined,
-                              'Added',
+                              context.l10n.added,
                               vehicle.createdAt.formattedDate,
                             ),
 
@@ -230,7 +230,7 @@ class _VehicleDetailPageState extends State<VehicleDetailPage> {
                                 listener: (context, trackerState) {
                                   if (trackerState.isLinked) {
                                     context.showSuccessSnackBar(
-                                      'Tracker linked successfully',
+                                      context.l10n.trackerLinkedSuccessfully,
                                     );
                                     // Reload vehicle to get updated tracker info
                                     context.read<VehicleFormBloc>().add(
@@ -241,7 +241,7 @@ class _VehicleDetailPageState extends State<VehicleDetailPage> {
                                   }
                                   if (trackerState.isUnlinked) {
                                     context.showSuccessSnackBar(
-                                      'Tracker unlinked successfully',
+                                      context.l10n.trackerUnlinkedSuccessfully,
                                     );
                                     _trackerSubscription?.cancel();
                                     _trackerSubscription = null;
@@ -379,19 +379,16 @@ class _VehicleDetailPageState extends State<VehicleDetailPage> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Unlink Tracker'),
-        content: const Text(
-          'Are you sure you want to unlink the GPS tracker from this vehicle? '
-          'The tracker will become available for linking to another vehicle.',
-        ),
+        title: Text(context.l10n.unlinkTracker),
+        content: Text(context.l10n.unlinkTrackerConfirmation),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: Text(context.l10n.cancel),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Unlink'),
+            child: Text(context.l10n.unlink),
           ),
         ],
       ),

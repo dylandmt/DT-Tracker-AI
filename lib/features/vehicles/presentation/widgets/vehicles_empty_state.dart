@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/utils/extensions.dart';
+
 /// Empty state widget for when no vehicles exist
 class VehiclesEmptyState extends StatelessWidget {
   final VoidCallback? onAddVehicle;
@@ -31,7 +33,7 @@ class VehiclesEmptyState extends StatelessWidget {
             ),
             const SizedBox(height: 24),
             Text(
-              'No Vehicles Yet',
+              context.l10n.noVehiclesYet,
               style: textTheme.headlineSmall?.copyWith(
                 fontWeight: FontWeight.bold,
               ),
@@ -39,7 +41,7 @@ class VehiclesEmptyState extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             Text(
-              'Add your first vehicle to start tracking its location and get real-time updates.',
+              context.l10n.addFirstVehicle,
               style: textTheme.bodyMedium?.copyWith(
                 color: colorScheme.onSurfaceVariant,
               ),
@@ -49,7 +51,7 @@ class VehiclesEmptyState extends StatelessWidget {
             FilledButton.icon(
               onPressed: onAddVehicle,
               icon: const Icon(Icons.add),
-              label: const Text('Add Vehicle'),
+              label: Text(context.l10n.addVehicle),
             ),
           ],
         ),

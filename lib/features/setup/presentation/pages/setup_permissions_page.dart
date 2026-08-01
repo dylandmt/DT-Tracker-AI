@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/route_constants.dart';
 import '../../../../core/permissions/permission_handler.dart';
 import '../../../../core/permissions/permission_status.dart';
+import '../../../../core/utils/extensions.dart';
 import '../../../../injection_container.dart';
 
 /// Setup page to ensure required permissions (location + notifications)
@@ -75,10 +76,10 @@ class _SetupPermissionsPageState extends State<SetupPermissionsPage>
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Setup Permissions'),
+        title: Text(context.l10n.setupPermissions),
         actions: [
           IconButton(
-            tooltip: 'Why we ask',
+            tooltip: context.l10n.whyWeAsk,
             icon: const Icon(Icons.info_outline),
             onPressed: _showExplainer,
           ),
@@ -94,7 +95,7 @@ class _SetupPermissionsPageState extends State<SetupPermissionsPage>
               borderRadius: BorderRadius.circular(12),
             ),
             child: Text(
-              'Allow these permissions to enable real-time tracking and alerts.',
+              context.l10n.permissionsIntro,
               style: textTheme.bodyMedium,
             ),
           ),
@@ -109,8 +110,8 @@ class _SetupPermissionsPageState extends State<SetupPermissionsPage>
           const SizedBox(height: 8),
           _PermissionTile(
             icon: Icons.location_on,
-            title: 'Location (While Using the App)',
-            subtitle: 'Required for map and tracking features',
+            title: context.l10n.locationWhileUsingApp,
+            subtitle: context.l10n.locationTrackingRequired,
             status: _location,
             onRequest: () => _request(AppPermission.location),
             onOpenSettings: () => _openSettings(AppPermission.location),
@@ -118,8 +119,8 @@ class _SetupPermissionsPageState extends State<SetupPermissionsPage>
           const SizedBox(height: 8),
           _PermissionTile(
             icon: Icons.notifications_active,
-            title: 'Notifications',
-            subtitle: 'Needed to alert you about tracker events',
+            title: context.l10n.notifications,
+            subtitle: context.l10n.notificationsRequired,
             status: _notification,
             onRequest: () => _request(AppPermission.notification),
             onOpenSettings: () => _openSettings(AppPermission.notification),
@@ -135,17 +136,20 @@ class _SetupPermissionsPageState extends State<SetupPermissionsPage>
               await _refreshStatuses();
             },
             icon: const Icon(Icons.fact_check),
-            label: const Text('Request All'),
+            label: Text(context.l10n.requestAll),
           ),
           const SizedBox(height: 12),
           FilledButton(
             onPressed: _readyToContinue
                 ? () => context.go(RouteConstants.home)
                 : null,
-            child: const Text('Continue'),
+            child: Text(context.l10n.continueLabel),
           ),
           const SizedBox(height: 8),
-          TextButton(onPressed: _refreshStatuses, child: const Text('Refresh')),
+          TextButton(
+            onPressed: _refreshStatuses,
+            child: Text(context.l10n.refresh),
+          ),
         ],
       ),
     );
@@ -155,16 +159,12 @@ class _SetupPermissionsPageState extends State<SetupPermissionsPage>
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Why We Need These'),
-        content: const Text(
-          'Location: required to show your vehicles on the map and to center the map on your position.\n\n'
-          'Notifications: used to inform you about important tracker events (e.g., status changes, alerts).\n\n'
-          'You can change these anytime in Settings.',
-        ),
+        title: Text(context.l10n.whyWeNeedThese),
+        content: Text(context.l10n.permissionsExplanation),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('OK'),
+            child: Text(context.l10n.ok),
           ),
         ],
       ),
@@ -244,8 +244,10 @@ class _PermissionTile extends StatelessWidget {
                       ),
                       child: Text(
                         granted
-                            ? 'Granted'
-                            : (needsSettings ? 'Requires Settings' : 'Denied'),
+                            ? context.l10n.granted
+                            : (needsSettings
+                                  ? context.l10n.requiresSettings
+                                  : context.l10n.denied),
                         style: const TextStyle(
                           color: Colors.white,
                           fontSize: 12,
@@ -257,12 +259,12 @@ class _PermissionTile extends StatelessWidget {
                     if (!granted && !needsSettings)
                       OutlinedButton(
                         onPressed: onRequest,
-                        child: const Text('Allow'),
+                        child: Text(context.l10n.allow),
                       ),
                     if (needsSettings)
                       OutlinedButton(
                         onPressed: onOpenSettings,
-                        child: const Text('Open Settings'),
+                        child: Text(context.l10n.openSettings),
                       ),
                   ],
                 ),
@@ -305,14 +307,14 @@ class _ServicesTile extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Location Services',
+                  context.l10n.locationServices,
                   style: textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w600,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Must be enabled by the system to provide GPS updates.',
+                  context.l10n.locationServicesRequired,
                   style: textTheme.bodySmall?.copyWith(
                     color: colorScheme.onSurfaceVariant,
                   ),
@@ -332,7 +334,7 @@ class _ServicesTile extends StatelessWidget {
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
-                        enabled ? 'On' : 'Off',
+                        enabled ? context.l10n.on : context.l10n.off,
                         style: const TextStyle(
                           color: Colors.white,
                           fontSize: 12,
@@ -344,7 +346,7 @@ class _ServicesTile extends StatelessWidget {
                     if (!enabled)
                       OutlinedButton(
                         onPressed: onOpenSettings,
-                        child: const Text('Open Settings'),
+                        child: Text(context.l10n.openSettings),
                       ),
                   ],
                 ),

@@ -9,6 +9,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'config/environment/firebase_config.dart';
 import 'config/environment/environment.dart';
 import 'core/network/network_info.dart';
+import 'core/localization/locale_controller.dart';
 import 'core/permissions/permission_handler.dart';
 import 'core/permissions/permission_handler_impl.dart';
 import 'core/utils/image_compressor.dart';
@@ -91,6 +92,7 @@ Future<void> initializeDependencies() async {
   // SharedPreferences
   final sharedPreferences = await SharedPreferences.getInstance();
   sl.registerLazySingleton<SharedPreferences>(() => sharedPreferences);
+  sl.registerLazySingleton<LocaleController>(() => LocaleController(sl()));
 
   //============================================================================
   // Core

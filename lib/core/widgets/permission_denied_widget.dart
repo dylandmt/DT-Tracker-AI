@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../permissions/permission_status.dart';
+import '../utils/extensions.dart';
 
 /// A reusable widget to display when a permission is denied
 ///
@@ -43,37 +44,37 @@ class PermissionDeniedWidget extends StatelessWidget {
     this.icon,
   });
 
-  String get _defaultTitle {
+  String _defaultTitle(BuildContext context) {
     switch (permission) {
       case AppPermission.camera:
-        return 'Camera Access Required';
+        return context.l10n.cameraAccessRequired;
       case AppPermission.photos:
-        return 'Photo Library Access Required';
+        return context.l10n.photoLibraryAccessRequired;
       case AppPermission.location:
-        return 'Location Access Required';
+        return context.l10n.locationPermissionRequired;
       case AppPermission.locationAlways:
-        return 'Background Location Required';
+        return context.l10n.backgroundLocationRequired;
       case AppPermission.notification:
-        return 'Notifications Disabled';
+        return context.l10n.notificationsDisabled;
       case AppPermission.storage:
-        return 'Storage Access Required';
+        return context.l10n.storageAccessRequired;
     }
   }
 
-  String get _defaultDescription {
+  String _defaultDescription(BuildContext context) {
     switch (permission) {
       case AppPermission.camera:
-        return 'Please allow camera access to take photos of your vehicle.';
+        return context.l10n.cameraAccessDescription;
       case AppPermission.photos:
-        return 'Please allow photo library access to select images for your vehicle.';
+        return context.l10n.photoLibraryAccessDescription;
       case AppPermission.location:
-        return 'Please allow location access to track your vehicle.';
+        return context.l10n.locationAccessDescription;
       case AppPermission.locationAlways:
-        return 'Please allow background location access for continuous tracking.';
+        return context.l10n.backgroundLocationDescription;
       case AppPermission.notification:
-        return 'Please enable notifications to receive alerts about your vehicles.';
+        return context.l10n.notificationsDescription;
       case AppPermission.storage:
-        return 'Please allow storage access to save vehicle images.';
+        return context.l10n.storageAccessDescription;
     }
   }
 
@@ -118,13 +119,13 @@ class PermissionDeniedWidget extends StatelessWidget {
           ),
           const SizedBox(height: 24),
           Text(
-            title ?? _defaultTitle,
+            title ?? _defaultTitle(context),
             style: textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 12),
           Text(
-            description ?? _defaultDescription,
+            description ?? _defaultDescription(context),
             style: textTheme.bodyMedium?.copyWith(
               color: colorScheme.onSurfaceVariant,
             ),
@@ -135,17 +136,17 @@ class PermissionDeniedWidget extends StatelessWidget {
             FilledButton.icon(
               onPressed: onOpenSettings,
               icon: const Icon(Icons.settings),
-              label: const Text('Open Settings'),
+              label: Text(context.l10n.openSettings),
             )
           else if (onRetry != null)
             FilledButton.icon(
               onPressed: onRetry,
               icon: const Icon(Icons.refresh),
-              label: const Text('Grant Permission'),
+              label: Text(context.l10n.grantPermission),
             ),
           if (isPermanentlyDenied && showSettingsButton && onRetry != null) ...[
             const SizedBox(height: 12),
-            TextButton(onPressed: onRetry, child: const Text('Try Again')),
+            TextButton(onPressed: onRetry, child: Text(context.l10n.tryAgain)),
           ],
         ],
       ),
@@ -165,29 +166,29 @@ class PermissionDeniedBanner extends StatelessWidget {
   final VoidCallback? onAction;
 
   /// Action button text
-  final String actionText;
+  final String? actionText;
 
   const PermissionDeniedBanner({
     super.key,
     required this.permission,
     this.message,
     this.onAction,
-    this.actionText = 'Grant',
+    this.actionText,
   });
 
-  String get _defaultMessage {
+  String _defaultMessage(BuildContext context) {
     switch (permission) {
       case AppPermission.camera:
-        return 'Camera access is required';
+        return context.l10n.cameraAccessShort;
       case AppPermission.photos:
-        return 'Photo library access is required';
+        return context.l10n.photoLibraryAccessShort;
       case AppPermission.location:
       case AppPermission.locationAlways:
-        return 'Location access is required';
+        return context.l10n.locationAccessShort;
       case AppPermission.notification:
-        return 'Notifications are disabled';
+        return context.l10n.notificationsDisabledShort;
       case AppPermission.storage:
-        return 'Storage access is required';
+        return context.l10n.storageAccessShort;
     }
   }
 
@@ -211,7 +212,7 @@ class PermissionDeniedBanner extends StatelessWidget {
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              message ?? _defaultMessage,
+              message ?? _defaultMessage(context),
               style: TextStyle(
                 color: colorScheme.onErrorContainer,
                 fontSize: 14,
@@ -226,7 +227,7 @@ class PermissionDeniedBanner extends StatelessWidget {
                 foregroundColor: colorScheme.onErrorContainer,
                 padding: const EdgeInsets.symmetric(horizontal: 12),
               ),
-              child: Text(actionText),
+              child: Text(actionText ?? context.l10n.grantPermission),
             ),
           ],
         ],

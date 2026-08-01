@@ -22,11 +22,11 @@ class _GeofencesPageState extends State<GeofencesPage> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const Text('Geofences')),
+    appBar: AppBar(title: Text(context.l10n.geofences)),
     floatingActionButton: FloatingActionButton.extended(
       onPressed: () => context.push(RouteConstants.geofenceAdd),
       icon: const Icon(Icons.add),
-      label: const Text('Add geofence'),
+      label: Text(context.l10n.addGeofence),
     ),
     body: BlocConsumer<GeofenceBloc, GeofenceState>(
       listener: (context, state) {
@@ -40,7 +40,7 @@ class _GeofencesPageState extends State<GeofencesPage> {
           return const Center(child: CircularProgressIndicator());
         }
         if (state.geofences.isEmpty) {
-          return const Center(
+          return Center(
             child: Padding(
               padding: EdgeInsets.all(32),
               child: Column(
@@ -48,10 +48,10 @@ class _GeofencesPageState extends State<GeofencesPage> {
                 children: [
                   Icon(Icons.fence_outlined, size: 64),
                   SizedBox(height: 16),
-                  Text('No geofences yet'),
+                  Text(context.l10n.noGeofencesYet),
                   SizedBox(height: 8),
                   Text(
-                    'Create a zone to monitor linked vehicles.',
+                    context.l10n.createZoneToMonitor,
                     textAlign: TextAlign.center,
                   ),
                 ],
@@ -82,16 +82,16 @@ class _GeofencesPageState extends State<GeofencesPage> {
     final remove = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete geofence?'),
-        content: Text('Delete "${geofence.name}"?'),
+        title: Text(context.l10n.deleteGeofence),
+        content: Text(context.l10n.deleteNamedGeofence(geofence.name)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: Text(context.l10n.cancel),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Delete'),
+            child: Text(context.l10n.delete),
           ),
         ],
       ),
@@ -117,7 +117,10 @@ class _GeofenceTile extends StatelessWidget {
       leading: Icon(geofence.isActive ? Icons.fence : Icons.fence_outlined),
       title: Text(geofence.name),
       subtitle: Text(
-        '${geofence.radiusMeters.toStringAsFixed(0)} m | ${geofence.vehicleIds.length} linked vehicle${geofence.vehicleIds.length == 1 ? '' : 's'}',
+        context.l10n.geofenceVehicleSummary(
+          geofence.radiusMeters.toStringAsFixed(0),
+          geofence.vehicleIds.length,
+        ),
       ),
       trailing: Row(
         mainAxisSize: MainAxisSize.min,

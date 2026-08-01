@@ -1,0 +1,45 @@
+{
+  "rules": {
+    "trackers_live": {
+      "$imei": {
+        ".read": "auth != null && root.child('users').child(auth.uid).child('devices').child($imei).val() === true",
+        ".write": false
+      }
+    },
+    "trackers_status": {
+      "$imei": {
+        ".read": "auth != null && root.child('users').child(auth.uid).child('devices').child($imei).val() === true",
+        ".write": false
+      }
+    },
+    "trackers_info": {
+      "$imei": {
+        ".read": "auth != null && root.child('users').child(auth.uid).child('devices').child($imei).val() === true",
+        ".write": false
+      }
+    },
+    "trackers_history": {
+      "$imei": {
+        "$date": {
+          ".read": "auth != null && root.child('users').child(auth.uid).child('devices').child($imei).val() === true",
+          ".write": false,
+          ".indexOn": ["ts"]
+        }
+      }
+    },
+    "users": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        ".write": false
+      }
+    },
+    "trackers_registry": {
+      "$imei": {
+        ".read": false,
+        ".write": false
+      }
+    },
+    ".read": false,
+    ".write": false
+  }
+}

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../../../core/utils/validators.dart';
+import '../../../../core/utils/extensions.dart';
 
 /// Reusable form fields for vehicle creation/editing
 class VehicleFormFields extends StatelessWidget {
@@ -32,7 +33,7 @@ class VehicleFormFields extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // Required fields section
-        _buildSectionHeader(context, 'Required Information'),
+        _buildSectionHeader(context, context.l10n.requiredInformation),
         const SizedBox(height: 12),
         _buildNameField(context),
         const SizedBox(height: 16),
@@ -41,7 +42,7 @@ class VehicleFormFields extends StatelessWidget {
         const SizedBox(height: 24),
 
         // Optional fields section
-        _buildSectionHeader(context, 'Vehicle Details (Optional)'),
+        _buildSectionHeader(context, context.l10n.vehicleDetailsOptional),
         const SizedBox(height: 12),
         Row(
           children: [
@@ -79,10 +80,10 @@ class VehicleFormFields extends StatelessWidget {
     return TextFormField(
       controller: nameController,
       enabled: enabled,
-      decoration: const InputDecoration(
-        labelText: 'Vehicle Name *',
-        hintText: 'e.g., My Car',
-        prefixIcon: Icon(Icons.directions_car_outlined),
+      decoration: InputDecoration(
+        labelText: context.l10n.vehicleName,
+        hintText: context.l10n.vehicleNameHint,
+        prefixIcon: const Icon(Icons.directions_car_outlined),
       ),
       textCapitalization: TextCapitalization.words,
       textInputAction: TextInputAction.next,
@@ -94,10 +95,10 @@ class VehicleFormFields extends StatelessWidget {
     return TextFormField(
       controller: plateNumberController,
       enabled: enabled,
-      decoration: const InputDecoration(
-        labelText: 'Plate Number *',
-        hintText: 'e.g., ABC-123',
-        prefixIcon: Icon(Icons.pin_outlined),
+      decoration: InputDecoration(
+        labelText: context.l10n.plateNumber,
+        hintText: context.l10n.plateNumberHint,
+        prefixIcon: const Icon(Icons.pin_outlined),
       ),
       textCapitalization: TextCapitalization.characters,
       textInputAction: TextInputAction.next,
@@ -109,9 +110,9 @@ class VehicleFormFields extends StatelessWidget {
     return TextFormField(
       controller: brandController,
       enabled: enabled,
-      decoration: const InputDecoration(
-        labelText: 'Brand',
-        hintText: 'e.g., Toyota',
+      decoration: InputDecoration(
+        labelText: context.l10n.brand,
+        hintText: context.l10n.brandHint,
       ),
       textCapitalization: TextCapitalization.words,
       textInputAction: TextInputAction.next,
@@ -122,9 +123,9 @@ class VehicleFormFields extends StatelessWidget {
     return TextFormField(
       controller: modelController,
       enabled: enabled,
-      decoration: const InputDecoration(
-        labelText: 'Model',
-        hintText: 'e.g., Corolla',
+      decoration: InputDecoration(
+        labelText: context.l10n.model,
+        hintText: context.l10n.modelHint,
       ),
       textCapitalization: TextCapitalization.words,
       textInputAction: TextInputAction.next,
@@ -135,9 +136,9 @@ class VehicleFormFields extends StatelessWidget {
     return TextFormField(
       controller: yearController,
       enabled: enabled,
-      decoration: const InputDecoration(
-        labelText: 'Year',
-        hintText: 'e.g., 2020',
+      decoration: InputDecoration(
+        labelText: context.l10n.year,
+        hintText: context.l10n.yearHint,
       ),
       keyboardType: TextInputType.number,
       textInputAction: TextInputAction.next,
@@ -162,7 +163,7 @@ class VehicleFormFields extends StatelessWidget {
 
     return DropdownButtonFormField<String>(
       initialValue: selectedColor,
-      decoration: const InputDecoration(labelText: 'Color'),
+      decoration: InputDecoration(labelText: context.l10n.color),
       items: _vehicleColors.map((color) {
         return DropdownMenuItem(
           value: color.name,

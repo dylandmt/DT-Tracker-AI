@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../../l10n/app_localizations.dart';
+
 /// Navigation destinations for the app
 enum AppDestination { vehicles, map, settings }
 
@@ -20,21 +22,21 @@ class AppNavigationBar extends StatelessWidget {
       selectedIndex: currentIndex,
       onDestinationSelected: onDestinationSelected,
       labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
-      destinations: const [
+      destinations: [
         NavigationDestination(
           icon: Icon(Icons.directions_car_outlined),
           selectedIcon: Icon(Icons.directions_car),
-          label: 'Vehicles',
+          label: AppLocalizations.of(context)!.vehicles,
         ),
         NavigationDestination(
           icon: Icon(Icons.map_outlined),
           selectedIcon: Icon(Icons.map),
-          label: 'Map',
+          label: AppLocalizations.of(context)!.map,
         ),
         NavigationDestination(
           icon: Icon(Icons.settings_outlined),
           selectedIcon: Icon(Icons.settings),
-          label: 'Settings',
+          label: AppLocalizations.of(context)!.settings,
         ),
       ],
     );

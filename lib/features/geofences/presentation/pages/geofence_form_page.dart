@@ -77,11 +77,11 @@ class _GeofenceFormPageState extends State<GeofenceFormPage> {
   void _submit() {
     if (!(_formKey.currentState?.validate() ?? false)) return;
     if (_vehicleIds.isEmpty) {
-      context.showErrorSnackBar('Select at least one linked vehicle');
+      context.showErrorSnackBar(context.l10n.selectLinkedVehicle);
       return;
     }
     if (!_triggerOnEnter && !_triggerOnExit) {
-      context.showErrorSnackBar('Enable an enter or exit trigger');
+      context.showErrorSnackBar(context.l10n.enableGeofenceTrigger);
       return;
     }
     context.read<GeofenceBloc>().add(
@@ -112,7 +112,9 @@ class _GeofenceFormPageState extends State<GeofenceFormPage> {
   @override
   Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(
-      title: Text(widget.isEditing ? 'Edit Geofence' : 'Add Geofence'),
+      title: Text(
+        widget.isEditing ? context.l10n.editGeofence : context.l10n.addGeofence,
+      ),
     ),
     body: BlocConsumer<GeofenceBloc, GeofenceState>(
       listener: (context, state) {
@@ -124,7 +126,9 @@ class _GeofenceFormPageState extends State<GeofenceFormPage> {
         }
         if (state.isSuccess) {
           context.showSuccessSnackBar(
-            widget.isEditing ? 'Geofence updated' : 'Geofence created',
+            widget.isEditing
+                ? context.l10n.geofenceUpdated
+                : context.l10n.geofenceCreated,
           );
           Navigator.pop(context);
         }
@@ -143,19 +147,24 @@ class _GeofenceFormPageState extends State<GeofenceFormPage> {
             children: [
               TextFormField(
                 controller: _nameController,
-                decoration: const InputDecoration(labelText: 'Name'),
+                decoration: InputDecoration(labelText: context.l10n.name),
                 validator: Validators.validateGeofenceName,
               ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _radiusController,
                 keyboardType: TextInputType.number,
-                decoration: const InputDecoration(labelText: 'Radius (meters)'),
+                decoration: InputDecoration(
+                  labelText: context.l10n.radiusMeters,
+                ),
                 validator: Validators.validateGeofenceRadius,
                 onChanged: (_) => setState(() {}),
               ),
               const SizedBox(height: 20),
-              Text('Center', style: Theme.of(context).textTheme.titleMedium),
+              Text(
+                context.l10n.center,
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
               const SizedBox(height: 8),
               SizedBox(
                 height: mapHeight,
@@ -196,25 +205,26 @@ class _GeofenceFormPageState extends State<GeofenceFormPage> {
                 ),
               ),
               const SizedBox(height: 8),
-              const Text('Tap the map to set the center.'),
+              Text(context.l10n.tapMapToSetCenter),
               const SizedBox(height: 4),
               Text(
-                'Changes can take up to one minute to affect tracker evaluation.',
+                context.l10n.trackerEvaluationDelay,
                 style: Theme.of(context).textTheme.bodySmall,
               ),
               const SizedBox(height: 20),
-              Text('Vehicles', style: Theme.of(context).textTheme.titleMedium),
+              Text(
+                context.l10n.vehicles,
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
               if (_loadingVehicles)
-                const Padding(
+                Padding(
                   padding: EdgeInsets.all(16),
                   child: Center(child: CircularProgressIndicator()),
                 )
               else if (_linkedVehicles.isEmpty)
-                const Padding(
+                Padding(
                   padding: EdgeInsets.only(top: 8),
-                  child: Text(
-                    'No linked vehicles are available. Link a tracker to a vehicle first.',
-                  ),
+                  child: Text(context.l10n.noLinkedVehicles),
                 )
               else
                 ..._linkedVehicles.map(
@@ -233,19 +243,19 @@ class _GeofenceFormPageState extends State<GeofenceFormPage> {
               const Divider(),
               SwitchListTile(
                 contentPadding: EdgeInsets.zero,
-                title: const Text('Trigger on enter'),
+                title: Text(context.l10n.triggerOnEnter),
                 value: _triggerOnEnter,
                 onChanged: (value) => setState(() => _triggerOnEnter = value),
               ),
               SwitchListTile(
                 contentPadding: EdgeInsets.zero,
-                title: const Text('Trigger on exit'),
+                title: Text(context.l10n.triggerOnExit),
                 value: _triggerOnExit,
                 onChanged: (value) => setState(() => _triggerOnExit = value),
               ),
               SwitchListTile(
                 contentPadding: EdgeInsets.zero,
-                title: const Text('Active'),
+                title: Text(context.l10n.active),
                 value: _isActive,
                 onChanged: (value) => setState(() => _isActive = value),
               ),
@@ -259,7 +269,9 @@ class _GeofenceFormPageState extends State<GeofenceFormPage> {
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
                     : Text(
-                        widget.isEditing ? 'Save changes' : 'Create geofence',
+                        widget.isEditing
+                            ? context.l10n.saveChanges
+                            : context.l10n.createGeofence,
                       ),
               ),
             ],

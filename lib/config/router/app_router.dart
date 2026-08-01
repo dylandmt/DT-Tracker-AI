@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/constants/route_constants.dart';
+import '../../core/utils/extensions.dart';
 import '../../features/auth/presentation/bloc/auth_bloc.dart';
 import '../../features/auth/presentation/pages/forgot_password_page.dart';
 import '../../features/auth/presentation/pages/login_page.dart';
@@ -249,7 +250,7 @@ class AppRouter {
             const Icon(Icons.error_outline, size: 64, color: Colors.red),
             const SizedBox(height: 16),
             Text(
-              'Page not found',
+              context.l10n.pageNotFound,
               style: Theme.of(context).textTheme.headlineSmall,
             ),
             const SizedBox(height: 8),
@@ -260,7 +261,7 @@ class AppRouter {
             const SizedBox(height: 24),
             FilledButton(
               onPressed: () => context.go(RouteConstants.splash),
-              child: const Text('Go Home'),
+              child: Text(context.l10n.goHome),
             ),
           ],
         ),

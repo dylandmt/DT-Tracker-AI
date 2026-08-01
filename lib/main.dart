@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'config/environment/firebase_config.dart';
 import 'app.dart';
+import 'core/localization/locale_controller.dart';
 import 'injection_container.dart';
 
 void main() async {
@@ -12,5 +13,5 @@ void main() async {
     FirebaseConfig.logConfiguration();
   }
   await initializeDependencies();
-  runApp(const DTTrackerApp());
+  runApp(DTTrackerApp(localeController: sl<LocaleController>()));
 }

@@ -66,10 +66,7 @@ class GeofenceRepositoryImpl implements GeofenceRepository {
     try {
       return dataSource
           .watchGeofences(_userId)
-          .map(
-            (geofences) =>
-                Right<Failure, List<GeofenceEntity>>(geofences),
-          )
+          .map((geofences) => Right<Failure, List<GeofenceEntity>>(geofences))
           .handleError(
             (Object error) => Left<Failure, List<GeofenceEntity>>(
               ServerFailure(message: error.toString()),

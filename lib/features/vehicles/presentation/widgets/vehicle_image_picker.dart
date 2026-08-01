@@ -6,6 +6,7 @@ import 'package:image_picker/image_picker.dart';
 
 import '../../../../core/permissions/permission_handler.dart';
 import '../../../../core/permissions/permission_status.dart';
+import '../../../../core/utils/extensions.dart';
 import '../../../../injection_container.dart';
 import '../../domain/entities/vehicle.dart';
 
@@ -61,7 +62,7 @@ class _VehicleImagePickerState extends State<VehicleImagePicker> {
             _showSettingsDialog(AppPermission.camera);
           } else {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Camera permission denied')),
+              SnackBar(content: Text(context.l10n.cameraPermissionDenied)),
             );
           }
         }
@@ -82,7 +83,7 @@ class _VehicleImagePickerState extends State<VehicleImagePicker> {
               _showSettingsDialog(AppPermission.photos);
             } else {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Photos permission denied')),
+                SnackBar(content: Text(context.l10n.photosPermissionDenied)),
               );
             }
           }
@@ -105,9 +106,9 @@ class _VehicleImagePickerState extends State<VehicleImagePicker> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Failed to pick image: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(context.l10n.failedToPickImage(e.toString()))),
+        );
       }
     }
   }
@@ -121,7 +122,7 @@ class _VehicleImagePickerState extends State<VehicleImagePicker> {
           children: [
             ListTile(
               leading: const Icon(Icons.camera_alt),
-              title: const Text('Take Photo'),
+              title: Text(context.l10n.takePhotoTitle),
               onTap: () {
                 Navigator.pop(context);
                 _pickImage(ImageSource.camera);
@@ -129,7 +130,7 @@ class _VehicleImagePickerState extends State<VehicleImagePicker> {
             ),
             ListTile(
               leading: const Icon(Icons.photo_library),
-              title: const Text('Choose from Gallery'),
+              title: Text(context.l10n.chooseFromGallery),
               onTap: () {
                 Navigator.pop(context);
                 _pickImage(ImageSource.gallery);
@@ -143,27 +144,29 @@ class _VehicleImagePickerState extends State<VehicleImagePicker> {
 
   void _showSettingsDialog(AppPermission permission) {
     final permissionName = permission == AppPermission.camera
-        ? 'Camera'
-        : 'Photo Library';
+        ? context.l10n.takePhoto
+        : context.l10n.photoLibrary;
 
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('$permissionName Access Required'),
-        content: Text(
-          'Please enable $permissionName access in Settings to add photos.',
+        title: Text(
+          permission == AppPermission.camera
+              ? context.l10n.cameraAccessRequired
+              : context.l10n.photoLibraryAccessRequired,
         ),
+        content: Text(context.l10n.enablePhotoPermission(permissionName)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: Text(context.l10n.cancel),
           ),
           FilledButton(
             onPressed: () {
               Navigator.pop(context);
               _permissionHandler.openSettings();
             },
-            child: const Text('Open Settings'),
+            child: Text(context.l10n.openSettings),
           ),
         ],
       ),
@@ -182,7 +185,7 @@ class _VehicleImagePickerState extends State<VehicleImagePicker> {
         Row(
           children: [
             Text(
-              'Photos',
+              context.l10n.photos,
               style: textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.w500,
               ),
@@ -250,7 +253,7 @@ class _VehicleImagePickerState extends State<VehicleImagePicker> {
             ),
             const SizedBox(height: 4),
             Text(
-              'Add',
+              context.l10n.add,
               style: TextStyle(
                 fontSize: 12,
                 color: widget.enabled

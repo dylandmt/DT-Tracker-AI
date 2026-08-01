@@ -86,9 +86,9 @@ class _RegisterPageState extends State<RegisterPage> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      const AuthHeader(
-                        title: 'Create Account',
-                        subtitle: 'Sign up to start tracking',
+                      AuthHeader(
+                        title: context.l10n.createAccount,
+                        subtitle: context.l10n.signUpToStartTracking,
                       ),
                       NameTextField(
                         controller: _nameController,
@@ -124,8 +124,8 @@ class _RegisterPageState extends State<RegisterPage> {
                       PasswordTextField(
                         controller: _confirmPasswordController,
                         focusNode: _confirmPasswordFocusNode,
-                        labelText: 'Confirm Password',
-                        hintText: 'Confirm your password',
+                        labelText: context.l10n.confirmPassword,
+                        hintText: context.l10n.confirmYourPassword,
                         validator: (value) =>
                             Validators.validateConfirmPassword(
                               value,
@@ -136,14 +136,14 @@ class _RegisterPageState extends State<RegisterPage> {
                       ),
                       const SizedBox(height: 32),
                       AuthButton(
-                        text: 'Sign Up',
+                        text: context.l10n.signUp,
                         onPressed: _onRegister,
                         isLoading: state.isLoading,
                       ),
                       const SizedBox(height: 24),
                       AuthLinkButton(
-                        prefixText: 'Already have an account?',
-                        linkText: 'Sign In',
+                        prefixText: context.l10n.alreadyHaveAccount,
+                        linkText: context.l10n.signIn,
                         onPressed: () {
                           context.pop();
                         },

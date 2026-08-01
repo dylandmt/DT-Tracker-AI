@@ -1,0 +1,19 @@
+{
+  "projects": {
+    "default": "dttracker-1cc83"
+  },
+  "targets": {
+    "dttracker-1cc83": {
+      "database": {
+        "dev": ["dttracker-dev-01"],
+        "staging": ["dttracker-staging-01"],
+        "prod": ["dttracker-prod-01"]
+      },
+      "storage": {
+        "dev": ["dttracker-dev-01"],
+        "staging": ["dttracker-staging-01"],
+        "prod": ["dttracker-prod-01"]
+      }
+    }
+  }
+}

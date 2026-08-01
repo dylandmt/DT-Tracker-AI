@@ -79,9 +79,9 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const AuthHeader(
-            title: 'Reset Password',
-            subtitle: 'Enter your email to receive a password reset link',
+          AuthHeader(
+            title: context.l10n.resetPassword,
+            subtitle: context.l10n.resetPasswordInstructions,
           ),
           EmailTextField(
             controller: _emailController,
@@ -91,13 +91,13 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
           ),
           const SizedBox(height: 32),
           AuthButton(
-            text: 'Send Reset Link',
+            text: context.l10n.sendResetLink,
             onPressed: _onSendReset,
             isLoading: state.isLoading,
           ),
           const SizedBox(height: 16),
           AuthButton(
-            text: 'Back to Sign In',
+            text: context.l10n.backToSignIn,
             onPressed: () => context.pop(),
             isOutlined: true,
           ),
@@ -121,7 +121,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
         ),
         const SizedBox(height: 24),
         Text(
-          'Check Your Email',
+          context.l10n.checkYourEmail,
           style: textTheme.headlineMedium?.copyWith(
             fontWeight: FontWeight.bold,
           ),
@@ -129,7 +129,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
         ),
         const SizedBox(height: 12),
         Text(
-          'We\'ve sent a password reset link to:',
+          context.l10n.passwordResetSentTo,
           style: textTheme.bodyLarge?.copyWith(
             color: colorScheme.onSurfaceVariant,
           ),
@@ -151,7 +151,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
           child: Column(
             children: [
               Text(
-                'Check your inbox and follow the link to reset your password.',
+                context.l10n.resetPasswordInboxInstructions,
                 style: textTheme.bodyMedium?.copyWith(
                   color: colorScheme.onSurfaceVariant,
                 ),
@@ -159,7 +159,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
               ),
               const SizedBox(height: 8),
               Text(
-                'If you don\'t see the email, check your spam folder.',
+                context.l10n.checkSpamFolder,
                 style: textTheme.bodySmall?.copyWith(
                   color: colorScheme.onSurfaceVariant,
                 ),
@@ -169,10 +169,13 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
           ),
         ),
         const SizedBox(height: 32),
-        AuthButton(text: 'Back to Sign In', onPressed: () => context.pop()),
+        AuthButton(
+          text: context.l10n.backToSignIn,
+          onPressed: () => context.pop(),
+        ),
         const SizedBox(height: 16),
         AuthButton(
-          text: 'Resend Email',
+          text: context.l10n.resendEmail,
           onPressed: () {
             setState(() {
               _emailSent = false;

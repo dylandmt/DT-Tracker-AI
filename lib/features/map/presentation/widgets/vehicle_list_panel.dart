@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/extensions.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/vehicle_location.dart';
 
 /// Sliding panel showing list of vehicles with their status
@@ -21,6 +22,7 @@ class VehicleListPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
 
@@ -58,13 +60,16 @@ class VehicleListPanel extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Vehicles',
+                        l10n.vehicles,
                         style: textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                       Text(
-                        '${vehicles.length} total • ${vehicles.where((v) => v.isOnline).length} online',
+                        l10n.vehicleSummary(
+                          vehicles.length,
+                          vehicles.where((v) => v.isOnline).length,
+                        ),
                         style: textTheme.bodySmall?.copyWith(
                           color: colorScheme.onSurfaceVariant,
                         ),
@@ -96,7 +101,7 @@ class VehicleListPanel extends StatelessWidget {
                         ),
                         const SizedBox(height: 16),
                         Text(
-                          'No vehicles with trackers',
+                          l10n.noVehiclesWithTrackers,
                           style: textTheme.bodyLarge?.copyWith(
                             color: colorScheme.onSurfaceVariant,
                           ),
@@ -231,7 +236,7 @@ class _VehicleListItem extends StatelessWidget {
                 ),
                 const SizedBox(width: 4),
                 Text(
-                  vehicle.formattedSpeed,
+                  vehicle.speed.localizedSpeed(context),
                   style: textTheme.bodySmall?.copyWith(
                     fontWeight: FontWeight.w500,
                     color: vehicle.speed > 100 ? AppColors.statusAlert : null,
@@ -241,7 +246,7 @@ class _VehicleListItem extends StatelessWidget {
             ),
             const SizedBox(height: 2),
             Text(
-              vehicle.lastUpdate.timeAgo,
+              vehicle.lastUpdate.localizedTimeAgo(context),
               style: textTheme.bodySmall?.copyWith(
                 color: colorScheme.onSurfaceVariant,
                 fontSize: 10,

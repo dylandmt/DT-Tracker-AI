@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import '../../l10n/app_localizations.dart';
+
 /// String extensions
 extension StringExtensions on String {
   /// Capitalize first letter
@@ -34,17 +36,17 @@ extension StringExtensions on String {
 extension DateTimeExtensions on DateTime {
   /// Format as 'MMM dd, yyyy'
   String get formattedDate {
-    return DateFormat('MMM dd, yyyy').format(this);
+    return DateFormat('MMM dd, yyyy').format(toLocal());
   }
 
   /// Format as 'HH:mm'
   String get formattedTime {
-    return DateFormat('HH:mm').format(this);
+    return DateFormat('HH:mm').format(toLocal());
   }
 
   /// Format as 'MMM dd, yyyy HH:mm'
   String get formattedDateTime {
-    return DateFormat('MMM dd, yyyy HH:mm').format(this);
+    return DateFormat('MMM dd, yyyy HH:mm').format(toLocal());
   }
 
   /// Format as relative time (e.g., '5 minutes ago')
@@ -69,6 +71,33 @@ extension DateTimeExtensions on DateTime {
     }
   }
 
+  String localizedDate(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return DateFormat(l10n.dateFormat, l10n.localeName).format(toLocal());
+  }
+
+  String localizedDateTime(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return DateFormat(l10n.dateTimeFormat, l10n.localeName).format(toLocal());
+  }
+
+  String localizedTimeAgo(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final difference = DateTime.now().difference(this);
+    if (difference.inDays > 365) {
+      return l10n.timeAgoYears(difference.inDays ~/ 365);
+    }
+    if (difference.inDays > 30) {
+      return l10n.timeAgoMonths(difference.inDays ~/ 30);
+    }
+    if (difference.inDays > 0) return l10n.timeAgoDays(difference.inDays);
+    if (difference.inHours > 0) return l10n.timeAgoHours(difference.inHours);
+    if (difference.inMinutes > 0) {
+      return l10n.timeAgoMinutes(difference.inMinutes);
+    }
+    return l10n.justNow;
+  }
+
   /// Check if date is today
   bool get isToday {
     final now = DateTime.now();
@@ -86,6 +115,8 @@ extension DateTimeExtensions on DateTime {
 
 /// BuildContext extensions
 extension ContextExtensions on BuildContext {
+  AppLocalizations get l10n => AppLocalizations.of(this)!;
+
   /// Get the theme
   ThemeData get theme => Theme.of(this);
 
@@ -145,6 +176,22 @@ extension DoubleExtensions on double {
   /// Format as coordinates
   String get formatCoordinate {
     return toStringAsFixed(6);
+  }
+
+  String localizedSpeed(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return l10n.speedKilometersPerHour(
+      NumberFormat.decimalPattern(l10n.localeName).format(this),
+    );
+  }
+
+  String localizedDistance(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final numberFormat = NumberFormat.decimalPattern(l10n.localeName);
+    if (this >= 1000) {
+      return l10n.distanceKilometers(numberFormat.format(this / 1000));
+    }
+    return l10n.distanceMeters(numberFormat.format(this));
   }
 }
 

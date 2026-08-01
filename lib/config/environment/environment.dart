@@ -31,7 +31,16 @@ class EnvironmentConfig {
   static bool get isProd => current == Environment.prod;
 
   /// Environment display name (for UI banner/logging)
-  static String get name => isDev ? 'Development' : 'Production';
+  static String get name {
+    switch (current) {
+      case Environment.dev:
+        return 'Development';
+      case Environment.staging:
+        return 'Staging';
+      case Environment.prod:
+        return 'Production';
+    }
+  }
 
   /// Firestore database ID
   static String get firestoreDatabase {

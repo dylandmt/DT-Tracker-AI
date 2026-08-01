@@ -47,8 +47,8 @@ class TrackerRepositoryImpl implements TrackerRepository {
     }
 
     try {
-      final exists = await trackerDataSource.trackerExists(imei);
-      return Right(exists);
+      final (info, _) = await backendDataSource.validateImei(imei);
+      return Right(info != null);
     } on ServerException catch (e) {
       return Left(ServerFailure(message: e.message));
     } catch (e) {

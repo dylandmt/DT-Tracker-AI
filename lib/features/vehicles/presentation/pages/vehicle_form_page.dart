@@ -96,7 +96,9 @@ class _VehicleFormPageState extends State<VehicleFormPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.isEditing ? 'Edit Vehicle' : 'Add Vehicle'),
+        title: Text(
+          widget.isEditing ? context.l10n.editVehicle : context.l10n.addVehicle,
+        ),
       ),
       body: BlocConsumer<VehicleFormBloc, VehicleFormState>(
         listener: (context, state) {
@@ -115,8 +117,8 @@ class _VehicleFormPageState extends State<VehicleFormPage> {
           if (state.isSuccess) {
             context.showSuccessSnackBar(
               widget.isEditing
-                  ? 'Vehicle updated successfully'
-                  : 'Vehicle created successfully',
+                  ? context.l10n.vehicleUpdatedSuccessfully
+                  : context.l10n.vehicleCreatedSuccessfully,
             );
             context.pop();
           }
@@ -173,7 +175,7 @@ class _VehicleFormPageState extends State<VehicleFormPage> {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    'You can add images after creating the vehicle.',
+                    context.l10n.addImagesAfterVehicle,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
@@ -196,7 +198,7 @@ class _VehicleFormPageState extends State<VehicleFormPage> {
                         const SizedBox(width: 12),
                         Expanded(
                           child: Text(
-                            'You can add photos after creating the vehicle.',
+                            context.l10n.addPhotosAfterVehicle,
                             style: Theme.of(context).textTheme.bodyMedium
                                 ?.copyWith(
                                   color: Theme.of(
@@ -225,7 +227,9 @@ class _VehicleFormPageState extends State<VehicleFormPage> {
                           ),
                         )
                       : Text(
-                          widget.isEditing ? 'Save Changes' : 'Create Vehicle',
+                          widget.isEditing
+                              ? context.l10n.saveChanges
+                              : context.l10n.createVehicle,
                         ),
                 ),
 

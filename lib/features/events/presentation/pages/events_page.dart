@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/utils/extensions.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/tracker_event.dart';
 import '../bloc/events_bloc.dart';
 
@@ -21,7 +22,7 @@ class _EventsPageState extends State<EventsPage> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const Text('Events')),
+    appBar: AppBar(title: Text(AppLocalizations.of(context)!.events)),
     body: BlocConsumer<EventsBloc, EventsState>(
       listener: (context, state) {
         if (state.errorMessage != null) {
@@ -33,7 +34,9 @@ class _EventsPageState extends State<EventsPage> {
           return const Center(child: CircularProgressIndicator());
         }
         if (state.events.isEmpty) {
-          return const Center(child: Text('No tracker events yet'));
+          return Center(
+            child: Text(AppLocalizations.of(context)!.noTrackerEvents),
+          );
         }
         return ListView.separated(
           padding: const EdgeInsets.all(16),
@@ -64,11 +67,11 @@ class _EventTile extends StatelessWidget {
         leading: Icon(icon),
         title: Text(event.title),
         subtitle: Text(
-          '${event.message}\n${event.occurredAt.toLocal().formattedDateTime}',
+          '${event.message}\n${event.occurredAt.localizedDateTime(context)}',
         ),
         isThreeLine: true,
         trailing: IconButton(
-          tooltip: 'Archive event',
+          tooltip: AppLocalizations.of(context)!.archiveEvent,
           icon: const Icon(Icons.archive_outlined),
           onPressed: () =>
               context.read<EventsBloc>().add(EventArchiveRequested(event.id)),

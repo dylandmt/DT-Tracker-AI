@@ -54,13 +54,22 @@ class TripPlaybackControls extends StatelessWidget {
                   ),
                 ),
                 PopupMenuButton<double>(
-                  tooltip: 'Playback speed',
+                  tooltip: context.l10n.playbackSpeed,
                   initialValue: speed,
                   onSelected: onSpeedChanged,
-                  itemBuilder: (_) => const [
-                    PopupMenuItem(value: 1.0, child: Text('1x speed')),
-                    PopupMenuItem(value: 2.0, child: Text('2x speed')),
-                    PopupMenuItem(value: 4.0, child: Text('4x speed')),
+                  itemBuilder: (_) => [
+                    PopupMenuItem(
+                      value: 1.0,
+                      child: Text(context.l10n.speedMultiplier('1')),
+                    ),
+                    PopupMenuItem(
+                      value: 2.0,
+                      child: Text(context.l10n.speedMultiplier('2')),
+                    ),
+                    PopupMenuItem(
+                      value: 4.0,
+                      child: Text(context.l10n.speedMultiplier('4')),
+                    ),
                   ],
                   child: Padding(
                     padding: const EdgeInsets.all(8),
@@ -68,7 +77,7 @@ class TripPlaybackControls extends StatelessWidget {
                   ),
                 ),
                 IconButton(
-                  tooltip: 'Close replay',
+                  tooltip: context.l10n.closeReplay,
                   onPressed: onClose,
                   icon: const Icon(Icons.close),
                 ),
@@ -83,12 +92,14 @@ class TripPlaybackControls extends StatelessWidget {
             Row(
               children: [
                 IconButton.filled(
-                  tooltip: isPlaying ? 'Pause replay' : 'Play replay',
+                  tooltip: isPlaying
+                      ? context.l10n.pauseReplay
+                      : context.l10n.playReplay,
                   onPressed: onPlayPause,
                   icon: Icon(isPlaying ? Icons.pause : Icons.play_arrow),
                 ),
                 IconButton(
-                  tooltip: 'Restart replay',
+                  tooltip: context.l10n.restartReplay,
                   onPressed: onStop,
                   icon: const Icon(Icons.restart_alt),
                 ),

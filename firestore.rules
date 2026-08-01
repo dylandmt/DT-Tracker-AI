@@ -2,8 +2,65 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
+
     function isOwner(uid) {
       return request.auth != null && request.auth.uid == uid;
+    }
+
+    match /users/{uid} {
+      allow read, create, update: if isOwner(uid);
+      allow delete: if false;
+    }
+
+    // Tracker linkage is updated only by the backend through the Admin SDK.
+    match /users/{uid}/vehicles/{vehicleId} {
+      allow read: if isOwner(uid);
+      allow create: if isOwner(uid)
+        && !request.resource.data.keys().hasAny([
+          'trackerId',
+          'trackerLinkedAt'
+        ]);
+      allow update: if isOwner(uid)
+        && !request.resource.data.diff(resource.data).affectedKeys().hasAny([
+          'trackerId',
+          'trackerLinkedAt'
+        ]);
+      allow delete: if isOwner(uid)
+        && !resource.data.keys().hasAny(['trackerId', 'trackerLinkedAt']);
+    }
+
+    match /users/{uid}/geofences/{geofenceId} {
+      allow read: if isOwner(uid);
+      allow create, update: if isOwner(uid) && isValidGeofence();
+      allow delete: if isOwner(uid);
+    }
+
+    match /users/{uid}/geofence_states/{stateId} {
+      allow read: if isOwner(uid);
+      allow create, update, delete: if false;
+    }
+
+    match /users/{uid}/events/{eventId} {
+      allow read: if isOwner(uid);
+      allow update: if isOwner(uid)
+        && request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['isRead', 'status'])
+        && request.resource.data.isRead is bool
+        && request.resource.data.status is string
+        && request.resource.data.status in ['new', 'read', 'archived']
+        && (
+          (request.resource.data.status == 'new'
+            && request.resource.data.isRead == false)
+          || (request.resource.data.status == 'read'
+            && request.resource.data.isRead == true)
+          || (request.resource.data.status == 'archived'
+            && request.resource.data.isRead == true)
+        );
+      allow create, delete: if false;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
     }
 
     function isValidGeofence() {
@@ -35,41 +92,6 @@ service cloud.firestore {
         && request.resource.data.triggerOnEnter is bool
         && request.resource.data.triggerOnExit is bool
         && request.resource.data.isActive is bool;
-    }
-
-    match /users/{uid} {
-      allow read, create, update: if isOwner(uid);
-      allow delete: if false;
-    }
-
-    match /users/{uid}/vehicles/{vehicleId} {
-      allow read, create, update, delete: if isOwner(uid);
-    }
-
-    match /users/{uid}/geofences/{geofenceId} {
-      allow read: if isOwner(uid);
-      allow create, update: if isOwner(uid) && isValidGeofence();
-      allow delete: if isOwner(uid);
-    }
-
-    match /users/{uid}/geofence_states/{stateId} {
-      allow read: if isOwner(uid);
-      allow create, update, delete: if false;
-    }
-
-    match /users/{uid}/events/{eventId} {
-      allow read: if isOwner(uid);
-      allow update: if isOwner(uid)
-        && request.resource.data.diff(resource.data).affectedKeys()
-          .hasOnly(['isRead', 'status'])
-        && request.resource.data.isRead is bool
-        && request.resource.data.status is string
-        && request.resource.data.status in ['new', 'read', 'archived'];
-      allow create, delete: if false;
-    }
-
-    match /{document=**} {
-      allow read, write: if false;
     }
   }
 }

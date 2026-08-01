@@ -1,29 +1,25 @@
 openapi: 3.0.3
 info:
   title: DT Tracker Backend API
-  version: 1.0.0
-  description: |
-    REST API contract for DT Tracker. The Flutter application uses Firebase Authentication
-    ID tokens for protected user endpoints. Tracker provisioning uses an environment-specific
-    admin API key. Device telemetry currently uses an unauthenticated ingest endpoint.
+  version: 2.0.0
+  description: REST API contract for DT Tracker. Flutter user endpoints use Firebase Authentication ID tokens. Administrative provisioning uses an environment-specific admin API key. Device ingest endpoints use HMAC-SHA256 authentication with IMEI, timestamp, nonce, and signature headers.
 servers:
-  - url: https://dev.dt-tracker.com
-    description: Development
-  - url: https://staging.dt-tracker.com
-    description: Staging
-  - url: https://api.dt-tracker.com
-    description: Production
-
+- url: https://dev.dt-tracker.com
+  description: Development
+- url: https://staging.dt-tracker.com
+  description: Staging
+- url: https://api.dt-tracker.com
+  description: Production
 tags:
-  - name: Operations
-  - name: Ingest
-  - name: Trackers
-  - name: Vehicles
-
+- name: Operations
+- name: Ingest
+- name: Trackers
+- name: Vehicles
 paths:
   /:
     get:
-      tags: [Operations]
+      tags:
+      - Operations
       summary: Backend information
       operationId: getBackendInfo
       responses:
@@ -39,10 +35,10 @@ paths:
                 environment: dev
                 version: 1.0.0
                 status: UP
-
   /health:
     get:
-      tags: [Operations]
+      tags:
+      - Operations
       summary: Health check
       operationId: getHealth
       responses:
@@ -57,10 +53,10 @@ paths:
                 environment: dev
                 uptime: 12345.67
                 timestamp: '2026-07-13T17:29:34.000Z'
-
   /version:
     get:
-      tags: [Operations]
+      tags:
+      - Operations
       summary: Runtime version information
       operationId: getVersion
       responses:
@@ -70,50 +66,55 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/VersionInfo'
-
   /api/v1/ingest:
     post:
-      tags: [Ingest]
-      summary: Receive tracker telemetry
-      description: |
-        Intended for DT Tracker firmware. The datetime field is UTC ISO-8601 and typically
-        comes from GNSS. The ts field is currently device uptime in milliseconds, not Unix time.
-        Telemetry persistence succeeds independently from geofence evaluation failures.
-      operationId: ingestTelemetry
+      tags:
+      - Ingest
+      summary: Submit one telemetry point
+      operationId: ingestSingle
+      security:
+      - DeviceImei: []
+        DeviceTimestamp: []
+        DeviceNonce: []
+        DeviceSignature: []
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/IngestRequest'
-            examples:
-              movingVehicle:
-                value:
-                  imei: '864643060618008'
-                  lat: 20.182058
-                  lng: -96.865013
-                  speed: 18.1
-                  battery: 90
-                  datetime: '2026-07-13T17:29:34Z'
-                  ts: 1234567
+              $ref: '#/components/schemas/SingleIngestRequest'
       responses:
         '200':
           description: Telemetry accepted
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/OkResponse'
-              example:
-                ok: true
+                $ref: '#/components/schemas/IngestAck'
         '400':
           $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/DeviceUnauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '429':
+          $ref: '#/components/responses/RateLimited'
         '500':
           $ref: '#/components/responses/InternalError'
+      description: 'Intended for DT Tracker firmware. The datetime field is UTC ISO-8601 and typically
 
+        comes from GNSS. The ts field is currently device uptime in milliseconds, not Unix time.
+
+        Telemetry persistence succeeds independently from geofence evaluation failures.
+
+
+        Requests require HMAC-SHA256 device authentication.'
   /ingest:
     post:
       deprecated: true
-      tags: [Ingest]
+      tags:
+      - Ingest
       summary: Legacy telemetry ingest
       description: Legacy alias for `/api/v1/ingest`.
       operationId: ingestTelemetryLegacy
@@ -134,15 +135,15 @@ paths:
           $ref: '#/components/responses/ValidationError'
         '500':
           $ref: '#/components/responses/InternalError'
-
   /api/v1/trackers/register:
     post:
-      tags: [Trackers]
+      tags:
+      - Trackers
       summary: Register tracker inventory
       description: Internal provisioning endpoint. Never call this endpoint from Flutter.
       operationId: registerTracker
       security:
-        - AdminApiKey: []
+      - AdminApiKey: []
       requestBody:
         required: true
         content:
@@ -177,14 +178,14 @@ paths:
                 message: Tracker is already registered
         '500':
           $ref: '#/components/responses/InternalError'
-
   /api/v1/trackers/validate:
     post:
-      tags: [Trackers]
+      tags:
+      - Trackers
       summary: Validate tracker availability
       operationId: validateTracker
       security:
-        - FirebaseIdToken: []
+      - FirebaseIdToken: []
       requestBody:
         required: true
         content:
@@ -221,16 +222,16 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
         '500':
           $ref: '#/components/responses/InternalError'
-
   /api/v1/vehicles/{vehicleId}/link:
     post:
-      tags: [Vehicles]
+      tags:
+      - Vehicles
       summary: Link a tracker to a user-owned vehicle
       operationId: linkTrackerToVehicle
       security:
-        - FirebaseIdToken: []
+      - FirebaseIdToken: []
       parameters:
-        - $ref: '#/components/parameters/VehicleId'
+      - $ref: '#/components/parameters/VehicleId'
       requestBody:
         required: true
         content:
@@ -264,16 +265,16 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
         '500':
           $ref: '#/components/responses/InternalError'
-
   /api/v1/vehicles/{vehicleId}/unlink:
     post:
-      tags: [Vehicles]
+      tags:
+      - Vehicles
       summary: Unlink the current tracker from a user-owned vehicle
       operationId: unlinkTrackerFromVehicle
       security:
-        - FirebaseIdToken: []
+      - FirebaseIdToken: []
       parameters:
-        - $ref: '#/components/parameters/VehicleId'
+      - $ref: '#/components/parameters/VehicleId'
       responses:
         '200':
           description: Tracker unlinked or vehicle already had no tracker
@@ -310,20 +311,104 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
         '500':
           $ref: '#/components/responses/InternalError'
-
+  /health/live:
+    get:
+      tags:
+      - Operations
+      summary: Liveness probe
+      operationId: getLiveness
+      responses:
+        '200':
+          $ref: '#/components/responses/Healthy'
+  /health/ready:
+    get:
+      tags:
+      - Operations
+      summary: Readiness probe
+      operationId: getReadiness
+      responses:
+        '200':
+          $ref: '#/components/responses/Healthy'
+        '503':
+          $ref: '#/components/responses/Unavailable'
+  /api/v1/ingest/batch:
+    post:
+      tags:
+      - Ingest
+      summary: Submit a batch of telemetry points
+      operationId: ingestBatch
+      security:
+      - DeviceImei: []
+        DeviceTimestamp: []
+        DeviceNonce: []
+        DeviceSignature: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BatchIngestRequest'
+            example:
+              schemaVersion: 2
+              imei: '864643060618008'
+              firmware: 1.1.0
+              battery: 90
+              points:
+              - eventId: 864643060618008-1042
+                sequence: 1042
+                lat: 20.182058
+                lng: -96.865013
+                speed: 18.1
+                datetime: '2026-07-21T20:00:00Z'
+                ts: 1234567
+                source: gnss
+      responses:
+        '200':
+          description: Batch processed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IngestAck'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/DeviceUnauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/InternalError'
 components:
   securitySchemes:
     FirebaseIdToken:
       type: http
       scheme: bearer
       bearerFormat: Firebase ID Token
-      description: "Obtain a current token from Firebase Authentication and send it as Authorization: Bearer <token>."
+      description: 'Obtain a current token from Firebase Authentication and send it as Authorization: Bearer <token>.'
     AdminApiKey:
       type: apiKey
       in: header
       name: x-admin-api-key
       description: Environment-specific internal provisioning key. Never embed in Flutter or firmware.
-
+    DeviceImei:
+      type: apiKey
+      in: header
+      name: x-device-imei
+    DeviceTimestamp:
+      type: apiKey
+      in: header
+      name: x-device-timestamp
+    DeviceNonce:
+      type: apiKey
+      in: header
+      name: x-device-nonce
+    DeviceSignature:
+      type: apiKey
+      in: header
+      name: x-device-signature
   parameters:
     VehicleId:
       name: vehicleId
@@ -333,7 +418,6 @@ components:
         type: string
         format: uuid
       example: df25934b-c7fd-4581-8640-c2384e3e7d5d
-
   responses:
     ValidationError:
       description: Request validation failed
@@ -341,8 +425,8 @@ components:
         application/json:
           schema:
             oneOf:
-              - $ref: '#/components/schemas/ErrorResponse'
-              - $ref: '#/components/schemas/ValidationErrorResponse'
+            - $ref: '#/components/schemas/ErrorResponse'
+            - $ref: '#/components/schemas/ValidationErrorResponse'
     Unauthorized:
       description: Missing or invalid authentication
       content:
@@ -361,19 +445,63 @@ components:
           example:
             error: internal_error
             message: Internal server error
-
+    Healthy:
+      description: Service is healthy
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Health'
+    Unavailable:
+      description: Service is not ready
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    DeviceUnauthorized:
+      description: Missing or invalid device authentication
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    Forbidden:
+      description: Authenticated identity is not permitted
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    Conflict:
+      description: Replay or resource conflict
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: device_request_replayed
+            message: This authenticated device request has already been processed
+    RateLimited:
+      description: Rate limit exceeded
+      headers:
+        Retry-After:
+          schema:
+            type: integer
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
   schemas:
     OkResponse:
       type: object
-      required: [ok]
+      required:
+      - ok
       properties:
         ok:
           type: boolean
           example: true
-
     ErrorResponse:
       type: object
-      required: [error, message]
+      required:
+      - error
+      - message
       properties:
         error:
           type: string
@@ -381,10 +509,11 @@ components:
         message:
           type: string
           example: Vehicle was not found
-
     ValidationDetail:
       type: object
-      required: [field, message]
+      required:
+      - field
+      - message
       properties:
         field:
           type: string
@@ -392,10 +521,11 @@ components:
         message:
           type: string
           example: IMEI must be exactly 15 digits
-
     ValidationErrorResponse:
       type: object
-      required: [error, details]
+      required:
+      - error
+      - details
       properties:
         error:
           type: string
@@ -404,7 +534,6 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ValidationDetail'
-
     BackendInfo:
       type: object
       properties:
@@ -414,16 +543,22 @@ components:
           type: string
         environment:
           type: string
-          enum: [dev, staging, prod]
+          enum:
+          - dev
+          - staging
+          - prod
         version:
           type: string
         status:
           type: string
           example: UP
-
     Health:
       type: object
-      required: [status, environment, uptime, timestamp]
+      required:
+      - status
+      - environment
+      - uptime
+      - timestamp
       properties:
         status:
           type: string
@@ -436,7 +571,6 @@ components:
         timestamp:
           type: string
           format: date-time
-
     VersionInfo:
       type: object
       properties:
@@ -449,14 +583,20 @@ components:
         environment:
           type: string
           example: dev
-
     IngestRequest:
       type: object
-      required: [imei, lat, lng, speed, battery, datetime, ts]
+      required:
+      - imei
+      - lat
+      - lng
+      - speed
+      - battery
+      - datetime
+      - ts
       properties:
         imei:
           type: string
-          pattern: '^\\d{14,17}$'
+          pattern: ^\\d{14,17}$
           example: '864643060618008'
         lat:
           type: number
@@ -485,23 +625,25 @@ components:
           type: integer
           minimum: 0
           description: Current firmware sends ESP32 uptime milliseconds, not Unix epoch time.
-
     ImeiRequest:
       type: object
-      required: [imei]
+      required:
+      - imei
       properties:
         imei:
           type: string
-          pattern: '^\\d{15}$'
+          pattern: ^\\d{15}$
           example: '864643060618008'
-
     RegisterTrackerRequest:
       type: object
-      required: [imei, model, provider]
+      required:
+      - imei
+      - model
+      - provider
       properties:
         imei:
           type: string
-          pattern: '^\\d{15}$'
+          pattern: ^\\d{15}$
         model:
           type: string
           minLength: 2
@@ -519,10 +661,11 @@ components:
         manufacturedAt:
           type: string
           format: date-time
-
     Tracker:
       type: object
-      required: [imei, status]
+      required:
+      - imei
+      - status
       properties:
         imei:
           type: string
@@ -545,7 +688,9 @@ components:
           nullable: true
         status:
           type: string
-          enum: [available, linked]
+          enum:
+          - available
+          - linked
         ownerId:
           type: string
           nullable: true
@@ -557,29 +702,33 @@ components:
           type: string
           format: date-time
           nullable: true
-
     RegisterTrackerResponse:
       type: object
-      required: [ok, tracker]
+      required:
+      - ok
+      - tracker
       properties:
         ok:
           type: boolean
           example: true
         tracker:
           $ref: '#/components/schemas/Tracker'
-
     ValidateTrackerResponse:
       type: object
-      required: [tracker, isAvailable]
+      required:
+      - tracker
+      - isAvailable
       properties:
         tracker:
           $ref: '#/components/schemas/Tracker'
         isAvailable:
           type: boolean
-
     LinkResponse:
       type: object
-      required: [ok, vehicleId, imei]
+      required:
+      - ok
+      - vehicleId
+      - imei
       properties:
         ok:
           type: boolean
@@ -590,10 +739,11 @@ components:
         imei:
           type: string
           example: '864643060618008'
-
     UnlinkResponse:
       type: object
-      required: [ok, vehicleId]
+      required:
+      - ok
+      - vehicleId
       properties:
         ok:
           type: boolean
@@ -607,3 +757,119 @@ components:
         message:
           type: string
           nullable: true
+    TelemetryPoint:
+      type: object
+      required:
+      - eventId
+      - sequence
+      - lat
+      - lng
+      - speed
+      - datetime
+      - ts
+      properties:
+        eventId:
+          type: string
+          maxLength: 128
+        sequence:
+          type: integer
+          minimum: 0
+        lat:
+          type: number
+          format: double
+          minimum: -90
+          maximum: 90
+        lng:
+          type: number
+          format: double
+          minimum: -180
+          maximum: 180
+        speed:
+          type: number
+          minimum: 0
+          description: Kilometres per hour.
+        datetime:
+          type: string
+          format: date-time
+        ts:
+          type: integer
+          minimum: 0
+        source:
+          type: string
+          maxLength: 30
+          example: gnss
+    SingleIngestRequest:
+      allOf:
+      - $ref: '#/components/schemas/TelemetryPoint'
+      - type: object
+        required:
+        - imei
+        - battery
+        properties:
+          imei:
+            type: string
+            pattern: ^\d{14,17}$
+          battery:
+            type: integer
+            minimum: 0
+            maximum: 100
+          firmware:
+            type: string
+            maxLength: 50
+    BatchIngestRequest:
+      type: object
+      required:
+      - schemaVersion
+      - imei
+      - points
+      properties:
+        schemaVersion:
+          type: integer
+          enum:
+          - 2
+        imei:
+          type: string
+          pattern: ^\d{14,17}$
+        firmware:
+          type: string
+          maxLength: 50
+        battery:
+          type: integer
+          minimum: 0
+          maximum: 100
+        points:
+          type: array
+          minItems: 1
+          maxItems: 50
+          items:
+            $ref: '#/components/schemas/TelemetryPoint'
+    IngestAck:
+      type: object
+      required:
+      - ok
+      - accepted
+      - duplicates
+      - acknowledgedEventIds
+      - processingTimeMs
+      properties:
+        ok:
+          type: boolean
+          example: true
+        accepted:
+          type: integer
+          minimum: 0
+        duplicates:
+          type: integer
+          minimum: 0
+        acknowledgedEventIds:
+          type: array
+          items:
+            type: string
+        acknowledgedThroughSequence:
+          type: integer
+          nullable: true
+        processingTimeMs:
+          type: integer
+          minimum: 0
+        requestId:
+          type: string

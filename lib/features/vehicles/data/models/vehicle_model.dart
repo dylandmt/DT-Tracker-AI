@@ -108,10 +108,9 @@ class VehicleModel extends VehicleEntity {
       'year': year,
       'color': color,
       'imageUrls': imageUrls,
-      'trackerId': trackerId,
-      'trackerLinkedAt': trackerLinkedAt != null
-          ? Timestamp.fromDate(trackerLinkedAt!)
-          : null,
+      if (trackerId != null) 'trackerId': trackerId,
+      if (trackerLinkedAt != null)
+        'trackerLinkedAt': Timestamp.fromDate(trackerLinkedAt!),
       'createdAt': Timestamp.fromDate(createdAt),
       'updatedAt': Timestamp.fromDate(updatedAt),
     };
@@ -127,10 +126,6 @@ class VehicleModel extends VehicleEntity {
       'year': year,
       'color': color,
       'imageUrls': imageUrls,
-      'trackerId': trackerId,
-      'trackerLinkedAt': trackerLinkedAt != null
-          ? Timestamp.fromDate(trackerLinkedAt!)
-          : null,
       'updatedAt': Timestamp.fromDate(DateTime.now()),
     };
   }

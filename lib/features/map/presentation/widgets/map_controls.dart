@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../bloc/map_bloc.dart';
+import '../../../../core/utils/extensions.dart';
 
 /// Map control buttons (zoom, map type, etc.)
 class MapControls extends StatelessWidget {
@@ -34,7 +35,7 @@ class MapControls extends StatelessWidget {
         _ControlButton(
           icon: Icons.layers,
           onPressed: () => _showMapTypeSheet(context),
-          tooltip: 'Map type',
+          tooltip: context.l10n.mapType,
         ),
         const SizedBox(height: 8),
 
@@ -43,7 +44,9 @@ class MapControls extends StatelessWidget {
           icon: Icons.traffic,
           onPressed: onToggleTraffic,
           isActive: showTraffic,
-          tooltip: showTraffic ? 'Hide traffic' : 'Show traffic',
+          tooltip: showTraffic
+              ? context.l10n.hideTraffic
+              : context.l10n.showTraffic,
         ),
         const SizedBox(height: 8),
 
@@ -51,7 +54,7 @@ class MapControls extends StatelessWidget {
         _ControlButton(
           icon: Icons.add,
           onPressed: onZoomIn,
-          tooltip: 'Zoom in',
+          tooltip: context.l10n.zoomIn,
         ),
         const SizedBox(height: 4),
 
@@ -59,7 +62,7 @@ class MapControls extends StatelessWidget {
         _ControlButton(
           icon: Icons.remove,
           onPressed: onZoomOut,
-          tooltip: 'Zoom out',
+          tooltip: context.l10n.zoomOut,
         ),
         const SizedBox(height: 8),
 
@@ -67,7 +70,7 @@ class MapControls extends StatelessWidget {
         _ControlButton(
           icon: Icons.my_location,
           onPressed: onMyLocation,
-          tooltip: 'My location',
+          tooltip: context.l10n.myLocation,
         ),
         const SizedBox(height: 8),
 
@@ -75,7 +78,7 @@ class MapControls extends StatelessWidget {
         _ControlButton(
           icon: Icons.fit_screen,
           onPressed: onFitBounds,
-          tooltip: 'Fit all vehicles',
+          tooltip: context.l10n.fitAllVehicles,
         ),
       ],
     );
@@ -175,7 +178,7 @@ class _MapTypeSheet extends StatelessWidget {
           ),
 
           Text(
-            'Map Type',
+            context.l10n.mapType,
             style: textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 16),
@@ -185,7 +188,7 @@ class _MapTypeSheet extends StatelessWidget {
             children: [
               _MapTypeOption(
                 type: MapViewType.normal,
-                label: 'Normal',
+                label: context.l10n.normal,
                 icon: Icons.map,
                 isSelected: currentType == MapViewType.normal,
                 onTap: () => onTypeSelected(MapViewType.normal),
@@ -193,7 +196,7 @@ class _MapTypeSheet extends StatelessWidget {
               const SizedBox(width: 12),
               _MapTypeOption(
                 type: MapViewType.satellite,
-                label: 'Satellite',
+                label: context.l10n.satellite,
                 icon: Icons.satellite_alt,
                 isSelected: currentType == MapViewType.satellite,
                 onTap: () => onTypeSelected(MapViewType.satellite),
@@ -201,7 +204,7 @@ class _MapTypeSheet extends StatelessWidget {
               const SizedBox(width: 12),
               _MapTypeOption(
                 type: MapViewType.terrain,
-                label: 'Terrain',
+                label: context.l10n.terrain,
                 icon: Icons.terrain,
                 isSelected: currentType == MapViewType.terrain,
                 onTap: () => onTypeSelected(MapViewType.terrain),
@@ -209,7 +212,7 @@ class _MapTypeSheet extends StatelessWidget {
               const SizedBox(width: 12),
               _MapTypeOption(
                 type: MapViewType.hybrid,
-                label: 'Hybrid',
+                label: context.l10n.hybrid,
                 icon: Icons.layers,
                 isSelected: currentType == MapViewType.hybrid,
                 onTap: () => onTypeSelected(MapViewType.hybrid),

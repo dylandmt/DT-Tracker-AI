@@ -55,14 +55,14 @@ class TrackerStatusCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'No GPS Tracker',
+                        context.l10n.noGpsTracker,
                         style: textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.w600,
                         ),
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        'Link a GPS tracker to enable real-time tracking',
+                        context.l10n.linkGpsTrackerToTrack,
                         style: textTheme.bodySmall?.copyWith(
                           color: colorScheme.onSurfaceVariant,
                         ),
@@ -84,7 +84,7 @@ class TrackerStatusCard extends StatelessWidget {
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
                     : const Icon(Icons.link),
-                label: const Text('Link Tracker'),
+                label: Text(context.l10n.linkGpsTracker),
               ),
             ),
           ],
@@ -126,7 +126,7 @@ class TrackerStatusCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'GPS Tracker Linked',
+                        context.l10n.gpsTrackerLinked,
                         style: textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.w600,
                         ),
@@ -153,7 +153,7 @@ class TrackerStatusCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
-                    isOnline ? 'Online' : 'Offline',
+                    isOnline ? context.l10n.online : context.l10n.offline,
                     style: const TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w500,
@@ -174,7 +174,7 @@ class TrackerStatusCard extends StatelessWidget {
                     context,
                     Icons.battery_full,
                     '${trackerStatus!.battery}%',
-                    'Battery',
+                    context.l10n.battery,
                     _getBatteryColor(trackerStatus!.battery),
                   ),
                   const SizedBox(width: 24),
@@ -182,7 +182,7 @@ class TrackerStatusCard extends StatelessWidget {
                     context,
                     Icons.speed,
                     trackerStatus!.speed.formatSpeed,
-                    'Speed',
+                    context.l10n.speed,
                     colorScheme.primary,
                   ),
                   const SizedBox(width: 24),
@@ -190,7 +190,7 @@ class TrackerStatusCard extends StatelessWidget {
                     context,
                     Icons.access_time,
                     trackerStatus!.lastUpdate.timeAgo,
-                    'Last Update',
+                    context.l10n.lastUpdate,
                     colorScheme.onSurfaceVariant,
                   ),
                 ],
@@ -209,7 +209,7 @@ class TrackerStatusCard extends StatelessWidget {
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
                     : const Icon(Icons.link_off),
-                label: const Text('Unlink Tracker'),
+                label: Text(context.l10n.unlinkTracker),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: colorScheme.error,
                 ),

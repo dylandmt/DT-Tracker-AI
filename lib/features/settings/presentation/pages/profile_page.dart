@@ -54,7 +54,7 @@ class _ProfilePageState extends State<ProfilePage> {
       );
       if (!hasPermission) {
         if (!mounted) return;
-        context.showErrorSnackBar('Camera permission denied');
+        context.showErrorSnackBar(context.l10n.cameraPermissionDenied);
         return;
       }
     }
@@ -71,7 +71,7 @@ class _ProfilePageState extends State<ProfilePage> {
       }
     } catch (_) {
       if (mounted) {
-        context.showErrorSnackBar('Unable to select profile photo');
+        context.showErrorSnackBar(context.l10n.unableToSelectProfilePhoto);
       }
     }
   }
@@ -85,7 +85,7 @@ class _ProfilePageState extends State<ProfilePage> {
           children: [
             ListTile(
               leading: const Icon(Icons.camera_alt_outlined),
-              title: const Text('Take photo'),
+              title: Text(context.l10n.takePhoto),
               onTap: () {
                 Navigator.pop(sheetContext);
                 _pickImage(ImageSource.camera);
@@ -93,7 +93,7 @@ class _ProfilePageState extends State<ProfilePage> {
             ),
             ListTile(
               leading: const Icon(Icons.photo_library_outlined),
-              title: const Text('Choose from gallery'),
+              title: Text(context.l10n.chooseFromGallery),
               onTap: () {
                 Navigator.pop(sheetContext);
                 _pickImage(ImageSource.gallery);
@@ -120,7 +120,7 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Profile')),
+      appBar: AppBar(title: Text(context.l10n.profile)),
       body: BlocListener<AuthBloc, AuthState>(
         listener: (context, state) {
           if (!_isSaving) return;
@@ -132,7 +132,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
           if (state.isProfileUpdated) {
             setState(() => _isSaving = false);
-            context.showSuccessSnackBar('Profile updated');
+            context.showSuccessSnackBar(context.l10n.profileUpdated);
             context.pop();
           }
         },
@@ -190,7 +190,7 @@ class _ProfilePageState extends State<ProfilePage> {
                             right: 0,
                             bottom: 0,
                             child: IconButton.filled(
-                              tooltip: 'Change profile photo',
+                              tooltip: context.l10n.changeProfilePhoto,
                               onPressed: isBusy ? null : _showImageSourcePicker,
                               icon: const Icon(Icons.camera_alt_outlined),
                             ),
@@ -209,14 +209,14 @@ class _ProfilePageState extends State<ProfilePage> {
                     TextFormField(
                       initialValue: user.email,
                       enabled: false,
-                      decoration: const InputDecoration(
-                        labelText: 'Email',
-                        prefixIcon: Icon(Icons.email_outlined),
+                      decoration: InputDecoration(
+                        labelText: context.l10n.email,
+                        prefixIcon: const Icon(Icons.email_outlined),
                       ),
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Your email address cannot be changed here.',
+                      context.l10n.emailCannotBeChanged,
                       style: Theme.of(context).textTheme.bodySmall,
                     ),
                     const SizedBox(height: 32),
@@ -228,7 +228,7 @@ class _ProfilePageState extends State<ProfilePage> {
                               height: 20,
                               child: CircularProgressIndicator(strokeWidth: 2),
                             )
-                          : const Text('Save changes'),
+                          : Text(context.l10n.saveChanges),
                     ),
                   ],
                 ),

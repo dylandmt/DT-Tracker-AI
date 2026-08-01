@@ -5,18 +5,6 @@ import '../models/tracker_info_model.dart';
 
 /// Abstract interface for tracker remote data source
 abstract class TrackerRemoteDataSource {
-  /// Get tracker info by IMEI
-  Future<TrackerInfoModel?> getTrackerInfo(String imei);
-
-  /// Check if a tracker exists
-  Future<bool> trackerExists(String imei);
-
-  /// Check if a tracker is available (exists and not owned)
-  Future<bool> isTrackerAvailable(String imei);
-
-  /// Set the tracker owner
-  Future<void> setTrackerOwner(String imei, String? ownerId);
-
   /// Get tracker live data
   Future<TrackerLiveModel> getTrackerLive(String imei);
 
@@ -36,11 +24,6 @@ class TrackerRemoteDataSourceImpl implements TrackerRemoteDataSource {
 
   TrackerRemoteDataSourceImpl({required this.database});
 
-  /// Reference to trackers_info node
-  DatabaseReference _trackersInfoRef(String imei) {
-    return database.ref('trackers_info/$imei');
-  }
-
   /// Reference to trackers_live node
   DatabaseReference _trackersLiveRef(String imei) {
     return database.ref('trackers_live/$imei');
@@ -49,64 +32,6 @@ class TrackerRemoteDataSourceImpl implements TrackerRemoteDataSource {
   /// Reference to trackers_status node
   DatabaseReference _trackersStatusRef(String imei) {
     return database.ref('trackers_status/$imei');
-  }
-
-  @override
-  Future<TrackerInfoModel?> getTrackerInfo(String imei) async {
-    try {
-      final snapshot = await _trackersInfoRef(imei).get();
-
-      if (!snapshot.exists || snapshot.value == null) {
-        return null;
-      }
-
-      final data = snapshot.value as Map<dynamic, dynamic>;
-      return TrackerInfoModel.fromRtdb(data, imei);
-    } catch (e) {
-      throw ServerException(message: 'Failed to get tracker info: $e');
-    }
-  }
-
-  @override
-  Future<bool> trackerExists(String imei) async {
-    try {
-      final snapshot = await _trackersInfoRef(imei).get();
-      return snapshot.exists;
-    } catch (e) {
-      throw ServerException(message: 'Failed to check tracker: $e');
-    }
-  }
-
-  @override
-  Future<bool> isTrackerAvailable(String imei) async {
-    try {
-      final snapshot = await _trackersInfoRef(imei).get();
-
-      if (!snapshot.exists) {
-        return false; // Tracker doesn't exist
-      }
-
-      final data = snapshot.value as Map<dynamic, dynamic>;
-      final ownerId = data['ownerId'] as String?;
-
-      return ownerId == null; // Available if no owner
-    } catch (e) {
-      throw ServerException(
-        message: 'Failed to check tracker availability: $e',
-      );
-    }
-  }
-
-  @override
-  Future<void> setTrackerOwner(String imei, String? ownerId) async {
-    try {
-      await _trackersInfoRef(imei).update({
-        'ownerId': ownerId,
-        'linkedAt': ownerId != null ? DateTime.now().toIso8601String() : null,
-      });
-    } catch (e) {
-      throw ServerException(message: 'Failed to set tracker owner: $e');
-    }
   }
 
   @override

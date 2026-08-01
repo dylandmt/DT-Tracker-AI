@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/utils/extensions.dart';
+
 /// Custom text field for authentication forms
 class AuthTextField extends StatefulWidget {
   final TextEditingController controller;
@@ -98,8 +100,8 @@ class EmailTextField extends StatelessWidget {
   Widget build(BuildContext context) {
     return AuthTextField(
       controller: controller,
-      labelText: 'Email',
-      hintText: 'Enter your email',
+      labelText: context.l10n.email,
+      hintText: context.l10n.enterYourEmail,
       prefixIcon: Icons.email_outlined,
       keyboardType: TextInputType.emailAddress,
       textInputAction: TextInputAction.next,
@@ -125,8 +127,8 @@ class PasswordTextField extends StatelessWidget {
   const PasswordTextField({
     super.key,
     required this.controller,
-    this.labelText = 'Password',
-    this.hintText = 'Enter your password',
+    this.labelText = '',
+    this.hintText,
     this.validator,
     this.onFieldSubmitted,
     this.enabled = true,
@@ -138,8 +140,8 @@ class PasswordTextField extends StatelessWidget {
   Widget build(BuildContext context) {
     return AuthTextField(
       controller: controller,
-      labelText: labelText,
-      hintText: hintText,
+      labelText: labelText.isEmpty ? context.l10n.password : labelText,
+      hintText: hintText ?? context.l10n.enterYourPassword,
       prefixIcon: Icons.lock_outlined,
       obscureText: true,
       keyboardType: TextInputType.visiblePassword,
@@ -173,8 +175,8 @@ class NameTextField extends StatelessWidget {
   Widget build(BuildContext context) {
     return AuthTextField(
       controller: controller,
-      labelText: 'Full Name',
-      hintText: 'Enter your full name',
+      labelText: context.l10n.fullName,
+      hintText: context.l10n.enterYourFullName,
       prefixIcon: Icons.person_outlined,
       keyboardType: TextInputType.name,
       textInputAction: TextInputAction.next,

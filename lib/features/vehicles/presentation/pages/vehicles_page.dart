@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/route_constants.dart';
 import '../../../../core/utils/extensions.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../bloc/vehicles_bloc.dart';
 import '../widgets/delete_vehicle_dialog.dart';
 import '../widgets/vehicle_card.dart';
@@ -27,9 +28,10 @@ class _VehiclesPageState extends State<VehiclesPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('My Vehicles'),
+        title: Text(l10n.myVehicles),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
@@ -46,7 +48,7 @@ class _VehiclesPageState extends State<VehiclesPage> {
             context.read<VehiclesBloc>().add(const ClearVehiclesError());
           }
           if (state.isDeleted) {
-            context.showSuccessSnackBar('Vehicle deleted successfully');
+            context.showSuccessSnackBar(l10n.vehicleDeleted);
           }
         },
         builder: (context, state) {
@@ -93,7 +95,7 @@ class _VehiclesPageState extends State<VehiclesPage> {
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => context.push(RouteConstants.vehicleAdd),
         icon: const Icon(Icons.add),
-        label: const Text('Add Vehicle'),
+        label: Text(l10n.addVehicle),
       ),
     );
   }

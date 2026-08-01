@@ -11,6 +11,7 @@ import '../../../../core/permissions/permission_status.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/extensions.dart';
 import '../../../../injection_container.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../../geofences/domain/entities/geofence.dart';
 import '../../../geofences/presentation/bloc/geofence_bloc.dart';
 import '../../domain/entities/trip_point.dart';
@@ -101,7 +102,9 @@ class _MapPageState extends State<MapPage> with WidgetsBindingObserver {
             if (state.hasTripHistory) {
               _fitTripPoints(state.tripPoints);
             } else {
-              context.showSnackBar('No trip data for this date');
+              context.showSnackBar(
+                AppLocalizations.of(context)!.noTripDataForDate,
+              );
             }
           }
           if (state.currentPlaybackPoint != null &&
@@ -267,7 +270,9 @@ class _MapPageState extends State<MapPage> with WidgetsBindingObserver {
       });
       if (!wasEnabled && enabled) {
         // Services transitioned to enabled
-        context.showSuccessSnackBar('Location services enabled');
+        context.showSuccessSnackBar(
+          AppLocalizations.of(context)!.locationServicesEnabled,
+        );
         // Reset dismissal so banner stays hidden naturally
         setState(() => _servicesBannerDismissed = false);
       }
@@ -367,19 +372,19 @@ class _MapPageState extends State<MapPage> with WidgetsBindingObserver {
                 children: [
                   _StatusIndicator(
                     icon: Icons.directions_car,
-                    label: 'Total',
+                    label: AppLocalizations.of(context)!.total,
                     count: state.vehicleLocations.length,
                     color: colorScheme.primary,
                   ),
                   _StatusIndicator(
                     icon: Icons.wifi,
-                    label: 'Online',
+                    label: AppLocalizations.of(context)!.online,
                     count: state.onlineVehicleCount,
                     color: AppColors.statusOnline,
                   ),
                   _StatusIndicator(
                     icon: Icons.play_arrow,
-                    label: 'Moving',
+                    label: AppLocalizations.of(context)!.moving,
                     count: state.movingVehicleCount,
                     color: AppColors.statusMoving,
                   ),
@@ -421,8 +426,8 @@ class _MapPageState extends State<MapPage> with WidgetsBindingObserver {
             BitmapDescriptor.hueAzure,
           ),
           infoWindow: InfoWindow(
-            title: 'Trip replay',
-            snippet: playbackPoint.timestamp.formattedDateTime,
+            title: AppLocalizations.of(context)!.tripReplay,
+            snippet: playbackPoint.timestamp.localizedDateTime(context),
           ),
           zIndexInt: 2,
         ),
@@ -638,12 +643,14 @@ class _MapPageState extends State<MapPage> with WidgetsBindingObserver {
         }
       } else {
         if (mounted) {
-          context.showErrorSnackBar('Location permission denied');
+          context.showErrorSnackBar(
+            AppLocalizations.of(context)!.locationPermissionDenied,
+          );
         }
       }
     } catch (e) {
       if (mounted) {
-        context.showErrorSnackBar('Failed to get location: ${e.toString()}');
+        context.showErrorSnackBar(e.toString());
       }
     } finally {
       if (mounted) {
@@ -656,22 +663,19 @@ class _MapPageState extends State<MapPage> with WidgetsBindingObserver {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Location Permission Required'),
-        content: const Text(
-          'Location permission is permanently denied. '
-          'Please enable it in app settings to use this feature.',
-        ),
+        title: Text(context.l10n.locationPermissionRequired),
+        content: Text(context.l10n.locationPermissionPermanentlyDenied),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: Text(context.l10n.cancel),
           ),
           FilledButton(
             onPressed: () {
               Navigator.pop(context);
               sl<AppPermissionHandler>().openSettings();
             },
-            child: const Text('Open Settings'),
+            child: Text(context.l10n.openSettings),
           ),
         ],
       ),
@@ -682,22 +686,19 @@ class _MapPageState extends State<MapPage> with WidgetsBindingObserver {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Enable Location Services'),
-        content: const Text(
-          'Location services are turned off.\n\n'
-          'Please enable them in system settings to use My Location and real-time updates.',
-        ),
+        title: Text(context.l10n.enableLocationServices),
+        content: Text(context.l10n.locationServicesTurnedOff),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: Text(context.l10n.cancel),
           ),
           FilledButton(
             onPressed: () async {
               Navigator.pop(context);
               await Geolocator.openLocationSettings();
             },
-            child: const Text('Open Settings'),
+            child: Text(context.l10n.openSettings),
           ),
         ],
       ),
@@ -718,7 +719,7 @@ class _MapPageState extends State<MapPage> with WidgetsBindingObserver {
             const SizedBox(width: 8),
             Expanded(
               child: Text(
-                'Location services are off. Enable them for accurate tracking.',
+                context.l10n.locationServicesOffBanner,
                 style: TextStyle(color: colorScheme.onErrorContainer),
               ),
             ),
@@ -727,10 +728,10 @@ class _MapPageState extends State<MapPage> with WidgetsBindingObserver {
                 await Geolocator.openLocationSettings();
                 await _checkLocationServices();
               },
-              child: const Text('Enable'),
+              child: Text(context.l10n.enable),
             ),
             IconButton(
-              tooltip: 'Dismiss',
+              tooltip: context.l10n.dismiss,
               icon: Icon(Icons.close, color: colorScheme.onErrorContainer),
               onPressed: () {
                 setState(() => _servicesBannerDismissed = true);
@@ -855,7 +856,7 @@ class _MapPageState extends State<MapPage> with WidgetsBindingObserver {
 
   void _openNavigation(VehicleLocationEntity vehicle) {
     // TODO: Open Google Maps or Apple Maps for navigation
-    context.showSnackBar('Opening navigation to ${vehicle.vehicleName}...');
+    context.showSnackBar(context.l10n.openingNavigation(vehicle.vehicleName));
   }
 }
 

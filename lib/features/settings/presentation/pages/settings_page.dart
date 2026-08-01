@@ -3,7 +3,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/route_constants.dart';
+import '../../../../core/localization/locale_controller.dart';
 import '../../../../core/utils/extensions.dart';
+import '../../../../injection_container.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../widgets/profile_photo_preview.dart';
 
@@ -13,11 +16,12 @@ class SettingsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Settings')),
+      appBar: AppBar(title: Text(l10n.settings)),
       body: BlocConsumer<AuthBloc, AuthState>(
         listener: (context, state) {
           if (state.isUnauthenticated) {
@@ -76,7 +80,7 @@ class SettingsPage extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            user?.displayName ?? 'User',
+                            user?.displayName ?? l10n.user,
                             style: textTheme.titleLarge?.copyWith(
                               fontWeight: FontWeight.bold,
                             ),
@@ -98,12 +102,12 @@ class SettingsPage extends StatelessWidget {
               const SizedBox(height: 16),
 
               // Settings sections
-              _buildSectionHeader(context, 'Account'),
+              _buildSectionHeader(context, l10n.account),
               _buildListTile(
                 context,
                 icon: Icons.person_outline,
-                title: 'Profile',
-                subtitle: 'Edit your profile information',
+                title: l10n.profile,
+                subtitle: l10n.editProfileInformation,
                 onTap: () {
                   context.push(RouteConstants.profile);
                 },
@@ -111,8 +115,8 @@ class SettingsPage extends StatelessWidget {
               _buildListTile(
                 context,
                 icon: Icons.notifications_outlined,
-                title: 'Tracker events',
-                subtitle: 'View geofence and tracker activity',
+                title: l10n.trackerEvents,
+                subtitle: l10n.viewTrackerActivity,
                 onTap: () {
                   context.push(RouteConstants.alerts);
                 },
@@ -120,23 +124,21 @@ class SettingsPage extends StatelessWidget {
 
               const SizedBox(height: 16),
 
-              _buildSectionHeader(context, 'Tracking'),
+              _buildSectionHeader(context, l10n.tracking),
               _buildListTile(
                 context,
                 icon: Icons.speed_outlined,
-                title: 'Speed Alerts',
-                subtitle: 'Configure speed limit alerts',
+                title: l10n.speedAlerts,
+                subtitle: l10n.configureSpeedAlerts,
                 onTap: () {
                   // TODO: Navigate to speed alert settings
-                  context.showSnackBar('Speed alerts coming soon');
+                  context.showSnackBar(l10n.speedAlertsComingSoon);
                 },
               ),
               SwitchListTile(
                 secondary: const Icon(Icons.fence_outlined),
-                title: const Text('Geofence alerts'),
-                subtitle: const Text(
-                  'Create events when vehicles enter or exit zones',
-                ),
+                title: Text(l10n.geofenceAlerts),
+                subtitle: Text(l10n.geofenceAlertsDescription),
                 value: user?.settings.geofenceAlertEnabled ?? true,
                 onChanged: state.isLoading || user == null
                     ? null
@@ -147,8 +149,8 @@ class SettingsPage extends StatelessWidget {
               _buildListTile(
                 context,
                 icon: Icons.fence_outlined,
-                title: 'Geofences',
-                subtitle: 'Manage geofence zones',
+                title: l10n.geofences,
+                subtitle: l10n.manageGeofenceZones,
                 onTap: () {
                   context.push(RouteConstants.geofences);
                 },
@@ -156,11 +158,18 @@ class SettingsPage extends StatelessWidget {
 
               const SizedBox(height: 16),
 
-              _buildSectionHeader(context, 'App'),
+              _buildSectionHeader(context, l10n.app),
+              _buildListTile(
+                context,
+                icon: Icons.language_outlined,
+                title: l10n.language,
+                subtitle: _languageName(context, sl<LocaleController>().locale),
+                onTap: () => _showLanguagePicker(context),
+              ),
               _buildListTile(
                 context,
                 icon: Icons.info_outline,
-                title: 'About',
+                title: l10n.about,
                 subtitle: 'Version 1.0.0',
                 onTap: () {
                   _showAboutDialog(context);
@@ -169,10 +178,10 @@ class SettingsPage extends StatelessWidget {
               _buildListTile(
                 context,
                 icon: Icons.help_outline,
-                title: 'Help & Support',
-                subtitle: 'Get help with the app',
+                title: l10n.helpAndSupport,
+                subtitle: l10n.getHelpWithApp,
                 onTap: () {
-                  context.showSnackBar('Help & Support coming soon');
+                  context.showSnackBar(l10n.helpComingSoon);
                 },
               ),
 
@@ -192,7 +201,7 @@ class SettingsPage extends StatelessWidget {
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
                       : const Icon(Icons.logout),
-                  label: const Text('Sign Out'),
+                  label: Text(l10n.signOut),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: colorScheme.error,
                     side: BorderSide(color: colorScheme.error),
@@ -253,22 +262,23 @@ class SettingsPage extends StatelessWidget {
   }
 
   void _showSignOutDialog(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Sign Out'),
-        content: const Text('Are you sure you want to sign out?'),
+        title: Text(l10n.signOut),
+        content: Text(l10n.signOutConfirmation),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('Cancel'),
+            child: Text(l10n.cancel),
           ),
           FilledButton(
             onPressed: () {
               Navigator.pop(dialogContext);
               context.read<AuthBloc>().add(SignOutRequested());
             },
-            child: const Text('Sign Out'),
+            child: Text(l10n.signOut),
           ),
         ],
       ),
@@ -276,6 +286,7 @@ class SettingsPage extends StatelessWidget {
   }
 
   void _showAboutDialog(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     showAboutDialog(
       context: context,
       applicationName: 'DT Tracker',
@@ -293,11 +304,45 @@ class SettingsPage extends StatelessWidget {
           color: Theme.of(context).colorScheme.primary,
         ),
       ),
-      children: [
-        const Text(
-          'Real-time GPS vehicle tracking app with geofencing and alerts.',
-        ),
-      ],
+      children: [Text(l10n.aboutDescription)],
     );
   }
+
+  String _languageName(BuildContext context, Locale? locale) {
+    final l10n = AppLocalizations.of(context)!;
+    return switch (locale?.languageCode) {
+      'en' => l10n.english,
+      'es' => l10n.spanish,
+      _ => l10n.systemDefault,
+    };
+  }
+
+  void _showLanguagePicker(BuildContext context) {
+    final controller = sl<LocaleController>();
+    final l10n = AppLocalizations.of(context)!;
+    showDialog<void>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(l10n.language),
+        content: RadioGroup<Locale?>(
+          groupValue: controller.locale,
+          onChanged: (locale) async {
+            await controller.setLocale(locale);
+            if (dialogContext.mounted) Navigator.pop(dialogContext);
+          },
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _languageOption(null, l10n.systemDefault),
+              _languageOption(const Locale('en'), l10n.english),
+              _languageOption(const Locale('es'), l10n.spanish),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _languageOption(Locale? locale, String label) =>
+      RadioListTile<Locale?>(value: locale, title: Text(label));
 }

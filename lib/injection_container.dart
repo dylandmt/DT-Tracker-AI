@@ -3,13 +3,18 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:get_it/get_it.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:uuid/uuid.dart';
 
 import 'config/environment/firebase_config.dart';
 import 'config/environment/environment.dart';
 import 'core/network/network_info.dart';
 import 'core/localization/locale_controller.dart';
+import 'core/notifications/notification_service.dart';
+import 'core/notifications/push_device_backend_datasource.dart';
 import 'core/permissions/permission_handler.dart';
 import 'core/permissions/permission_handler_impl.dart';
 import 'core/utils/image_compressor.dart';
@@ -85,6 +90,11 @@ Future<void> initializeDependencies() async {
     () => FirebaseConfig.getRealtimeDatabase(),
   );
   sl.registerLazySingleton<FirebaseStorage>(() => FirebaseConfig.getStorage());
+  sl.registerLazySingleton<FirebaseMessaging>(() => FirebaseMessaging.instance);
+  sl.registerLazySingleton<FlutterLocalNotificationsPlugin>(
+    FlutterLocalNotificationsPlugin.new,
+  );
+  sl.registerLazySingleton<Uuid>(Uuid.new);
 
   // Connectivity
   sl.registerLazySingleton<Connectivity>(() => Connectivity());
@@ -107,6 +117,19 @@ Future<void> initializeDependencies() async {
   );
 
   sl.registerLazySingleton<ImageCompressor>(() => ImageCompressorImpl());
+
+  sl.registerLazySingleton<PushDeviceBackendDataSource>(
+    () => PushDeviceBackendDataSource(firebaseAuth: sl()),
+  );
+  sl.registerLazySingleton<NotificationService>(
+    () => NotificationService(
+      messaging: sl(),
+      localNotifications: sl(),
+      preferences: sl(),
+      uuid: sl(),
+      backendDataSource: sl(),
+    ),
+  );
 
   //============================================================================
   // Features - Auth

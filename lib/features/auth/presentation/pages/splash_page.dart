@@ -6,6 +6,7 @@ import '../../../../core/constants/app_constants.dart';
 import '../../../../core/constants/route_constants.dart';
 import '../../../../core/permissions/permission_handler.dart';
 import '../../../../core/permissions/permission_status.dart';
+import '../../../../core/notifications/notification_service.dart';
 import '../../../../core/utils/extensions.dart';
 import 'package:geolocator/geolocator.dart';
 import '../../utils/permission_gate.dart';
@@ -24,9 +25,9 @@ class SplashPage extends StatelessWidget {
           // Gate by required permissions: location + notifications
           final handler = sl<AppPermissionHandler>();
           final hasLocation = await handler.isGranted(AppPermission.location);
-          final hasNotifications = await handler.isGranted(
-            AppPermission.notification,
-          );
+          final hasNotifications = await sl<NotificationService>()
+              .notificationPermissionStatus()
+              .then((status) => status.isGranted);
 
           // Also ensure location services are enabled
           final servicesEnabled = await Geolocator.isLocationServiceEnabled();

@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/route_constants.dart';
 import '../../../../core/permissions/permission_handler.dart';
 import '../../../../core/permissions/permission_status.dart';
+import '../../../../core/notifications/notification_service.dart';
 import '../../../../core/utils/extensions.dart';
 import '../../../../injection_container.dart';
 
@@ -19,6 +20,7 @@ class SetupPermissionsPage extends StatefulWidget {
 class _SetupPermissionsPageState extends State<SetupPermissionsPage>
     with WidgetsBindingObserver {
   final _handler = sl<AppPermissionHandler>();
+  final _notificationService = sl<NotificationService>();
 
   AppPermissionStatus _location = AppPermissionStatus.unknown;
   AppPermissionStatus _notification = AppPermissionStatus.unknown;
@@ -50,7 +52,7 @@ class _SetupPermissionsPageState extends State<SetupPermissionsPage>
 
   Future<void> _refreshStatuses() async {
     final loc = await _handler.checkPermission(AppPermission.location);
-    final noti = await _handler.checkPermission(AppPermission.notification);
+    final noti = await _notificationService.notificationPermissionStatus();
     final servicesEnabled = await Geolocator.isLocationServiceEnabled();
     if (!mounted) return;
     setState(() {
@@ -61,7 +63,11 @@ class _SetupPermissionsPageState extends State<SetupPermissionsPage>
   }
 
   Future<void> _request(AppPermission permission) async {
-    await _handler.ensurePermission(permission);
+    if (permission == AppPermission.notification) {
+      await _notificationService.requestPermissionAndRegister();
+    } else {
+      await _handler.ensurePermission(permission);
+    }
     await _refreshStatuses();
   }
 
@@ -129,10 +135,8 @@ class _SetupPermissionsPageState extends State<SetupPermissionsPage>
           // Request all
           OutlinedButton.icon(
             onPressed: () async {
-              await _handler.requestPermissions([
-                AppPermission.location,
-                AppPermission.notification,
-              ]);
+              await _handler.ensurePermission(AppPermission.location);
+              await _notificationService.requestPermissionAndRegister();
               await _refreshStatuses();
             },
             icon: const Icon(Icons.fact_check),

@@ -191,6 +191,7 @@ class UserSettingsModel extends UserSettings {
     super.speedLimitKmh,
     super.geofenceAlertEnabled,
     super.pushNotificationsEnabled,
+    super.emailNotificationsEnabled,
   });
 
   /// Create from UserSettings entity
@@ -200,6 +201,7 @@ class UserSettingsModel extends UserSettings {
       speedLimitKmh: entity.speedLimitKmh,
       geofenceAlertEnabled: entity.geofenceAlertEnabled,
       pushNotificationsEnabled: entity.pushNotificationsEnabled,
+      emailNotificationsEnabled: entity.emailNotificationsEnabled,
     );
   }
 
@@ -211,6 +213,8 @@ class UserSettingsModel extends UserSettings {
       geofenceAlertEnabled: json['geofenceAlertEnabled'] as bool? ?? true,
       pushNotificationsEnabled:
           json['pushNotificationsEnabled'] as bool? ?? true,
+      emailNotificationsEnabled:
+          json['emailNotificationsEnabled'] as bool? ?? false,
     );
   }
 
@@ -221,6 +225,7 @@ class UserSettingsModel extends UserSettings {
       'speedLimitKmh': speedLimitKmh,
       'geofenceAlertEnabled': geofenceAlertEnabled,
       'pushNotificationsEnabled': pushNotificationsEnabled,
+      'emailNotificationsEnabled': emailNotificationsEnabled,
     };
   }
 }

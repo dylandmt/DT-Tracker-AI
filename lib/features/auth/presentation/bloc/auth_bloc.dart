@@ -53,6 +53,9 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<PasswordResetRequested>(_onPasswordResetRequested);
     on<ProfileUpdateRequested>(_onProfileUpdateRequested);
     on<GeofenceAlertPreferenceChanged>(_onGeofenceAlertPreferenceChanged);
+    on<EmailNotificationPreferenceChanged>(
+      _onEmailNotificationPreferenceChanged,
+    );
     on<AuthStateChanged>(_onAuthStateChanged);
     on<ClearAuthError>(_onClearAuthError);
   }
@@ -70,6 +73,29 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     final result = await updateUserSettings(
       UpdateUserSettingsParams(
         settings: user.settings.copyWith(geofenceAlertEnabled: event.enabled),
+      ),
+    );
+    result.fold(
+      (failure) => emit(AuthState.error(failure.message, user: user)),
+      (updatedUser) => emit(AuthState.authenticated(updatedUser)),
+    );
+  }
+
+  Future<void> _onEmailNotificationPreferenceChanged(
+    EmailNotificationPreferenceChanged event,
+    Emitter<AuthState> emit,
+  ) async {
+    final user = state.user;
+    if (user == null) {
+      emit(AuthState.error('No user is signed in'));
+      return;
+    }
+    emit(state.copyWith(status: AuthStatus.loading, errorMessage: null));
+    final result = await updateUserSettings(
+      UpdateUserSettingsParams(
+        settings: user.settings.copyWith(
+          emailNotificationsEnabled: event.enabled,
+        ),
       ),
     );
     result.fold(

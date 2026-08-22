@@ -212,6 +212,18 @@ abstract class AppLocalizations {
   /// **'Create events when vehicles enter or exit zones'**
   String get geofenceAlertsDescription;
 
+  /// No description provided for @emailAlerts.
+  ///
+  /// In en, this message translates to:
+  /// **'Email alerts'**
+  String get emailAlerts;
+
+  /// No description provided for @emailAlertsDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Receive tracker and geofence alerts by email'**
+  String get emailAlertsDescription;
+
   /// No description provided for @geofences.
   ///
   /// In en, this message translates to:

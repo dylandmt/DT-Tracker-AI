@@ -69,6 +69,13 @@ class AppLocalizationsEs extends AppLocalizations {
       'Crea eventos cuando los vehiculos entren o salgan de zonas';
 
   @override
+  String get emailAlerts => 'Alertas por correo';
+
+  @override
+  String get emailAlertsDescription =>
+      'Recibe alertas del rastreador y geocercas por correo';
+
+  @override
   String get geofences => 'Geocercas';
 
   @override

@@ -109,6 +109,15 @@ class GeofenceAlertPreferenceChanged extends AuthEvent {
   List<Object?> get props => [enabled];
 }
 
+class EmailNotificationPreferenceChanged extends AuthEvent {
+  final bool enabled;
+
+  const EmailNotificationPreferenceChanged(this.enabled);
+
+  @override
+  List<Object?> get props => [enabled];
+}
+
 /// Event when auth state changes (from stream)
 class AuthStateChanged extends AuthEvent {
   final UserEntity? user;

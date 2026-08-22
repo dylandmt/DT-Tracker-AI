@@ -146,6 +146,17 @@ class SettingsPage extends StatelessWidget {
                         GeofenceAlertPreferenceChanged(enabled),
                       ),
               ),
+              SwitchListTile(
+                secondary: const Icon(Icons.email_outlined),
+                title: Text(l10n.emailAlerts),
+                subtitle: Text(l10n.emailAlertsDescription),
+                value: user?.settings.emailNotificationsEnabled ?? false,
+                onChanged: state.isLoading || user == null
+                    ? null
+                    : (enabled) => context.read<AuthBloc>().add(
+                        EmailNotificationPreferenceChanged(enabled),
+                      ),
+              ),
               _buildListTile(
                 context,
                 icon: Icons.fence_outlined,

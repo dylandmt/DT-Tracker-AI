@@ -104,12 +104,14 @@ class UserSettings extends Equatable {
   final double speedLimitKmh;
   final bool geofenceAlertEnabled;
   final bool pushNotificationsEnabled;
+  final bool emailNotificationsEnabled;
 
   const UserSettings({
     this.speedAlertEnabled = true,
     this.speedLimitKmh = 120.0,
     this.geofenceAlertEnabled = true,
     this.pushNotificationsEnabled = true,
+    this.emailNotificationsEnabled = false,
   });
 
   /// Default settings.
@@ -123,6 +125,7 @@ class UserSettings extends Equatable {
     double? speedLimitKmh,
     bool? geofenceAlertEnabled,
     bool? pushNotificationsEnabled,
+    bool? emailNotificationsEnabled,
   }) {
     return UserSettings(
       speedAlertEnabled: speedAlertEnabled ?? this.speedAlertEnabled,
@@ -130,6 +133,8 @@ class UserSettings extends Equatable {
       geofenceAlertEnabled: geofenceAlertEnabled ?? this.geofenceAlertEnabled,
       pushNotificationsEnabled:
           pushNotificationsEnabled ?? this.pushNotificationsEnabled,
+      emailNotificationsEnabled:
+          emailNotificationsEnabled ?? this.emailNotificationsEnabled,
     );
   }
 
@@ -139,5 +144,6 @@ class UserSettings extends Equatable {
     speedLimitKmh,
     geofenceAlertEnabled,
     pushNotificationsEnabled,
+    emailNotificationsEnabled,
   ];
 }

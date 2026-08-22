@@ -19,6 +19,8 @@
   "speedAlertsComingSoon": "Las alertas de velocidad estaran disponibles pronto",
   "geofenceAlerts": "Alertas de geocerca",
   "geofenceAlertsDescription": "Crea eventos cuando los vehiculos entren o salgan de zonas",
+  "emailAlerts": "Alertas por correo",
+  "emailAlertsDescription": "Recibe alertas del rastreador y geocercas por correo",
   "geofences": "Geocercas",
   "manageGeofenceZones": "Administra las zonas de geocerca",
   "about": "Acerca de",

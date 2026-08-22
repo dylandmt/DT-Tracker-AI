@@ -2,9 +2,12 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 import '../../../../core/constants/app_constants.dart';
+import '../../../../core/permissions/permission_handler.dart';
+import '../../../../core/permissions/permission_status.dart';
 import '../../../../core/usecases/usecase.dart';
 import '../../../../core/utils/extensions.dart';
 import '../../../../core/utils/validators.dart';
@@ -38,6 +41,8 @@ class _GeofenceFormPageState extends State<GeofenceFormPage> {
   bool _isActive = true;
   bool _loaded = false;
   bool _loadingVehicles = true;
+  GoogleMapController? _mapController;
+  bool _isGettingCurrentLocation = false;
 
   @override
   void initState() {
@@ -98,6 +103,102 @@ class _GeofenceFormPageState extends State<GeofenceFormPage> {
           triggerOnExit: _triggerOnExit,
           isActive: _isActive,
         ),
+      ),
+    );
+  }
+
+  Future<void> _goToCurrentLocation() async {
+    if (_isGettingCurrentLocation) return;
+
+    setState(() => _isGettingCurrentLocation = true);
+    try {
+      final permissionHandler = sl<AppPermissionHandler>();
+      var status = await permissionHandler.checkPermission(
+        AppPermission.location,
+      );
+      if (!status.isGranted) {
+        status = await permissionHandler.requestPermission(
+          AppPermission.location,
+        );
+      }
+
+      if (!status.isGranted) {
+        if (mounted) {
+          if (status.requiresSettings) {
+            _showLocationPermissionDialog();
+          } else {
+            context.showErrorSnackBar(context.l10n.locationPermissionDenied);
+          }
+        }
+        return;
+      }
+
+      if (!await Geolocator.isLocationServiceEnabled()) {
+        if (mounted) _showEnableLocationServicesDialog();
+        return;
+      }
+
+      final position = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+          timeLimit: Duration(seconds: 10),
+        ),
+      );
+      await _mapController?.animateCamera(
+        CameraUpdate.newLatLngZoom(
+          LatLng(position.latitude, position.longitude),
+          16,
+        ),
+      );
+    } catch (error) {
+      if (mounted) context.showErrorSnackBar(error.toString());
+    } finally {
+      if (mounted) setState(() => _isGettingCurrentLocation = false);
+    }
+  }
+
+  void _showLocationPermissionDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(context.l10n.locationPermissionRequired),
+        content: Text(context.l10n.locationPermissionPermanentlyDenied),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(context.l10n.cancel),
+          ),
+          FilledButton(
+            onPressed: () {
+              Navigator.pop(context);
+              sl<AppPermissionHandler>().openSettings();
+            },
+            child: Text(context.l10n.openSettings),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showEnableLocationServicesDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(context.l10n.enableLocationServices),
+        content: Text(context.l10n.locationServicesTurnedOff),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(context.l10n.cancel),
+          ),
+          FilledButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              await Geolocator.openLocationSettings();
+            },
+            child: Text(context.l10n.openSettings),
+          ),
+        ],
       ),
     );
   }
@@ -168,40 +269,70 @@ class _GeofenceFormPageState extends State<GeofenceFormPage> {
               const SizedBox(height: 8),
               SizedBox(
                 height: mapHeight,
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: GoogleMap(
-                    initialCameraPosition: CameraPosition(
-                      target: _center,
-                      zoom: 14,
+                child: Stack(
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: GoogleMap(
+                        initialCameraPosition: CameraPosition(
+                          target: _center,
+                          zoom: 14,
+                        ),
+                        onMapCreated: (controller) =>
+                            _mapController = controller,
+                        gestureRecognizers: {
+                          Factory<EagerGestureRecognizer>(
+                            () => EagerGestureRecognizer(),
+                          ),
+                        },
+                        onTap: (center) => setState(() => _center = center),
+                        markers: {
+                          Marker(
+                            markerId: const MarkerId('geofence-center'),
+                            position: _center,
+                          ),
+                        },
+                        circles: {
+                          Circle(
+                            circleId: const CircleId('geofence-preview'),
+                            center: _center,
+                            radius:
+                                double.tryParse(_radiusController.text) ??
+                                AppConstants.defaultGeofenceRadiusMeters,
+                            fillColor: Theme.of(
+                              context,
+                            ).colorScheme.primary.withValues(alpha: .16),
+                            strokeColor: Theme.of(context).colorScheme.primary,
+                            strokeWidth: 2,
+                          ),
+                        },
+                      ),
                     ),
-                    gestureRecognizers: {
-                      Factory<EagerGestureRecognizer>(
-                        () => EagerGestureRecognizer(),
+                    Positioned(
+                      top: 12,
+                      right: 12,
+                      child: Material(
+                        color: Theme.of(context).colorScheme.surface,
+                        elevation: 2,
+                        borderRadius: BorderRadius.circular(8),
+                        child: IconButton(
+                          icon: _isGettingCurrentLocation
+                              ? const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : const Icon(Icons.my_location),
+                          tooltip: context.l10n.myLocation,
+                          onPressed: _isGettingCurrentLocation
+                              ? null
+                              : _goToCurrentLocation,
+                        ),
                       ),
-                    },
-                    onTap: (center) => setState(() => _center = center),
-                    markers: {
-                      Marker(
-                        markerId: const MarkerId('geofence-center'),
-                        position: _center,
-                      ),
-                    },
-                    circles: {
-                      Circle(
-                        circleId: const CircleId('geofence-preview'),
-                        center: _center,
-                        radius:
-                            double.tryParse(_radiusController.text) ??
-                            AppConstants.defaultGeofenceRadiusMeters,
-                        fillColor: Theme.of(
-                          context,
-                        ).colorScheme.primary.withValues(alpha: .16),
-                        strokeColor: Theme.of(context).colorScheme.primary,
-                        strokeWidth: 2,
-                      ),
-                    },
-                  ),
+                    ),
+                  ],
                 ),
               ),
               const SizedBox(height: 8),

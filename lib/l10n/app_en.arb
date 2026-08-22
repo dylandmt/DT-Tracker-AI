@@ -19,6 +19,8 @@
   "speedAlertsComingSoon": "Speed alerts coming soon",
   "geofenceAlerts": "Geofence alerts",
   "geofenceAlertsDescription": "Create events when vehicles enter or exit zones",
+  "emailAlerts": "Email alerts",
+  "emailAlertsDescription": "Receive tracker and geofence alerts by email",
   "geofences": "Geofences",
   "manageGeofenceZones": "Manage geofence zones",
   "about": "About",

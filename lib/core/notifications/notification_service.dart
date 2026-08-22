@@ -44,31 +44,33 @@ class NotificationService {
       _notificationActions.stream;
 
   Future<void> initialize() async {
-    if (_initialized || !Platform.isAndroid) return;
+    if (_initialized || (!Platform.isAndroid && !Platform.isIOS)) return;
     _initialized = true;
 
-    const initializationSettings = InitializationSettings(
-      android: AndroidInitializationSettings('@mipmap/ic_launcher'),
-    );
-    await _localNotifications.initialize(
-      initializationSettings,
-      onDidReceiveNotificationResponse: (response) {
-        final payload = NotificationPayload.tryFromJson(response.payload);
-        if (payload != null) _notificationActions.add(payload);
-      },
-    );
+    if (Platform.isAndroid) {
+      const initializationSettings = InitializationSettings(
+        android: AndroidInitializationSettings('@mipmap/ic_launcher'),
+      );
+      await _localNotifications.initialize(
+        initializationSettings,
+        onDidReceiveNotificationResponse: (response) {
+          final payload = NotificationPayload.tryFromJson(response.payload);
+          if (payload != null) _notificationActions.add(payload);
+        },
+      );
 
-    const channel = AndroidNotificationChannel(
-      _channelId,
-      'Geofence alerts',
-      description: 'Notifications when a vehicle enters or exits a geofence.',
-      importance: Importance.high,
-    );
-    await _localNotifications
-        .resolvePlatformSpecificImplementation<
-          AndroidFlutterLocalNotificationsPlugin
-        >()
-        ?.createNotificationChannel(channel);
+      const channel = AndroidNotificationChannel(
+        _channelId,
+        'Geofence alerts',
+        description: 'Notifications when a vehicle enters or exits a geofence.',
+        importance: Importance.high,
+      );
+      await _localNotifications
+          .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin
+          >()
+          ?.createNotificationChannel(channel);
+    }
 
     _foregroundSubscription = FirebaseMessaging.onMessage.listen(
       _handleForegroundMessage,
@@ -92,7 +94,9 @@ class NotificationService {
   }
 
   Future<AppPermissionStatus> notificationPermissionStatus() async {
-    if (!Platform.isAndroid) return AppPermissionStatus.denied;
+    if (!Platform.isAndroid && !Platform.isIOS) {
+      return AppPermissionStatus.denied;
+    }
 
     final settings = await _messaging.getNotificationSettings();
     return switch (settings.authorizationStatus) {
@@ -106,7 +110,9 @@ class NotificationService {
   /// This is the sole notification permission request in the setup flow.
   Future<AppPermissionStatus> requestPermissionAndRegister() async {
     await initialize();
-    if (!Platform.isAndroid) return AppPermissionStatus.denied;
+    if (!Platform.isAndroid && !Platform.isIOS) {
+      return AppPermissionStatus.denied;
+    }
 
     final currentStatus = await notificationPermissionStatus();
     if (currentStatus.isGranted) {

@@ -862,4 +862,46 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get storageAccessShort => 'Se requiere acceso al almacenamiento';
+
+  @override
+  String get firstName => 'Nombre';
+
+  @override
+  String get enterYourFirstName => 'Ingresa tu nombre';
+
+  @override
+  String get lastName => 'Apellido paterno';
+
+  @override
+  String get enterYourLastName => 'Ingresa tu apellido paterno';
+
+  @override
+  String get secondLastName => 'Apellido materno';
+
+  @override
+  String get enterYourSecondLastName => 'Ingresa tu apellido materno';
+
+  @override
+  String get gender => 'Género';
+
+  @override
+  String get birthDate => 'Fecha de nacimiento';
+
+  @override
+  String get male => 'Masculino';
+
+  @override
+  String get female => 'Femenino';
+
+  @override
+  String get other => 'Otro';
+
+  @override
+  String get preferNotToSay => 'Prefiero no decirlo';
+
+  @override
+  String get selectGender => 'Selecciona tu género';
+
+  @override
+  String get selectBirthDate => 'Selecciona tu fecha de nacimiento';
 }

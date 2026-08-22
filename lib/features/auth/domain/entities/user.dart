@@ -1,10 +1,23 @@
 import 'package:equatable/equatable.dart';
 
-/// User entity representing an authenticated user
+/// Supported user gender values.
+enum UserGender { male, female, other, preferNotToSay }
+
+/// User entity representing an authenticated user.
 class UserEntity extends Equatable {
   final String id;
   final String email;
+
+  final String? firstName;
+  final String? lastName;
+  final String? secondLastName;
+
+  final UserGender? gender;
+  final DateTime? birthDate;
+
+  /// Kept for Firebase Auth and backwards compatibility.
   final String? displayName;
+
   final String? photoUrl;
   final DateTime createdAt;
   final UserSettings settings;
@@ -12,16 +25,43 @@ class UserEntity extends Equatable {
   const UserEntity({
     required this.id,
     required this.email,
+    this.firstName,
+    this.lastName,
+    this.secondLastName,
+    this.gender,
+    this.birthDate,
     this.displayName,
     this.photoUrl,
     required this.createdAt,
     required this.settings,
   });
 
-  /// Create a copy with modified fields
+  /// Full name generated from the structured name fields.
+  ///
+  /// Falls back to displayName for legacy users.
+  String get fullName {
+    final name = [firstName, lastName, secondLastName]
+        .whereType<String>()
+        .map((value) => value.trim())
+        .where((value) => value.isNotEmpty)
+        .join(' ');
+
+    if (name.isNotEmpty) {
+      return name;
+    }
+
+    return displayName?.trim() ?? '';
+  }
+
+  /// Create a copy with modified fields.
   UserEntity copyWith({
     String? id,
     String? email,
+    String? firstName,
+    String? lastName,
+    String? secondLastName,
+    UserGender? gender,
+    DateTime? birthDate,
     String? displayName,
     String? photoUrl,
     DateTime? createdAt,
@@ -30,6 +70,11 @@ class UserEntity extends Equatable {
     return UserEntity(
       id: id ?? this.id,
       email: email ?? this.email,
+      firstName: firstName ?? this.firstName,
+      lastName: lastName ?? this.lastName,
+      secondLastName: secondLastName ?? this.secondLastName,
+      gender: gender ?? this.gender,
+      birthDate: birthDate ?? this.birthDate,
       displayName: displayName ?? this.displayName,
       photoUrl: photoUrl ?? this.photoUrl,
       createdAt: createdAt ?? this.createdAt,
@@ -41,6 +86,11 @@ class UserEntity extends Equatable {
   List<Object?> get props => [
     id,
     email,
+    firstName,
+    lastName,
+    secondLastName,
+    gender,
+    birthDate,
     displayName,
     photoUrl,
     createdAt,
@@ -48,7 +98,7 @@ class UserEntity extends Equatable {
   ];
 }
 
-/// User settings/preferences
+/// User settings/preferences.
 class UserSettings extends Equatable {
   final bool speedAlertEnabled;
   final double speedLimitKmh;
@@ -62,12 +112,12 @@ class UserSettings extends Equatable {
     this.pushNotificationsEnabled = true,
   });
 
-  /// Default settings
+  /// Default settings.
   factory UserSettings.defaults() {
     return const UserSettings();
   }
 
-  /// Create a copy with modified fields
+  /// Create a copy with modified fields.
   UserSettings copyWith({
     bool? speedAlertEnabled,
     double? speedLimitKmh,

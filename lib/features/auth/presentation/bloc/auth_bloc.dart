@@ -132,7 +132,11 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       SignUpParams(
         email: event.email,
         password: event.password,
-        displayName: event.displayName,
+        firstName: event.firstName,
+        lastName: event.lastName,
+        secondLastName: event.secondLastName,
+        gender: event.gender,
+        birthDate: event.birthDate,
       ),
     );
 
@@ -216,7 +220,11 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
     final updateResult = await updateUserProfile(
       UpdateUserProfileParams(
-        displayName: event.displayName,
+        firstName: event.firstName,
+        lastName: event.lastName,
+        secondLastName: event.secondLastName,
+        gender: event.gender,
+        birthDate: event.birthDate,
         photoUrl: event.imagePath != null ? photoUrl : null,
       ),
     );

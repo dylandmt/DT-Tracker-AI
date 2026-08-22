@@ -15,7 +15,11 @@ abstract class AuthRepository {
   Future<Either<Failure, UserEntity>> signUpWithEmail({
     required String email,
     required String password,
-    String? displayName,
+    required String firstName,
+    required String lastName,
+    String? secondLastName,
+    required UserGender gender,
+    required DateTime birthDate,
   });
 
   /// Sign out the current user
@@ -32,7 +36,11 @@ abstract class AuthRepository {
 
   /// Update user profile
   Future<Either<Failure, UserEntity>> updateUserProfile({
-    String? displayName,
+    String? firstName,
+    String? lastName,
+    String? secondLastName,
+    UserGender? gender,
+    DateTime? birthDate,
     String? photoUrl,
   });
 

@@ -47,8 +47,9 @@ class AuthRepositoryImpl implements AuthRepository {
         userModel = UserModel.newUser(
           id: firebaseUser.uid,
           email: firebaseUser.email ?? email,
-          displayName: firebaseUser.displayName,
+          legacyDisplayName: firebaseUser.displayName,
         );
+
         await userRemoteDataSource.createUser(userModel);
       }
 
@@ -66,7 +67,11 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<Either<Failure, UserEntity>> signUpWithEmail({
     required String email,
     required String password,
-    String? displayName,
+    required String firstName,
+    required String lastName,
+    String? secondLastName,
+    required UserGender gender,
+    required DateTime birthDate,
   }) async {
     if (!await networkInfo.isConnected) {
       return const Left(NetworkFailure());
@@ -78,15 +83,26 @@ class AuthRepositoryImpl implements AuthRepository {
         password: password,
       );
 
-      if (displayName != null && displayName.isNotEmpty) {
+      final displayName = [
+        firstName.trim(),
+        lastName.trim(),
+        secondLastName?.trim(),
+      ].whereType<String>().where((value) => value.isNotEmpty).join(' ');
+
+      if (displayName.isNotEmpty) {
         await authRemoteDataSource.updateDisplayName(displayName);
       }
 
       final userModel = UserModel.newUser(
         id: firebaseUser.uid,
         email: firebaseUser.email ?? email,
-        displayName: displayName,
+        firstName: firstName,
+        lastName: lastName,
+        secondLastName: secondLastName,
+        gender: gender,
+        birthDate: birthDate,
       );
+
       await userRemoteDataSource.createUser(userModel);
 
       return Right(userModel);
@@ -103,6 +119,7 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<Either<Failure, void>> signOut() async {
     try {
       await authRemoteDataSource.signOut();
+
       return const Right(null);
     } on AuthException catch (e) {
       return Left(AuthFailure(message: e.message));
@@ -126,9 +143,11 @@ class AuthRepositoryImpl implements AuthRepository {
         final newUser = UserModel.newUser(
           id: firebaseUser.uid,
           email: firebaseUser.email ?? '',
-          displayName: firebaseUser.displayName,
+          legacyDisplayName: firebaseUser.displayName,
         );
+
         await userRemoteDataSource.createUser(newUser);
+
         return Right(newUser);
       }
 
@@ -150,6 +169,7 @@ class AuthRepositoryImpl implements AuthRepository {
 
     try {
       await authRemoteDataSource.sendPasswordReset(email: email);
+
       return const Right(null);
     } on AuthException catch (e) {
       return Left(AuthFailure.fromCode(e.code ?? 'unknown'));
@@ -174,18 +194,20 @@ class AuthRepositoryImpl implements AuthRepository {
           final newUser = UserModel.newUser(
             id: firebaseUser.uid,
             email: firebaseUser.email ?? '',
-            displayName: firebaseUser.displayName,
+            legacyDisplayName: firebaseUser.displayName,
           );
+
           await userRemoteDataSource.createUser(newUser);
+
           return newUser;
         }
 
         return userModel;
-      } catch (e) {
+      } catch (_) {
         return UserModel.newUser(
           id: firebaseUser.uid,
           email: firebaseUser.email ?? '',
-          displayName: firebaseUser.displayName,
+          legacyDisplayName: firebaseUser.displayName,
         );
       }
     });
@@ -193,7 +215,11 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Future<Either<Failure, UserEntity>> updateUserProfile({
-    String? displayName,
+    String? firstName,
+    String? lastName,
+    String? secondLastName,
+    UserGender? gender,
+    DateTime? birthDate,
     String? photoUrl,
   }) async {
     if (!await networkInfo.isConnected) {
@@ -202,30 +228,59 @@ class AuthRepositoryImpl implements AuthRepository {
 
     try {
       final firebaseUser = authRemoteDataSource.getCurrentUser();
+
       if (firebaseUser == null) {
         return const Left(AuthFailure(message: 'No user is signed in'));
       }
 
-      if (displayName != null) {
-        await authRemoteDataSource.updateDisplayName(displayName);
-      }
-      if (photoUrl != null) {
-        await authRemoteDataSource.updatePhotoUrl(photoUrl);
-      }
-
       var userModel = await userRemoteDataSource.getUser(firebaseUser.uid);
+
       if (userModel == null) {
         return const Left(NotFoundFailure(message: 'User not found'));
+      }
+
+      final updatedFirstName = firstName?.trim() ?? userModel.firstName;
+
+      final updatedLastName = lastName?.trim() ?? userModel.lastName;
+
+      final updatedSecondLastName =
+          secondLastName?.trim() ?? userModel.secondLastName;
+
+      final updatedGender = gender ?? userModel.gender;
+
+      final updatedBirthDate = birthDate ?? userModel.birthDate;
+
+      final displayName =
+          [updatedFirstName, updatedLastName, updatedSecondLastName]
+              .whereType<String>()
+              .map((value) => value.trim())
+              .where((value) => value.isNotEmpty)
+              .join(' ');
+
+      if (displayName.isNotEmpty && displayName != userModel.displayName) {
+        await authRemoteDataSource.updateDisplayName(displayName);
+      }
+
+      if (photoUrl != null && photoUrl != userModel.photoUrl) {
+        await authRemoteDataSource.updatePhotoUrl(photoUrl);
       }
 
       userModel = UserModel(
         id: userModel.id,
         email: userModel.email,
-        displayName: displayName ?? userModel.displayName,
+        firstName: updatedFirstName,
+        lastName: updatedLastName,
+        secondLastName: updatedSecondLastName,
+        gender: updatedGender,
+        birthDate: updatedBirthDate,
+        displayName: displayName.isNotEmpty
+            ? displayName
+            : userModel.displayName,
         photoUrl: photoUrl ?? userModel.photoUrl,
         createdAt: userModel.createdAt,
         settings: userModel.settings,
       );
+
       await userRemoteDataSource.updateUser(userModel);
 
       return Right(userModel);
@@ -248,13 +303,16 @@ class AuthRepositoryImpl implements AuthRepository {
 
     try {
       final firebaseUser = authRemoteDataSource.getCurrentUser();
+
       if (firebaseUser == null) {
         return const Left(AuthFailure(message: 'No user is signed in'));
       }
+
       final imageUrl = await profileImageDataSource.uploadImage(
         userId: firebaseUser.uid,
         filePath: filePath,
       );
+
       return Right(imageUrl);
     } on ServerException catch (e) {
       return Left(ServerFailure(message: e.message));
@@ -269,6 +327,7 @@ class AuthRepositoryImpl implements AuthRepository {
   }) async {
     try {
       await profileImageDataSource.deleteImage(imageUrl);
+
       return const Right(null);
     } on ServerException catch (e) {
       return Left(ServerFailure(message: e.message));
@@ -287,11 +346,13 @@ class AuthRepositoryImpl implements AuthRepository {
 
     try {
       final firebaseUser = authRemoteDataSource.getCurrentUser();
+
       if (firebaseUser == null) {
         return const Left(AuthFailure(message: 'No user is signed in'));
       }
 
       var userModel = await userRemoteDataSource.getUser(firebaseUser.uid);
+
       if (userModel == null) {
         return const Left(NotFoundFailure(message: 'User not found'));
       }
@@ -299,11 +360,22 @@ class AuthRepositoryImpl implements AuthRepository {
       userModel = UserModel(
         id: userModel.id,
         email: userModel.email,
+
+        // Preserve all profile fields.
+        firstName: userModel.firstName,
+        lastName: userModel.lastName,
+        secondLastName: userModel.secondLastName,
+        gender: userModel.gender,
+        birthDate: userModel.birthDate,
+
         displayName: userModel.displayName,
         photoUrl: userModel.photoUrl,
         createdAt: userModel.createdAt,
+
+        // Only settings change here.
         settings: settings,
       );
+
       await userRemoteDataSource.updateUser(userModel);
 
       return Right(userModel);

@@ -847,4 +847,46 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get storageAccessShort => 'Storage access is required';
+
+  @override
+  String get firstName => 'First name';
+
+  @override
+  String get enterYourFirstName => 'Enter your first name';
+
+  @override
+  String get lastName => 'Last name';
+
+  @override
+  String get enterYourLastName => 'Enter your last name';
+
+  @override
+  String get secondLastName => 'Second last name';
+
+  @override
+  String get enterYourSecondLastName => 'Enter your second last name';
+
+  @override
+  String get gender => 'Gender';
+
+  @override
+  String get birthDate => 'Date of birth';
+
+  @override
+  String get male => 'Male';
+
+  @override
+  String get female => 'Female';
+
+  @override
+  String get other => 'Other';
+
+  @override
+  String get preferNotToSay => 'Prefer not to say';
+
+  @override
+  String get selectGender => 'Select your gender';
+
+  @override
+  String get selectBirthDate => 'Select your date of birth';
 }

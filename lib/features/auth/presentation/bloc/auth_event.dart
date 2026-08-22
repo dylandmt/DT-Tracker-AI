@@ -26,16 +26,34 @@ class SignInRequested extends AuthEvent {
 class SignUpRequested extends AuthEvent {
   final String email;
   final String password;
-  final String? displayName;
+
+  final String firstName;
+  final String lastName;
+  final String? secondLastName;
+
+  final UserGender gender;
+  final DateTime birthDate;
 
   const SignUpRequested({
     required this.email,
     required this.password,
-    this.displayName,
+    required this.firstName,
+    required this.lastName,
+    this.secondLastName,
+    required this.gender,
+    required this.birthDate,
   });
 
   @override
-  List<Object?> get props => [email, password, displayName];
+  List<Object?> get props => [
+    email,
+    password,
+    firstName,
+    lastName,
+    secondLastName,
+    gender,
+    birthDate,
+  ];
 }
 
 /// Event to sign out
@@ -51,15 +69,35 @@ class PasswordResetRequested extends AuthEvent {
   List<Object?> get props => [email];
 }
 
-/// Update the display name and optionally replace the profile image.
+/// Update the user profile and optionally replace the profile image.
 class ProfileUpdateRequested extends AuthEvent {
-  final String displayName;
+  final String? firstName;
+  final String? lastName;
+  final String? secondLastName;
+
+  final UserGender? gender;
+  final DateTime? birthDate;
+
   final String? imagePath;
 
-  const ProfileUpdateRequested({required this.displayName, this.imagePath});
+  const ProfileUpdateRequested({
+    this.firstName,
+    this.lastName,
+    this.secondLastName,
+    this.gender,
+    this.birthDate,
+    this.imagePath,
+  });
 
   @override
-  List<Object?> get props => [displayName, imagePath];
+  List<Object?> get props => [
+    firstName,
+    lastName,
+    secondLastName,
+    gender,
+    birthDate,
+    imagePath,
+  ];
 }
 
 class GeofenceAlertPreferenceChanged extends AuthEvent {

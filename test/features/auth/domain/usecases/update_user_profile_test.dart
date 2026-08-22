@@ -16,6 +16,11 @@ void main() {
   final user = UserEntity(
     id: 'user-id',
     email: 'user@example.com',
+    firstName: 'Updated',
+    lastName: 'User',
+    secondLastName: null,
+    gender: UserGender.male,
+    birthDate: DateTime(1990, 5, 18),
     displayName: 'Updated User',
     photoUrl: 'https://example.com/profile.jpg',
     createdAt: DateTime(2026),
@@ -27,30 +32,40 @@ void main() {
     useCase = UpdateUserProfile(repository);
   });
 
-  test(
-    'forwards display name and profile photo URL to the repository',
-    () async {
-      when(
-        () => repository.updateUserProfile(
-          displayName: 'Updated User',
-          photoUrl: 'https://example.com/profile.jpg',
-        ),
-      ).thenAnswer((_) async => Right<Failure, UserEntity>(user));
+  test('forwards profile fields and photo URL to the repository', () async {
+    when(
+      () => repository.updateUserProfile(
+        firstName: 'Updated',
+        lastName: 'User',
+        secondLastName: null,
+        gender: UserGender.male,
+        birthDate: DateTime(1990, 5, 18),
+        photoUrl: 'https://example.com/profile.jpg',
+      ),
+    ).thenAnswer((_) async => Right<Failure, UserEntity>(user));
 
-      final result = await useCase(
-        const UpdateUserProfileParams(
-          displayName: 'Updated User',
-          photoUrl: 'https://example.com/profile.jpg',
-        ),
-      );
+    final result = await useCase(
+      UpdateUserProfileParams(
+        firstName: 'Updated',
+        lastName: 'User',
+        secondLastName: null,
+        gender: UserGender.male,
+        birthDate: DateTime(1990, 5, 18),
+        photoUrl: 'https://example.com/profile.jpg',
+      ),
+    );
 
-      expect(result, Right<Failure, UserEntity>(user));
-      verify(
-        () => repository.updateUserProfile(
-          displayName: 'Updated User',
-          photoUrl: 'https://example.com/profile.jpg',
-        ),
-      ).called(1);
-    },
-  );
+    expect(result, Right<Failure, UserEntity>(user));
+
+    verify(
+      () => repository.updateUserProfile(
+        firstName: 'Updated',
+        lastName: 'User',
+        secondLastName: null,
+        gender: UserGender.male,
+        birthDate: DateTime(1990, 5, 18),
+        photoUrl: 'https://example.com/profile.jpg',
+      ),
+    ).called(1);
+  });
 }

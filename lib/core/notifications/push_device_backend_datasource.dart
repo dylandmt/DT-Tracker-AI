@@ -22,25 +22,32 @@ class PushDeviceBackendDataSource {
     required String pushToken,
   }) async {
     final user = _auth.currentUser;
+
     if (user == null) {
       throw const AuthException(message: 'User not authenticated');
     }
 
     final idToken = await user.getIdToken();
+
     final client = HttpClient();
+
     try {
       final request = await client.putUrl(
         Uri.parse('$_baseUrl/users/me/devices/$deviceId/push-token'),
       );
+
       request.headers.set(HttpHeaders.contentTypeHeader, 'application/json');
+
       request.headers.set(HttpHeaders.authorizationHeader, 'Bearer $idToken');
+
+      final platform = Platform.isIOS ? 'ios' : 'android';
+
       request.add(
-        utf8.encode(
-          jsonEncode({'pushToken': pushToken, 'platform': 'android'}),
-        ),
+        utf8.encode(jsonEncode({'pushToken': pushToken, 'platform': platform})),
       );
 
       final response = await request.close();
+
       if (response.statusCode < 200 || response.statusCode >= 300) {
         throw ServerException(
           message: 'Push token registration failed',

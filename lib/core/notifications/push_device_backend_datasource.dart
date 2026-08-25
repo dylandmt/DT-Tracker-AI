@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 
 import '../../config/environment/environment.dart';
 import '../errors/exceptions.dart';
@@ -22,35 +23,45 @@ class PushDeviceBackendDataSource {
     required String pushToken,
   }) async {
     final user = _auth.currentUser;
-
     if (user == null) {
       throw const AuthException(message: 'User not authenticated');
     }
 
     final idToken = await user.getIdToken();
+    final platform = Platform.isIOS ? 'ios' : 'android';
+    final uri = Uri.parse('$_baseUrl/users/me/devices/$deviceId/push-token');
 
     final client = HttpClient();
 
     try {
-      final request = await client.putUrl(
-        Uri.parse('$_baseUrl/users/me/devices/$deviceId/push-token'),
-      );
+      if (kDebugMode) {
+        debugPrint('[PUSH] Registering push device');
+        debugPrint('[PUSH] uri=$uri');
+        debugPrint('[PUSH] deviceId=$deviceId');
+        debugPrint('[PUSH] platform=$platform');
+        debugPrint('[PUSH] tokenLength=${pushToken.length}');
+      }
 
+      final request = await client.putUrl(uri);
       request.headers.set(HttpHeaders.contentTypeHeader, 'application/json');
-
       request.headers.set(HttpHeaders.authorizationHeader, 'Bearer $idToken');
-
-      final platform = Platform.isIOS ? 'ios' : 'android';
-
       request.add(
         utf8.encode(jsonEncode({'pushToken': pushToken, 'platform': platform})),
       );
 
       final response = await request.close();
+      final responseBody = await response.transform(utf8.decoder).join();
+
+      if (kDebugMode) {
+        debugPrint('[PUSH] registration status=${response.statusCode}');
+        debugPrint('[PUSH] registration body=$responseBody');
+      }
 
       if (response.statusCode < 200 || response.statusCode >= 300) {
         throw ServerException(
-          message: 'Push token registration failed',
+          message: responseBody.isEmpty
+              ? 'Push token registration failed'
+              : 'Push token registration failed: $responseBody',
           statusCode: response.statusCode,
         );
       }

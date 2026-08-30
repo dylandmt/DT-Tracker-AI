@@ -911,4 +911,50 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get selectBirthDate => 'Selecciona tu fecha de nacimiento';
+
+  @override
+  String get trips => 'Viajes';
+
+  @override
+  String get tripHistory => 'Historial de viajes';
+
+  @override
+  String get noTripsYet => 'Aun no hay viajes completados';
+
+  @override
+  String get startTrip => 'Iniciar viaje';
+
+  @override
+  String get endTrip => 'Finalizar viaje';
+
+  @override
+  String get activeTrip => 'Viaje activo';
+
+  @override
+  String get selectVehicleToStartTrip =>
+      'Selecciona un vehiculo vinculado para iniciar un viaje.';
+
+  @override
+  String get start => 'Iniciar';
+
+  @override
+  String get tracker => 'Rastreador';
+
+  @override
+  String get tripDetails => 'Detalles del viaje';
+
+  @override
+  String get distance => 'Distancia';
+
+  @override
+  String get duration => 'Duracion';
+
+  @override
+  String get maxSpeed => 'Velocidad maxima';
+
+  @override
+  String get averageSpeed => 'Velocidad promedio';
+
+  @override
+  String get points => 'Puntos';
 }

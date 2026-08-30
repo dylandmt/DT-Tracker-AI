@@ -98,5 +98,20 @@
   "other": "Other",
   "preferNotToSay": "Prefer not to say",
   "selectGender": "Select your gender",
-  "selectBirthDate": "Select your date of birth" 
+  "selectBirthDate": "Select your date of birth",
+  "trips": "Trips",
+  "tripHistory": "Trip history",
+  "noTripsYet": "No completed trips yet",
+  "startTrip": "Start trip",
+  "endTrip": "End trip",
+  "activeTrip": "Active trip",
+  "selectVehicleToStartTrip": "Select a linked vehicle to begin a trip.",
+  "start": "Start",
+  "tracker": "Tracker",
+  "tripDetails": "Trip details",
+  "distance": "Distance",
+  "duration": "Duration",
+  "maxSpeed": "Max speed",
+  "averageSpeed": "Average speed",
+  "points": "Points"
 }

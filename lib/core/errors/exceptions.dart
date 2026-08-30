@@ -2,10 +2,14 @@
 class ServerException implements Exception {
   final String message;
   final int? statusCode;
+  final String? errorCode;
+  final String? requestId;
 
   const ServerException({
     this.message = 'Server error occurred',
     this.statusCode,
+    this.errorCode,
+    this.requestId,
   });
 
   @override

@@ -30,6 +30,9 @@ class HomePage extends StatelessWidget {
       return 1;
     }
     if (location.startsWith('/home/settings')) {
+      return 3;
+    }
+    if (location.startsWith('/home/trips')) {
       return 2;
     }
     // Default to vehicles
@@ -46,6 +49,9 @@ class HomePage extends StatelessWidget {
         context.go('/home/map');
         break;
       case 2:
+        context.go('/home/trips');
+        break;
+      case 3:
         context.go('/home/settings');
         break;
     }

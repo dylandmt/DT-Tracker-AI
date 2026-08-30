@@ -137,6 +137,24 @@ class NotFoundFailure extends Failure {
   });
 }
 
+class ForbiddenFailure extends Failure {
+  const ForbiddenFailure({
+    super.message = 'You do not have permission to perform this operation.',
+  });
+}
+
+class ConflictFailure extends Failure {
+  const ConflictFailure({
+    super.message = 'This operation conflicts with the current server state.',
+  });
+}
+
+class ActiveTripExistsFailure extends ConflictFailure {
+  const ActiveTripExistsFailure({
+    super.message = 'You already have an active trip.',
+  });
+}
+
 /// Unknown/unexpected failures
 class UnknownFailure extends Failure {
   const UnknownFailure({

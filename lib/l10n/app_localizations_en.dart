@@ -896,4 +896,50 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get selectBirthDate => 'Select your date of birth';
+
+  @override
+  String get trips => 'Trips';
+
+  @override
+  String get tripHistory => 'Trip history';
+
+  @override
+  String get noTripsYet => 'No completed trips yet';
+
+  @override
+  String get startTrip => 'Start trip';
+
+  @override
+  String get endTrip => 'End trip';
+
+  @override
+  String get activeTrip => 'Active trip';
+
+  @override
+  String get selectVehicleToStartTrip =>
+      'Select a linked vehicle to begin a trip.';
+
+  @override
+  String get start => 'Start';
+
+  @override
+  String get tracker => 'Tracker';
+
+  @override
+  String get tripDetails => 'Trip details';
+
+  @override
+  String get distance => 'Distance';
+
+  @override
+  String get duration => 'Duration';
+
+  @override
+  String get maxSpeed => 'Max speed';
+
+  @override
+  String get averageSpeed => 'Average speed';
+
+  @override
+  String get points => 'Points';
 }

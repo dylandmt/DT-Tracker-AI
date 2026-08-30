@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../l10n/app_localizations.dart';
 
 /// Navigation destinations for the app
-enum AppDestination { vehicles, map, settings }
+enum AppDestination { vehicles, map, trips, settings }
 
 /// App bottom navigation bar using Material 3 NavigationBar
 class AppNavigationBar extends StatelessWidget {
@@ -32,6 +32,11 @@ class AppNavigationBar extends StatelessWidget {
           icon: Icon(Icons.map_outlined),
           selectedIcon: Icon(Icons.map),
           label: AppLocalizations.of(context)!.map,
+        ),
+        NavigationDestination(
+          icon: Icon(Icons.route_outlined),
+          selectedIcon: Icon(Icons.route),
+          label: AppLocalizations.of(context)!.trips,
         ),
         NavigationDestination(
           icon: Icon(Icons.settings_outlined),

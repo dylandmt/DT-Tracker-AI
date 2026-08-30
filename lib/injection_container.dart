@@ -73,6 +73,11 @@ import 'features/events/data/repositories/event_repository_impl.dart';
 import 'features/events/domain/repositories/event_repository.dart';
 import 'features/events/domain/usecases/event_usecases.dart';
 import 'features/events/presentation/bloc/events_bloc.dart';
+import 'features/trips/data/datasources/trip_remote_datasource.dart';
+import 'features/trips/data/repositories/trip_repository_impl.dart';
+import 'features/trips/domain/repositories/trip_repository.dart';
+import 'features/trips/domain/usecases/trip_usecases.dart';
+import 'features/trips/presentation/bloc/trip_bloc.dart';
 
 final sl = GetIt.instance;
 
@@ -183,6 +188,31 @@ Future<void> initializeDependencies() async {
       uploadProfileImage: sl(),
       deleteProfileImage: sl(),
       updateUserSettings: sl(),
+    ),
+  );
+
+  //============================================================================
+  // Features - Trips
+  //============================================================================
+  sl.registerLazySingleton<TripRemoteDataSource>(
+    () => TripRemoteDataSourceImpl(firebaseAuth: sl()),
+  );
+  sl.registerLazySingleton<TripRepository>(
+    () => TripRepositoryImpl(remoteDataSource: sl(), networkInfo: sl()),
+  );
+  sl.registerLazySingleton(() => StartTrip(sl()));
+  sl.registerLazySingleton(() => GetActiveTrip(sl()));
+  sl.registerLazySingleton(() => GetTrips(sl()));
+  sl.registerLazySingleton(() => GetTrip(sl()));
+  sl.registerLazySingleton(() => EndTrip(sl()));
+  sl.registerFactory(
+    () => TripBloc(
+      getActiveTrip: sl(),
+      getTrips: sl(),
+      getTrip: sl(),
+      startTrip: sl(),
+      endTrip: sl(),
+      getVehicles: sl(),
     ),
   );
 

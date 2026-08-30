@@ -13,6 +13,7 @@ class RouteConstants {
   static const String home = '/home';
   static const String homeVehicles = '/home/vehicles';
   static const String homeMap = '/home/map';
+  static const String homeTrips = '/home/trips';
   static const String homeSettings = '/home/settings';
 
   // Vehicle Routes (nested under home)
@@ -47,6 +48,7 @@ class RouteConstants {
   static const String homeName = 'home';
   static const String homeVehiclesName = 'homeVehicles';
   static const String homeMapName = 'homeMap';
+  static const String homeTripsName = 'homeTrips';
   static const String homeSettingsName = 'homeSettings';
   static const String vehiclesName = 'vehicles';
   static const String vehicleDetailName = 'vehicleDetail';

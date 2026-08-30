@@ -97,5 +97,20 @@
   "other": "Otro",
   "preferNotToSay": "Prefiero no decirlo",
   "selectGender": "Selecciona tu género",
-  "selectBirthDate": "Selecciona tu fecha de nacimiento"
+  "selectBirthDate": "Selecciona tu fecha de nacimiento",
+  "trips": "Viajes",
+  "tripHistory": "Historial de viajes",
+  "noTripsYet": "Aun no hay viajes completados",
+  "startTrip": "Iniciar viaje",
+  "endTrip": "Finalizar viaje",
+  "activeTrip": "Viaje activo",
+  "selectVehicleToStartTrip": "Selecciona un vehiculo vinculado para iniciar un viaje.",
+  "start": "Iniciar",
+  "tracker": "Rastreador",
+  "tripDetails": "Detalles del viaje",
+  "distance": "Distancia",
+  "duration": "Duracion",
+  "maxSpeed": "Velocidad maxima",
+  "averageSpeed": "Velocidad promedio",
+  "points": "Puntos"
 }

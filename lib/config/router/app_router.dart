@@ -27,6 +27,8 @@ import '../../features/vehicles/presentation/pages/link_tracker_page.dart';
 import '../../features/vehicles/presentation/pages/vehicle_detail_page.dart';
 import '../../features/vehicles/presentation/pages/vehicle_form_page.dart';
 import '../../features/vehicles/presentation/pages/vehicles_page.dart';
+import '../../features/trips/presentation/bloc/trip_bloc.dart';
+import '../../features/trips/presentation/pages/trips_page.dart';
 import '../../injection_container.dart';
 
 /// Application router configuration using GoRouter
@@ -221,6 +223,17 @@ class AppRouter {
                   ),
                 ],
                 child: const MapPage(),
+              ),
+            ),
+          ),
+
+          GoRoute(
+            path: RouteConstants.homeTrips,
+            name: RouteConstants.homeTripsName,
+            pageBuilder: (context, state) => NoTransitionPage(
+              child: BlocProvider(
+                create: (_) => sl<TripBloc>(),
+                child: const TripsPage(),
               ),
             ),
           ),

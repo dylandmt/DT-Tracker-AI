@@ -1675,6 +1675,96 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Select your date of birth'**
   String get selectBirthDate;
+
+  /// No description provided for @trips.
+  ///
+  /// In en, this message translates to:
+  /// **'Trips'**
+  String get trips;
+
+  /// No description provided for @tripHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Trip history'**
+  String get tripHistory;
+
+  /// No description provided for @noTripsYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No completed trips yet'**
+  String get noTripsYet;
+
+  /// No description provided for @startTrip.
+  ///
+  /// In en, this message translates to:
+  /// **'Start trip'**
+  String get startTrip;
+
+  /// No description provided for @endTrip.
+  ///
+  /// In en, this message translates to:
+  /// **'End trip'**
+  String get endTrip;
+
+  /// No description provided for @activeTrip.
+  ///
+  /// In en, this message translates to:
+  /// **'Active trip'**
+  String get activeTrip;
+
+  /// No description provided for @selectVehicleToStartTrip.
+  ///
+  /// In en, this message translates to:
+  /// **'Select a linked vehicle to begin a trip.'**
+  String get selectVehicleToStartTrip;
+
+  /// No description provided for @start.
+  ///
+  /// In en, this message translates to:
+  /// **'Start'**
+  String get start;
+
+  /// No description provided for @tracker.
+  ///
+  /// In en, this message translates to:
+  /// **'Tracker'**
+  String get tracker;
+
+  /// No description provided for @tripDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Trip details'**
+  String get tripDetails;
+
+  /// No description provided for @distance.
+  ///
+  /// In en, this message translates to:
+  /// **'Distance'**
+  String get distance;
+
+  /// No description provided for @duration.
+  ///
+  /// In en, this message translates to:
+  /// **'Duration'**
+  String get duration;
+
+  /// No description provided for @maxSpeed.
+  ///
+  /// In en, this message translates to:
+  /// **'Max speed'**
+  String get maxSpeed;
+
+  /// No description provided for @averageSpeed.
+  ///
+  /// In en, this message translates to:
+  /// **'Average speed'**
+  String get averageSpeed;
+
+  /// No description provided for @points.
+  ///
+  /// In en, this message translates to:
+  /// **'Points'**
+  String get points;
 }
 
 class _AppLocalizationsDelegate

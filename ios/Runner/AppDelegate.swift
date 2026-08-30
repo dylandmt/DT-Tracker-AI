@@ -1,6 +1,7 @@
 import Flutter
 import UIKit
 import GoogleMaps
+import UserNotifications
 
 @main
 @objc class AppDelegate: FlutterAppDelegate, FlutterImplicitEngineDelegate {
@@ -17,9 +18,48 @@ import GoogleMaps
 
     GMSServices.provideAPIKey(apiKey)
 
-    return super.application(
+    let result = super.application(
       application,
       didFinishLaunchingWithOptions: launchOptions
+    )
+
+    print("[APNS] Calling registerForRemoteNotifications()")
+
+    DispatchQueue.main.async {
+      application.registerForRemoteNotifications()
+    }
+
+    return result
+  }
+
+  override func application(
+    _ application: UIApplication,
+    didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data
+  ) {
+    let token = deviceToken.map {
+      String(format: "%02.2hhx", $0)
+    }.joined()
+
+    print("[APNS] Registration SUCCESS")
+    print("[APNS] Token available=true")
+    print("[APNS] Token length=\(token.count)")
+
+    super.application(
+      application,
+      didRegisterForRemoteNotificationsWithDeviceToken: deviceToken
+    )
+  }
+
+  override func application(
+    _ application: UIApplication,
+    didFailToRegisterForRemoteNotificationsWithError error: Error
+  ) {
+    print("[APNS] Registration FAILED")
+    print("[APNS] Error=\(error.localizedDescription)")
+
+    super.application(
+      application,
+      didFailToRegisterForRemoteNotificationsWithError: error
     )
   }
 

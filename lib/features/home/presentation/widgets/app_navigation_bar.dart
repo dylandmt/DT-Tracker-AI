@@ -33,11 +33,11 @@ class AppNavigationBar extends StatelessWidget {
           selectedIcon: Icon(Icons.map),
           label: AppLocalizations.of(context)!.map,
         ),
-        NavigationDestination(
-          icon: Icon(Icons.route_outlined),
-          selectedIcon: Icon(Icons.route),
-          label: AppLocalizations.of(context)!.trips,
-        ),
+        // NavigationDestination(
+        //   icon: Icon(Icons.route_outlined),
+        //   selectedIcon: Icon(Icons.route),
+        //   label: AppLocalizations.of(context)!.trips,
+        // ),
         NavigationDestination(
           icon: Icon(Icons.settings_outlined),
           selectedIcon: Icon(Icons.settings),

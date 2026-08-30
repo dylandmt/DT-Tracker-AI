@@ -125,16 +125,16 @@ class SettingsPage extends StatelessWidget {
               const SizedBox(height: 16),
 
               _buildSectionHeader(context, l10n.tracking),
-              _buildListTile(
-                context,
-                icon: Icons.speed_outlined,
-                title: l10n.speedAlerts,
-                subtitle: l10n.configureSpeedAlerts,
-                onTap: () {
-                  // TODO: Navigate to speed alert settings
-                  context.showSnackBar(l10n.speedAlertsComingSoon);
-                },
-              ),
+              // _buildListTile(
+              //   context,
+              //   icon: Icons.speed_outlined,
+              //   title: l10n.speedAlerts,
+              //   subtitle: l10n.configureSpeedAlerts,
+              //   onTap: () {
+              //     // TODO: Navigate to speed alert settings
+              //     context.showSnackBar(l10n.speedAlertsComingSoon);
+              //   },
+              // ),
               SwitchListTile(
                 secondary: const Icon(Icons.fence_outlined),
                 title: Text(l10n.geofenceAlerts),
@@ -186,16 +186,16 @@ class SettingsPage extends StatelessWidget {
                   _showAboutDialog(context);
                 },
               ),
-              _buildListTile(
-                context,
-                icon: Icons.help_outline,
-                title: l10n.helpAndSupport,
-                subtitle: l10n.getHelpWithApp,
-                onTap: () {
-                  context.showSnackBar(l10n.helpComingSoon);
-                },
-              ),
 
+              // _buildListTile(
+              //   context,
+              //   icon: Icons.help_outline,
+              //   title: l10n.helpAndSupport,
+              //   subtitle: l10n.getHelpWithApp,
+              //   onTap: () {
+              //     context.showSnackBar(l10n.helpComingSoon);
+              //   },
+              // ),
               const SizedBox(height: 32),
 
               // Sign out button

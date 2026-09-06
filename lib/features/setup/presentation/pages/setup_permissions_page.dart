@@ -28,7 +28,7 @@ class _SetupPermissionsPageState extends State<SetupPermissionsPage>
 
   bool get _allGranted => _location.isGranted && _notification.isGranted;
 
-  bool get _readyToContinue => _allGranted && _locationServicesEnabled;
+  bool get _readyToContinue => _allGranted;
 
   @override
   void initState() {

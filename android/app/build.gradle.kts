@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "com.dttrackerai.dt_tracker_ai"
+    namespace = "com.dttracker.android"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -21,7 +21,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.dttrackerai.dt_tracker_ai"
+        applicationId = "com.dttracker.android"
         minSdk = 29
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode

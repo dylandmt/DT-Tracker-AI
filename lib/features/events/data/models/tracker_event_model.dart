@@ -9,7 +9,9 @@ class TrackerEventModel extends TrackerEventEntity {
     required super.status,
     required super.isRead,
     required super.vehicleId,
+    super.vehicleName,
     required super.trackerId,
+    super.geofenceName,
     required super.title,
     required super.message,
     required super.occurredAt,
@@ -21,13 +23,16 @@ class TrackerEventModel extends TrackerEventEntity {
   ) {
     final data = document.data()!;
     final location = data['location'];
+    final eventData = data['data'];
     return TrackerEventModel(
       id: document.id,
       type: data['type'] as String? ?? 'unknown',
       status: data['status'] as String? ?? 'new',
       isRead: data['isRead'] as bool? ?? false,
       vehicleId: data['vehicleId'] as String? ?? '',
+      vehicleName: _stringValue(data, eventData, 'vehicleName'),
       trackerId: data['trackerId'] as String? ?? '',
+      geofenceName: _stringValue(data, eventData, 'geofenceName'),
       title: data['title'] as String? ?? 'Tracker event',
       message: data['message'] as String? ?? '',
       occurredAt:
@@ -39,5 +44,16 @@ class TrackerEventModel extends TrackerEventEntity {
             )
           : null,
     );
+  }
+
+  static String? _stringValue(
+    Map<String, dynamic> data,
+    Object? eventData,
+    String field,
+  ) {
+    final value =
+        data[field] ??
+        (eventData is Map<String, dynamic> ? eventData[field] : null);
+    return value is String && value.isNotEmpty ? value : null;
   }
 }

@@ -6,6 +6,7 @@ import 'config/environment/firebase_config.dart';
 import 'app.dart';
 import 'core/localization/locale_controller.dart';
 import 'core/notifications/firebase_messaging_background_handler.dart';
+import 'core/theme/theme_controller.dart';
 import 'injection_container.dart';
 
 void main() async {
@@ -16,5 +17,10 @@ void main() async {
     FirebaseConfig.logConfiguration();
   }
   await initializeDependencies();
-  runApp(DTTrackerApp(localeController: sl<LocaleController>()));
+  runApp(
+    DTTrackerApp(
+      localeController: sl<LocaleController>(),
+      themeController: sl<ThemeController>(),
+    ),
+  );
 }

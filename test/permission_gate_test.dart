@@ -9,7 +9,6 @@ void main() {
       final route = resolvePostAuthRoute(
         hasLocation: true,
         hasNotifications: true,
-        servicesEnabled: true,
       );
       expect(route, RouteConstants.home);
     });
@@ -18,7 +17,6 @@ void main() {
       final route = resolvePostAuthRoute(
         hasLocation: false,
         hasNotifications: true,
-        servicesEnabled: true,
       );
       expect(route, RouteConstants.setup);
     });
@@ -27,18 +25,19 @@ void main() {
       final route = resolvePostAuthRoute(
         hasLocation: true,
         hasNotifications: false,
-        servicesEnabled: true,
       );
       expect(route, RouteConstants.setup);
     });
 
-    test('routes to setup when services are disabled', () {
-      final route = resolvePostAuthRoute(
-        hasLocation: true,
-        hasNotifications: true,
-        servicesEnabled: false,
-      );
-      expect(route, RouteConstants.setup);
-    });
+    test(
+      'returns home when services are disabled but permissions are granted',
+      () {
+        final route = resolvePostAuthRoute(
+          hasLocation: true,
+          hasNotifications: true,
+        );
+        expect(route, RouteConstants.home);
+      },
+    );
   });
 }

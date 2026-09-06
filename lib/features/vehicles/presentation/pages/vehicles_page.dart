@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/route_constants.dart';
+import '../../../../core/utils/image_cache.dart';
 import '../../../../core/utils/extensions.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../bloc/vehicles_bloc.dart';
@@ -64,6 +65,10 @@ class _VehiclesPageState extends State<VehiclesPage> {
 
           return RefreshIndicator(
             onRefresh: () async {
+              await refreshCachedImages(
+                state.vehicles.expand((vehicle) => vehicle.imageUrls),
+              );
+              if (!context.mounted) return;
               context.read<VehiclesBloc>().add(const RefreshVehicles());
             },
             child: GridView.builder(
@@ -102,7 +107,7 @@ class _VehiclesPageState extends State<VehiclesPage> {
 
   Future<void> _showDeleteDialog(BuildContext context, vehicle) async {
     final confirmed = await showDeleteVehicleDialog(context, vehicle);
-    if (confirmed == true && mounted) {
+    if (confirmed == true && context.mounted) {
       context.read<VehiclesBloc>().add(
         DeleteVehicleRequested(vehicleId: vehicle.id),
       );

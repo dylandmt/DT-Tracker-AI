@@ -7,15 +7,21 @@ import 'core/localization/locale_controller.dart';
 import 'core/notifications/notification_payload.dart';
 import 'core/notifications/notification_service.dart';
 import 'core/theme/app_theme.dart';
+import 'core/theme/theme_controller.dart';
 import 'core/widgets/environment_banner.dart';
 import 'injection_container.dart';
 import 'l10n/app_localizations.dart';
 
 /// Main application widget
 class DTTrackerApp extends StatefulWidget {
-  const DTTrackerApp({super.key, required this.localeController});
+  const DTTrackerApp({
+    super.key,
+    required this.localeController,
+    required this.themeController,
+  });
 
   final LocaleController localeController;
+  final ThemeController themeController;
 
   @override
   State<DTTrackerApp> createState() => _DTTrackerAppState();
@@ -45,7 +51,10 @@ class _DTTrackerAppState extends State<DTTrackerApp> {
   @override
   Widget build(BuildContext context) {
     return ListenableBuilder(
-      listenable: widget.localeController,
+      listenable: Listenable.merge([
+        widget.localeController,
+        widget.themeController,
+      ]),
       builder: (context, child) => MaterialApp.router(
         onGenerateTitle: (context) => AppLocalizations.of(context)!.appTitle,
         locale: widget.localeController.locale,
@@ -54,7 +63,7 @@ class _DTTrackerAppState extends State<DTTrackerApp> {
         debugShowCheckedModeBanner: false,
         theme: AppTheme.lightTheme,
         darkTheme: AppTheme.darkTheme,
-        themeMode: ThemeMode.system,
+        themeMode: widget.themeController.themeMode,
         routerConfig: AppRouter.router,
         builder: (context, child) {
           return EnvironmentBanner(child: child ?? const SizedBox.shrink());

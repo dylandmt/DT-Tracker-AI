@@ -5,6 +5,7 @@ import '../../../../core/utils/extensions.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/tracker_event.dart';
 import '../bloc/events_bloc.dart';
+import '../utils/localized_tracker_event.dart';
 
 class EventsPage extends StatefulWidget {
   const EventsPage({super.key});
@@ -33,17 +34,29 @@ class _EventsPageState extends State<EventsPage> {
         if (state.isLoading && state.events.isEmpty) {
           return const Center(child: CircularProgressIndicator());
         }
-        if (state.events.isEmpty) {
-          return Center(
-            child: Text(AppLocalizations.of(context)!.noTrackerEvents),
-          );
-        }
-        return ListView.separated(
-          padding: const EdgeInsets.all(16),
-          itemCount: state.events.length,
-          separatorBuilder: (_, __) => const SizedBox(height: 8),
-          itemBuilder: (context, index) =>
-              _EventTile(event: state.events[index]),
+        return RefreshIndicator(
+          onRefresh: () async => context.read<EventsBloc>().add(
+            const EventsSubscriptionRequested(),
+          ),
+          child: state.events.isEmpty
+              ? ListView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  children: [
+                    const SizedBox(height: 180),
+                    Center(
+                      child: Text(
+                        AppLocalizations.of(context)!.noTrackerEvents,
+                      ),
+                    ),
+                  ],
+                )
+              : ListView.separated(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: state.events.length,
+                  separatorBuilder: (_, __) => const SizedBox(height: 8),
+                  itemBuilder: (context, index) =>
+                      _EventTile(event: state.events[index]),
+                ),
         );
       },
     ),
@@ -57,6 +70,10 @@ class _EventTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final localizedEvent = localizedTrackerEvent(
+      AppLocalizations.of(context)!,
+      event,
+    );
     final icon = switch (event.eventType) {
       TrackerEventType.geofenceEnter => Icons.login,
       TrackerEventType.geofenceExit => Icons.logout,
@@ -65,9 +82,9 @@ class _EventTile extends StatelessWidget {
     return Card(
       child: ListTile(
         leading: Icon(icon),
-        title: Text(event.title),
+        title: Text(localizedEvent.title),
         subtitle: Text(
-          '${event.message}\n${event.occurredAt.localizedDateTime(context)}',
+          '${localizedEvent.message}\n${event.occurredAt.localizedDateTime(context)}',
         ),
         isThreeLine: true,
         trailing: IconButton(

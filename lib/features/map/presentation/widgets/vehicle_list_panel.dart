@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/extensions.dart';
@@ -178,10 +179,10 @@ class _VehicleListItem extends StatelessWidget {
               child: vehicle.imageUrl != null
                   ? ClipRRect(
                       borderRadius: BorderRadius.circular(8),
-                      child: Image.network(
-                        vehicle.imageUrl!,
+                      child: CachedNetworkImage(
+                        imageUrl: vehicle.imageUrl!,
                         fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => Icon(
+                        errorWidget: (_, __, ___) => Icon(
                           Icons.directions_car,
                           color: colorScheme.onSurfaceVariant,
                         ),

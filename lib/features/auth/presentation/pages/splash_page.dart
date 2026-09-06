@@ -7,8 +7,8 @@ import '../../../../core/constants/route_constants.dart';
 import '../../../../core/permissions/permission_handler.dart';
 import '../../../../core/permissions/permission_status.dart';
 import '../../../../core/notifications/notification_service.dart';
+import '../../../../core/onboarding/onboarding_controller.dart';
 import '../../../../core/utils/extensions.dart';
-import 'package:geolocator/geolocator.dart';
 import '../../utils/permission_gate.dart';
 import '../../../../injection_container.dart';
 import '../bloc/auth_bloc.dart';
@@ -21,6 +21,10 @@ class SplashPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocListener<AuthBloc, AuthState>(
       listener: (context, state) async {
+        if (!sl<OnboardingController>().hasCompletedGeneral) {
+          context.go(RouteConstants.onboarding);
+          return;
+        }
         if (state.isAuthenticated) {
           // Gate by required permissions: location + notifications
           final handler = sl<AppPermissionHandler>();
@@ -29,14 +33,11 @@ class SplashPage extends StatelessWidget {
               .notificationPermissionStatus()
               .then((status) => status.isGranted);
 
-          // Also ensure location services are enabled
-          final servicesEnabled = await Geolocator.isLocationServiceEnabled();
-
           final target = resolvePostAuthRoute(
             hasLocation: hasLocation,
             hasNotifications: hasNotifications,
-            servicesEnabled: servicesEnabled,
           );
+          if (!context.mounted) return;
           context.go(target);
         } else if (state.isUnauthenticated) {
           context.go(RouteConstants.login);

@@ -3,8 +3,13 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/route_constants.dart';
+import '../../../../core/notifications/notification_service.dart';
+import '../../../../core/permissions/permission_handler.dart';
+import '../../../../core/permissions/permission_status.dart';
 import '../../../../core/utils/extensions.dart';
 import '../../../../core/utils/validators.dart';
+import '../../../../injection_container.dart';
+import '../../utils/permission_gate.dart';
 import '../bloc/auth_bloc.dart';
 import '../widgets/auth_button.dart';
 import '../widgets/auth_header.dart';
@@ -48,9 +53,21 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<AuthBloc, AuthState>(
-      listener: (context, state) {
+      listener: (context, state) async {
         if (state.isAuthenticated) {
-          context.go(RouteConstants.home);
+          final hasLocation = await sl<AppPermissionHandler>().isGranted(
+            AppPermission.location,
+          );
+          final hasNotifications = await sl<NotificationService>()
+              .notificationPermissionStatus()
+              .then((status) => status.isGranted);
+          if (!context.mounted) return;
+          context.go(
+            resolvePostAuthRoute(
+              hasLocation: hasLocation,
+              hasNotifications: hasNotifications,
+            ),
+          );
         } else if (state.hasError && state.errorMessage != null) {
           context.showErrorSnackBar(state.errorMessage!);
           context.read<AuthBloc>().add(ClearAuthError());

@@ -942,4 +942,123 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get points => 'Points';
+
+  @override
+  String get theme => 'Theme';
+
+  @override
+  String get lightTheme => 'Light';
+
+  @override
+  String get darkTheme => 'Dark';
+
+  @override
+  String get loadingTripHistory => 'Loading route history...';
+
+  @override
+  String get colorWhite => 'White';
+
+  @override
+  String get colorBlack => 'Black';
+
+  @override
+  String get colorSilver => 'Silver';
+
+  @override
+  String get colorGray => 'Gray';
+
+  @override
+  String get colorRed => 'Red';
+
+  @override
+  String get colorBlue => 'Blue';
+
+  @override
+  String get colorGreen => 'Green';
+
+  @override
+  String get colorYellow => 'Yellow';
+
+  @override
+  String get colorOrange => 'Orange';
+
+  @override
+  String get colorBrown => 'Brown';
+
+  @override
+  String get colorBeige => 'Beige';
+
+  @override
+  String get colorGold => 'Gold';
+
+  @override
+  String get vehicleYear => 'Year';
+
+  @override
+  String get geofenceEnterEventTitle => 'Geofence entered';
+
+  @override
+  String geofenceEnterEventMessage(String vehicleName, String geofenceName) {
+    return 'Your vehicle $vehicleName entered $geofenceName.';
+  }
+
+  @override
+  String geofenceEnterEventMessageWithoutGeofence(String vehicleName) {
+    return 'Your vehicle $vehicleName entered a geofence.';
+  }
+
+  @override
+  String get geofenceExitEventTitle => 'Geofence exited';
+
+  @override
+  String geofenceExitEventMessage(String vehicleName, String geofenceName) {
+    return 'Your vehicle $vehicleName exited $geofenceName.';
+  }
+
+  @override
+  String geofenceExitEventMessageWithoutGeofence(String vehicleName) {
+    return 'Your vehicle $vehicleName exited a geofence.';
+  }
+
+  @override
+  String get next => 'Next';
+
+  @override
+  String get skip => 'Skip';
+
+  @override
+  String get getStarted => 'Let\'s go';
+
+  @override
+  String get onboardingVehiclesTitle => 'Your vehicles, always close';
+
+  @override
+  String get onboardingVehiclesBody =>
+      'Keep the important vehicles in one simple place.';
+
+  @override
+  String get onboardingMapTitle => 'See what matters in real time';
+
+  @override
+  String get onboardingMapBody =>
+      'Open the map to see each vehicle\'s latest location.';
+
+  @override
+  String get onboardingAlertsTitle => 'Stay one step ahead';
+
+  @override
+  String get onboardingAlertsBody =>
+      'Get notified when a vehicle enters or leaves your important zones.';
+
+  @override
+  String get onboardingReadyTitle => 'You\'re ready to move with confidence';
+
+  @override
+  String get onboardingReadyBody => 'We\'ll help you keep every trip in sight.';
+
+  @override
+  String get restartGuide => 'View app guide';
+
+  @override
+  String get restartGuideSubtitle => 'See the welcome guide and tips again';
 }

@@ -12,11 +12,13 @@ import 'package:uuid/uuid.dart';
 import 'config/environment/firebase_config.dart';
 import 'config/environment/environment.dart';
 import 'core/network/network_info.dart';
+import 'core/onboarding/onboarding_controller.dart';
 import 'core/localization/locale_controller.dart';
 import 'core/notifications/notification_service.dart';
 import 'core/notifications/push_device_backend_datasource.dart';
 import 'core/permissions/permission_handler.dart';
 import 'core/permissions/permission_handler_impl.dart';
+import 'core/theme/theme_controller.dart';
 import 'core/utils/image_compressor.dart';
 import 'features/auth/data/datasources/auth_remote_data_source.dart';
 import 'features/auth/data/datasources/profile_image_data_source.dart';
@@ -108,6 +110,10 @@ Future<void> initializeDependencies() async {
   final sharedPreferences = await SharedPreferences.getInstance();
   sl.registerLazySingleton<SharedPreferences>(() => sharedPreferences);
   sl.registerLazySingleton<LocaleController>(() => LocaleController(sl()));
+  sl.registerLazySingleton<ThemeController>(() => ThemeController(sl()));
+  sl.registerLazySingleton<OnboardingController>(
+    () => OnboardingController(sl()),
+  );
 
   //============================================================================
   // Core

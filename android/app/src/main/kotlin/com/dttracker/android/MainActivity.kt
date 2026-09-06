@@ -1,4 +1,4 @@
-package com.dttrackerai.dt_tracker_ai
+package com.dttracker.android
 
 import io.flutter.embedding.android.FlutterActivity
 

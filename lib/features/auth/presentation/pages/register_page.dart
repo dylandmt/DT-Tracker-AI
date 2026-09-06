@@ -119,7 +119,8 @@ class _RegisterPageState extends State<RegisterPage> {
     return BlocConsumer<AuthBloc, AuthState>(
       listener: (context, state) {
         if (state.isAuthenticated) {
-          context.go(RouteConstants.home);
+          // A newly created account must complete the initial setup.
+          context.go(RouteConstants.setup);
         } else if (state.hasError && state.errorMessage != null) {
           context.showErrorSnackBar(state.errorMessage!);
 

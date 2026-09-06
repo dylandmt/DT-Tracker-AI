@@ -18,7 +18,9 @@ class TrackerEventEntity extends Equatable {
   final String status;
   final bool isRead;
   final String vehicleId;
+  final String? vehicleName;
   final String trackerId;
+  final String? geofenceName;
   final String title;
   final String message;
   final DateTime occurredAt;
@@ -30,7 +32,9 @@ class TrackerEventEntity extends Equatable {
     required this.status,
     required this.isRead,
     required this.vehicleId,
+    this.vehicleName,
     required this.trackerId,
+    this.geofenceName,
     required this.title,
     required this.message,
     required this.occurredAt,
@@ -50,7 +54,9 @@ class TrackerEventEntity extends Equatable {
     status,
     isRead,
     vehicleId,
+    vehicleName,
     trackerId,
+    geofenceName,
     title,
     message,
     occurredAt,

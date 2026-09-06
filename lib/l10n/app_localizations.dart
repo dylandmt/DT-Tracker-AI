@@ -1765,6 +1765,222 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Points'**
   String get points;
+
+  /// No description provided for @theme.
+  ///
+  /// In en, this message translates to:
+  /// **'Theme'**
+  String get theme;
+
+  /// No description provided for @lightTheme.
+  ///
+  /// In en, this message translates to:
+  /// **'Light'**
+  String get lightTheme;
+
+  /// No description provided for @darkTheme.
+  ///
+  /// In en, this message translates to:
+  /// **'Dark'**
+  String get darkTheme;
+
+  /// No description provided for @loadingTripHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading route history...'**
+  String get loadingTripHistory;
+
+  /// No description provided for @colorWhite.
+  ///
+  /// In en, this message translates to:
+  /// **'White'**
+  String get colorWhite;
+
+  /// No description provided for @colorBlack.
+  ///
+  /// In en, this message translates to:
+  /// **'Black'**
+  String get colorBlack;
+
+  /// No description provided for @colorSilver.
+  ///
+  /// In en, this message translates to:
+  /// **'Silver'**
+  String get colorSilver;
+
+  /// No description provided for @colorGray.
+  ///
+  /// In en, this message translates to:
+  /// **'Gray'**
+  String get colorGray;
+
+  /// No description provided for @colorRed.
+  ///
+  /// In en, this message translates to:
+  /// **'Red'**
+  String get colorRed;
+
+  /// No description provided for @colorBlue.
+  ///
+  /// In en, this message translates to:
+  /// **'Blue'**
+  String get colorBlue;
+
+  /// No description provided for @colorGreen.
+  ///
+  /// In en, this message translates to:
+  /// **'Green'**
+  String get colorGreen;
+
+  /// No description provided for @colorYellow.
+  ///
+  /// In en, this message translates to:
+  /// **'Yellow'**
+  String get colorYellow;
+
+  /// No description provided for @colorOrange.
+  ///
+  /// In en, this message translates to:
+  /// **'Orange'**
+  String get colorOrange;
+
+  /// No description provided for @colorBrown.
+  ///
+  /// In en, this message translates to:
+  /// **'Brown'**
+  String get colorBrown;
+
+  /// No description provided for @colorBeige.
+  ///
+  /// In en, this message translates to:
+  /// **'Beige'**
+  String get colorBeige;
+
+  /// No description provided for @colorGold.
+  ///
+  /// In en, this message translates to:
+  /// **'Gold'**
+  String get colorGold;
+
+  /// No description provided for @vehicleYear.
+  ///
+  /// In en, this message translates to:
+  /// **'Year'**
+  String get vehicleYear;
+
+  /// No description provided for @geofenceEnterEventTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Geofence entered'**
+  String get geofenceEnterEventTitle;
+
+  /// No description provided for @geofenceEnterEventMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Your vehicle {vehicleName} entered {geofenceName}.'**
+  String geofenceEnterEventMessage(String vehicleName, String geofenceName);
+
+  /// No description provided for @geofenceEnterEventMessageWithoutGeofence.
+  ///
+  /// In en, this message translates to:
+  /// **'Your vehicle {vehicleName} entered a geofence.'**
+  String geofenceEnterEventMessageWithoutGeofence(String vehicleName);
+
+  /// No description provided for @geofenceExitEventTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Geofence exited'**
+  String get geofenceExitEventTitle;
+
+  /// No description provided for @geofenceExitEventMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Your vehicle {vehicleName} exited {geofenceName}.'**
+  String geofenceExitEventMessage(String vehicleName, String geofenceName);
+
+  /// No description provided for @geofenceExitEventMessageWithoutGeofence.
+  ///
+  /// In en, this message translates to:
+  /// **'Your vehicle {vehicleName} exited a geofence.'**
+  String geofenceExitEventMessageWithoutGeofence(String vehicleName);
+
+  /// No description provided for @next.
+  ///
+  /// In en, this message translates to:
+  /// **'Next'**
+  String get next;
+
+  /// No description provided for @skip.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip'**
+  String get skip;
+
+  /// No description provided for @getStarted.
+  ///
+  /// In en, this message translates to:
+  /// **'Let\'s go'**
+  String get getStarted;
+
+  /// No description provided for @onboardingVehiclesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your vehicles, always close'**
+  String get onboardingVehiclesTitle;
+
+  /// No description provided for @onboardingVehiclesBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep the important vehicles in one simple place.'**
+  String get onboardingVehiclesBody;
+
+  /// No description provided for @onboardingMapTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'See what matters in real time'**
+  String get onboardingMapTitle;
+
+  /// No description provided for @onboardingMapBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Open the map to see each vehicle\'s latest location.'**
+  String get onboardingMapBody;
+
+  /// No description provided for @onboardingAlertsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Stay one step ahead'**
+  String get onboardingAlertsTitle;
+
+  /// No description provided for @onboardingAlertsBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Get notified when a vehicle enters or leaves your important zones.'**
+  String get onboardingAlertsBody;
+
+  /// No description provided for @onboardingReadyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re ready to move with confidence'**
+  String get onboardingReadyTitle;
+
+  /// No description provided for @onboardingReadyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'We\'ll help you keep every trip in sight.'**
+  String get onboardingReadyBody;
+
+  /// No description provided for @restartGuide.
+  ///
+  /// In en, this message translates to:
+  /// **'View app guide'**
+  String get restartGuide;
+
+  /// No description provided for @restartGuideSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'See the welcome guide and tips again'**
+  String get restartGuideSubtitle;
 }
 
 class _AppLocalizationsDelegate

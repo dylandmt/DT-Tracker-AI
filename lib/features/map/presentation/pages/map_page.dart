@@ -1,10 +1,12 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../core/permissions/permission_handler.dart';
 import '../../../../core/permissions/permission_status.dart';
@@ -251,6 +253,32 @@ class _MapPageState extends State<MapPage> with WidgetsBindingObserver {
                   child: ColoredBox(
                     color: Colors.black26,
                     child: Center(child: CircularProgressIndicator()),
+                  ),
+                ),
+
+              if (state.isTripLoading)
+                Positioned.fill(
+                  child: ColoredBox(
+                    color: Colors.black26,
+                    child: Center(
+                      child: Card(
+                        child: Padding(
+                          padding: const EdgeInsets.all(24),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const CircularProgressIndicator(),
+                              const SizedBox(height: 16),
+                              Text(
+                                AppLocalizations.of(
+                                  context,
+                                )!.loadingTripHistory,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
                   ),
                 ),
             ],
@@ -832,7 +860,7 @@ class _MapPageState extends State<MapPage> with WidgetsBindingObserver {
       firstDate: firstDate,
       lastDate: now,
     ).then((selectedDate) {
-      if (selectedDate != null) {
+      if (selectedDate != null && context.mounted) {
         context.read<MapBloc>().add(
           LoadTripHistory(
             startDate: DateTime(
@@ -854,9 +882,23 @@ class _MapPageState extends State<MapPage> with WidgetsBindingObserver {
     });
   }
 
-  void _openNavigation(VehicleLocationEntity vehicle) {
-    // TODO: Open Google Maps or Apple Maps for navigation
-    context.showSnackBar(context.l10n.openingNavigation(vehicle.vehicleName));
+  Future<void> _openNavigation(VehicleLocationEntity vehicle) async {
+    final destination = '${vehicle.latitude},${vehicle.longitude}';
+    final navigationUri = Platform.isIOS
+        ? Uri.http('maps.apple.com', '/', {'daddr': destination})
+        : Uri(scheme: 'google.navigation', queryParameters: {'q': destination});
+    final fallbackUri = Uri.https('www.google.com', '/maps/dir/', {
+      'api': '1',
+      'destination': destination,
+    });
+
+    final launched = await launchUrl(
+      navigationUri,
+      mode: LaunchMode.externalApplication,
+    );
+    if (!launched) {
+      await launchUrl(fallbackUri, mode: LaunchMode.externalApplication);
+    }
   }
 }
 

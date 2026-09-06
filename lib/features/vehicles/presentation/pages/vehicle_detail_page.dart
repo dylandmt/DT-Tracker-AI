@@ -6,7 +6,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/route_constants.dart';
+import '../../../../core/utils/image_cache.dart';
 import '../../../../core/utils/extensions.dart';
+import '../../../../core/utils/vehicle_color_localization.dart';
 import '../../../../injection_container.dart';
 import '../../domain/entities/tracker_info.dart';
 import '../../domain/usecases/get_tracker_info.dart';
@@ -15,6 +17,7 @@ import '../bloc/vehicle_form_bloc.dart';
 import '../bloc/vehicles_bloc.dart';
 import '../widgets/delete_vehicle_dialog.dart';
 import '../widgets/tracker_status_card.dart';
+import '../widgets/vehicle_photo_gallery.dart';
 
 /// Page displaying vehicle details
 class VehicleDetailPage extends StatefulWidget {
@@ -114,189 +117,200 @@ class _VehicleDetailPageState extends State<VehicleDetailPage> {
               }
 
               return Scaffold(
-                body: CustomScrollView(
-                  slivers: [
-                    // App Bar with image
-                    SliverAppBar(
-                      expandedHeight: 250,
-                      pinned: true,
-                      flexibleSpace: FlexibleSpaceBar(
-                        background: vehicle.imageUrls.isNotEmpty
-                            ? _buildImageCarousel(
-                                vehicle.imageUrls,
-                                colorScheme,
-                              )
-                            : _buildPlaceholderImage(colorScheme),
+                body: RefreshIndicator(
+                  onRefresh: () => _refreshVehicle(vehicle.imageUrls),
+                  child: CustomScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    slivers: [
+                      // App Bar with image
+                      SliverAppBar(
+                        expandedHeight: 250,
+                        pinned: true,
+                        flexibleSpace: FlexibleSpaceBar(
+                          background: vehicle.imageUrls.isNotEmpty
+                              ? _buildImageCarousel(
+                                  vehicle.imageUrls,
+                                  colorScheme,
+                                )
+                              : _buildPlaceholderImage(colorScheme),
+                        ),
+                        actions: [
+                          IconButton(
+                            icon: const Icon(Icons.edit),
+                            onPressed: () async {
+                              await context.push(
+                                RouteConstants.vehicleEdit.replaceFirst(
+                                  ':id',
+                                  vehicle.id,
+                                ),
+                              );
+                              if (!context.mounted) return;
+                              // Reload vehicle details after returning
+                              context.read<VehicleFormBloc>().add(
+                                LoadVehicleForEdit(vehicleId: widget.vehicleId),
+                              );
+                              final refreshed = context
+                                  .read<VehicleFormBloc>()
+                                  .state
+                                  .vehicle;
+                              if (refreshed?.trackerId != null) {
+                                _startWatchingTracker(refreshed!.trackerId!);
+                              }
+                            },
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.delete),
+                            onPressed: vehiclesState.isDeleting
+                                ? null
+                                : () => _showDeleteDialog(context),
+                          ),
+                        ],
                       ),
-                      actions: [
-                        IconButton(
-                          icon: const Icon(Icons.edit),
-                          onPressed: () async {
-                            await context.push(
-                              RouteConstants.vehicleEdit.replaceFirst(
-                                ':id',
-                                vehicle.id,
-                              ),
-                            );
-                            if (!mounted) return;
-                            // Reload vehicle details after returning
-                            context.read<VehicleFormBloc>().add(
-                              LoadVehicleForEdit(vehicleId: widget.vehicleId),
-                            );
-                            final refreshed = context
-                                .read<VehicleFormBloc>()
-                                .state
-                                .vehicle;
-                            if (refreshed?.trackerId != null) {
-                              _startWatchingTracker(refreshed!.trackerId!);
-                            }
-                          },
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.delete),
-                          onPressed: vehiclesState.isDeleting
-                              ? null
-                              : () => _showDeleteDialog(context),
-                        ),
-                      ],
-                    ),
-                    // Content
-                    SliverToBoxAdapter(
-                      child: Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // Vehicle name and plate
-                            Text(
-                              vehicle.name,
-                              style: textTheme.headlineSmall?.copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 6,
-                              ),
-                              decoration: BoxDecoration(
-                                color: colorScheme.primaryContainer,
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: Text(
-                                vehicle.plateNumber,
-                                style: textTheme.titleMedium?.copyWith(
-                                  color: colorScheme.onPrimaryContainer,
-                                  fontWeight: FontWeight.w600,
+                      // Content
+                      SliverToBoxAdapter(
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // Vehicle name and plate
+                              Text(
+                                vehicle.name,
+                                style: textTheme.headlineSmall?.copyWith(
+                                  fontWeight: FontWeight.bold,
                                 ),
                               ),
-                            ),
+                              const SizedBox(height: 4),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 6,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: colorScheme.primaryContainer,
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: Text(
+                                  vehicle.plateNumber,
+                                  style: textTheme.titleMedium?.copyWith(
+                                    color: colorScheme.onPrimaryContainer,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
 
-                            const SizedBox(height: 24),
+                              const SizedBox(height: 24),
 
-                            // Vehicle details
-                            if (vehicle.fullDescription != null) ...[
+                              // Vehicle details
+                              if (vehicle.fullDescription != null) ...[
+                                _buildDetailRow(
+                                  context,
+                                  Icons.directions_car,
+                                  context.l10n.vehicle,
+                                  vehicle.fullDescription!,
+                                ),
+                                const SizedBox(height: 12),
+                              ],
+                              if (vehicle.color != null) ...[
+                                _buildDetailRow(
+                                  context,
+                                  Icons.palette_outlined,
+                                  context.l10n.color,
+                                  localizedVehicleColor(
+                                    context.l10n,
+                                    vehicle.color!,
+                                  ),
+                                ),
+                                const SizedBox(height: 12),
+                              ],
                               _buildDetailRow(
                                 context,
-                                Icons.directions_car,
-                                context.l10n.vehicle,
-                                vehicle.fullDescription!,
+                                Icons.calendar_today_outlined,
+                                context.l10n.added,
+                                vehicle.createdAt.formattedDate,
                               ),
-                              const SizedBox(height: 12),
-                            ],
-                            if (vehicle.color != null) ...[
-                              _buildDetailRow(
-                                context,
-                                Icons.palette_outlined,
-                                context.l10n.color,
-                                vehicle.color!,
-                              ),
-                              const SizedBox(height: 12),
-                            ],
-                            _buildDetailRow(
-                              context,
-                              Icons.calendar_today_outlined,
-                              context.l10n.added,
-                              vehicle.createdAt.formattedDate,
-                            ),
 
-                            const SizedBox(height: 24),
+                              const SizedBox(height: 24),
 
-                            // Tracker status card
-                            BlocProvider(
-                              create: (_) => sl<TrackerLinkBloc>(),
-                              child: BlocConsumer<TrackerLinkBloc, TrackerLinkState>(
-                                listener: (context, trackerState) {
-                                  if (trackerState.isLinked) {
-                                    context.showSuccessSnackBar(
-                                      context.l10n.trackerLinkedSuccessfully,
-                                    );
-                                    // Reload vehicle to get updated tracker info
-                                    context.read<VehicleFormBloc>().add(
-                                      LoadVehicleForEdit(
-                                        vehicleId: widget.vehicleId,
-                                      ),
-                                    );
-                                  }
-                                  if (trackerState.isUnlinked) {
-                                    context.showSuccessSnackBar(
-                                      context.l10n.trackerUnlinkedSuccessfully,
-                                    );
-                                    _trackerSubscription?.cancel();
-                                    _trackerSubscription = null;
-                                    setState(() => _trackerStatus = null);
-                                    // Reload vehicle
-                                    context.read<VehicleFormBloc>().add(
-                                      LoadVehicleForEdit(
-                                        vehicleId: widget.vehicleId,
-                                      ),
-                                    );
-                                  }
-                                  if (trackerState.hasError &&
-                                      trackerState.errorMessage != null) {
-                                    context.showErrorSnackBar(
-                                      trackerState.errorMessage!,
-                                    );
-                                  }
-                                },
-                                builder: (context, trackerState) {
-                                  return TrackerStatusCard(
-                                    vehicle: vehicle,
-                                    trackerStatus: _trackerStatus,
-                                    isLoading: trackerState.isLoading,
-                                    onLinkTracker: () async {
-                                      await context.push(
-                                        '${RouteConstants.vehicleDetail.replaceFirst(':id', vehicle.id)}/link-tracker',
+                              // Tracker status card
+                              BlocProvider(
+                                create: (_) => sl<TrackerLinkBloc>(),
+                                child: BlocConsumer<TrackerLinkBloc, TrackerLinkState>(
+                                  listener: (context, trackerState) {
+                                    if (trackerState.isLinked) {
+                                      context.showSuccessSnackBar(
+                                        context.l10n.trackerLinkedSuccessfully,
                                       );
-                                      if (!mounted) return;
-                                      // Reload and (re)start tracker watcher if linked
+                                      // Reload vehicle to get updated tracker info
                                       context.read<VehicleFormBloc>().add(
                                         LoadVehicleForEdit(
                                           vehicleId: widget.vehicleId,
                                         ),
                                       );
-                                      final refreshed = context
-                                          .read<VehicleFormBloc>()
-                                          .state
-                                          .vehicle;
-                                      if (refreshed?.trackerId != null) {
-                                        _startWatchingTracker(
-                                          refreshed!.trackerId!,
+                                    }
+                                    if (trackerState.isUnlinked) {
+                                      context.showSuccessSnackBar(
+                                        context
+                                            .l10n
+                                            .trackerUnlinkedSuccessfully,
+                                      );
+                                      _trackerSubscription?.cancel();
+                                      _trackerSubscription = null;
+                                      setState(() => _trackerStatus = null);
+                                      // Reload vehicle
+                                      context.read<VehicleFormBloc>().add(
+                                        LoadVehicleForEdit(
+                                          vehicleId: widget.vehicleId,
+                                        ),
+                                      );
+                                    }
+                                    if (trackerState.hasError &&
+                                        trackerState.errorMessage != null) {
+                                      context.showErrorSnackBar(
+                                        trackerState.errorMessage!,
+                                      );
+                                    }
+                                  },
+                                  builder: (context, trackerState) {
+                                    return TrackerStatusCard(
+                                      vehicle: vehicle,
+                                      trackerStatus: _trackerStatus,
+                                      isLoading: trackerState.isLoading,
+                                      onLinkTracker: () async {
+                                        await context.push(
+                                          '${RouteConstants.vehicleDetail.replaceFirst(':id', vehicle.id)}/link-tracker',
                                         );
-                                      }
-                                    },
-                                    onUnlinkTracker: () =>
-                                        _showUnlinkDialog(context, vehicle.id),
-                                  );
-                                },
+                                        if (!context.mounted) return;
+                                        // Reload and (re)start tracker watcher if linked
+                                        context.read<VehicleFormBloc>().add(
+                                          LoadVehicleForEdit(
+                                            vehicleId: widget.vehicleId,
+                                          ),
+                                        );
+                                        final refreshed = context
+                                            .read<VehicleFormBloc>()
+                                            .state
+                                            .vehicle;
+                                        if (refreshed?.trackerId != null) {
+                                          _startWatchingTracker(
+                                            refreshed!.trackerId!,
+                                          );
+                                        }
+                                      },
+                                      onUnlinkTracker: () => _showUnlinkDialog(
+                                        context,
+                                        vehicle.id,
+                                      ),
+                                    );
+                                  },
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               );
             },
@@ -306,18 +320,34 @@ class _VehicleDetailPageState extends State<VehicleDetailPage> {
     );
   }
 
+  Future<void> _refreshVehicle(List<String> imageUrls) async {
+    await refreshCachedImages(imageUrls);
+    if (mounted) {
+      context.read<VehicleFormBloc>().add(
+        LoadVehicleForEdit(vehicleId: widget.vehicleId),
+      );
+    }
+  }
+
   Widget _buildImageCarousel(List<String> imageUrls, ColorScheme colorScheme) {
     return PageView.builder(
       itemCount: imageUrls.length,
       itemBuilder: (context, index) {
-        return CachedNetworkImage(
-          imageUrl: imageUrls[index],
-          fit: BoxFit.cover,
-          placeholder: (_, __) => Container(
-            color: colorScheme.surfaceContainerHighest,
-            child: const Center(child: CircularProgressIndicator()),
+        return GestureDetector(
+          onTap: () => showVehiclePhotoGallery(
+            context,
+            imageUrls: imageUrls,
+            initialIndex: index,
           ),
-          errorWidget: (_, __, ___) => _buildPlaceholderImage(colorScheme),
+          child: CachedNetworkImage(
+            imageUrl: imageUrls[index],
+            fit: BoxFit.cover,
+            placeholder: (_, __) => Container(
+              color: colorScheme.surfaceContainerHighest,
+              child: const Center(child: CircularProgressIndicator()),
+            ),
+            errorWidget: (_, __, ___) => _buildPlaceholderImage(colorScheme),
+          ),
         );
       },
     );
@@ -368,7 +398,7 @@ class _VehicleDetailPageState extends State<VehicleDetailPage> {
     if (vehicle == null) return;
 
     final confirmed = await showDeleteVehicleDialog(context, vehicle);
-    if (confirmed == true && mounted) {
+    if (confirmed == true && context.mounted) {
       context.read<VehiclesBloc>().add(
         DeleteVehicleRequested(vehicleId: vehicle.id),
       );
@@ -394,7 +424,7 @@ class _VehicleDetailPageState extends State<VehicleDetailPage> {
       ),
     );
 
-    if (confirmed == true && mounted) {
+    if (confirmed == true && context.mounted) {
       context.read<TrackerLinkBloc>().add(
         UnlinkTrackerFromVehicle(vehicleId: vehicleId),
       );

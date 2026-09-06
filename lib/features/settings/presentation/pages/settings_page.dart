@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 import '../../../../core/constants/route_constants.dart';
 import '../../../../core/localization/locale_controller.dart';
+import '../../../../core/onboarding/onboarding_controller.dart';
+import '../../../../core/theme/theme_controller.dart';
 import '../../../../core/utils/extensions.dart';
 import '../../../../injection_container.dart';
 import '../../../../l10n/app_localizations.dart';
@@ -49,18 +52,20 @@ class SettingsPage extends StatelessWidget {
                           ? GestureDetector(
                               onTap: () => showProfilePhotoPreview(
                                 context,
-                                imageProvider: NetworkImage(user.photoUrl!),
+                                imageProvider: CachedNetworkImageProvider(
+                                  user.photoUrl!,
+                                ),
                                 heroTag: 'profile-photo-${user.id}',
                               ),
                               child: Hero(
                                 tag: 'profile-photo-${user.id}',
                                 child: ClipOval(
-                                  child: Image.network(
-                                    user.photoUrl!,
+                                  child: CachedNetworkImage(
+                                    imageUrl: user.photoUrl!,
                                     width: 64,
                                     height: 64,
                                     fit: BoxFit.cover,
-                                    errorBuilder: (_, __, ___) =>
+                                    errorWidget: (_, __, ___) =>
                                         _buildAvatarText(
                                           user.displayName ?? user.email,
                                           colorScheme,
@@ -112,15 +117,15 @@ class SettingsPage extends StatelessWidget {
                   context.push(RouteConstants.profile);
                 },
               ),
-              _buildListTile(
-                context,
-                icon: Icons.notifications_outlined,
-                title: l10n.trackerEvents,
-                subtitle: l10n.viewTrackerActivity,
-                onTap: () {
-                  context.push(RouteConstants.alerts);
-                },
-              ),
+              // _buildListTile(
+              //   context,
+              //   icon: Icons.notifications_outlined,
+              //   title: l10n.trackerEvents,
+              //   subtitle: l10n.viewTrackerActivity,
+              //   onTap: () {
+              //     context.push(RouteConstants.alerts);
+              //   },
+              // ),
 
               const SizedBox(height: 16),
 
@@ -176,6 +181,23 @@ class SettingsPage extends StatelessWidget {
                 title: l10n.language,
                 subtitle: _languageName(context, sl<LocaleController>().locale),
                 onTap: () => _showLanguagePicker(context),
+              ),
+              _buildListTile(
+                context,
+                icon: Icons.brightness_6_outlined,
+                title: l10n.theme,
+                subtitle: _themeName(context, sl<ThemeController>().themeMode),
+                onTap: () => _showThemePicker(context),
+              ),
+              _buildListTile(
+                context,
+                icon: Icons.tips_and_updates_outlined,
+                title: l10n.restartGuide,
+                subtitle: l10n.restartGuideSubtitle,
+                onTap: () async {
+                  await sl<OnboardingController>().reset();
+                  if (context.mounted) context.go(RouteConstants.onboarding);
+                },
               ),
               _buildListTile(
                 context,
@@ -356,4 +378,41 @@ class SettingsPage extends StatelessWidget {
 
   Widget _languageOption(Locale? locale, String label) =>
       RadioListTile<Locale?>(value: locale, title: Text(label));
+
+  String _themeName(BuildContext context, ThemeMode themeMode) {
+    final l10n = AppLocalizations.of(context)!;
+    return themeMode == ThemeMode.dark ? l10n.darkTheme : l10n.lightTheme;
+  }
+
+  void _showThemePicker(BuildContext context) {
+    final controller = sl<ThemeController>();
+    final l10n = AppLocalizations.of(context)!;
+    showDialog<void>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(l10n.theme),
+        content: RadioGroup<ThemeMode>(
+          groupValue: controller.themeMode,
+          onChanged: (themeMode) async {
+            if (themeMode == null) return;
+            await controller.setThemeMode(themeMode);
+            if (dialogContext.mounted) Navigator.pop(dialogContext);
+          },
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              RadioListTile<ThemeMode>(
+                value: ThemeMode.light,
+                title: Text(l10n.lightTheme),
+              ),
+              RadioListTile<ThemeMode>(
+                value: ThemeMode.dark,
+                title: Text(l10n.darkTheme),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }

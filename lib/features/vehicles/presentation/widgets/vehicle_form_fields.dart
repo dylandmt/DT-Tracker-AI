@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 
 import '../../../../core/utils/validators.dart';
 import '../../../../core/utils/extensions.dart';
+import '../../../../core/utils/vehicle_color_localization.dart';
 
 /// Reusable form fields for vehicle creation/editing
 class VehicleFormFields extends StatelessWidget {
@@ -137,7 +138,7 @@ class VehicleFormFields extends StatelessWidget {
       controller: yearController,
       enabled: enabled,
       decoration: InputDecoration(
-        labelText: context.l10n.year,
+        labelText: context.l10n.vehicleYear,
         hintText: context.l10n.yearHint,
       ),
       keyboardType: TextInputType.number,
@@ -181,7 +182,7 @@ class VehicleFormFields extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 8),
-              Text(color.name),
+              Text(localizedVehicleColor(context.l10n, color.name)),
             ],
           ),
         );

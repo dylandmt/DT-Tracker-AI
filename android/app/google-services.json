@@ -8,6 +8,63 @@
   "client": [
     {
       "client_info": {
+        "mobilesdk_app_id": "1:725005413832:android:85eb7c7cd7b50a420324fd",
+        "android_client_info": {
+          "package_name": "com.dttracker.android"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDCri59_s5vo2hpkL3ZihwYsPF3oefRXKk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:725005413832:android:6021af4ab3dc183d0324fd",
+        "android_client_info": {
+          "package_name": "com.dttracker.android.dev"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDCri59_s5vo2hpkL3ZihwYsPF3oefRXKk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:725005413832:android:8c570c0bc88195fe0324fd",
+        "android_client_info": {
+          "package_name": "com.dttracker.android.staging"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDCri59_s5vo2hpkL3ZihwYsPF3oefRXKk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
         "mobilesdk_app_id": "1:725005413832:android:d6cdb671bbcf3b320324fd",
         "android_client_info": {
           "package_name": "com.dttrackerai.dt_tracker_ai"

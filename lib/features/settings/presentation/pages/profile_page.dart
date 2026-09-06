@@ -4,11 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 import '../../../../core/permissions/permission_handler.dart';
 import '../../../../core/permissions/permission_status.dart';
+import '../../../../core/utils/image_cache.dart';
 import '../../../../core/utils/extensions.dart';
-import '../../../../core/utils/validators.dart';
 import '../../../../injection_container.dart';
 import '../../../auth/domain/entities/user.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
@@ -38,6 +39,7 @@ class _ProfilePageState extends State<ProfilePage> {
   DateTime? _selectedBirthDate;
 
   bool _isSaving = false;
+  bool _isRefreshing = false;
 
   @override
   void didChangeDependencies() {
@@ -47,16 +49,16 @@ class _ProfilePageState extends State<ProfilePage> {
 
     if (user != null && user.id != _initializedUserId) {
       _initializedUserId = user.id;
-
-      _firstNameController.text = user.firstName ?? '';
-
-      _lastNameController.text = user.lastName ?? '';
-
-      _secondLastNameController.text = user.secondLastName ?? '';
-
-      _selectedGender = user.gender;
-      _selectedBirthDate = user.birthDate;
+      _populateProfile(user);
     }
+  }
+
+  void _populateProfile(UserEntity user) {
+    _firstNameController.text = user.firstName ?? '';
+    _lastNameController.text = user.lastName ?? '';
+    _secondLastNameController.text = user.secondLastName ?? '';
+    _selectedGender = user.gender;
+    _selectedBirthDate = user.birthDate;
   }
 
   @override
@@ -206,12 +208,24 @@ class _ProfilePageState extends State<ProfilePage> {
     return '?';
   }
 
+  Future<void> _refreshProfile(String? photoUrl) async {
+    await refreshCachedImages([photoUrl]);
+    if (mounted) {
+      _isRefreshing = true;
+      context.read<AuthBloc>().add(CheckAuthStatus());
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text(context.l10n.profile)),
       body: BlocListener<AuthBloc, AuthState>(
         listener: (context, state) {
+          if (_isRefreshing && state.isAuthenticated && state.user != null) {
+            _populateProfile(state.user!);
+            _isRefreshing = false;
+          }
           if (!_isSaving) {
             return;
           }
@@ -247,196 +261,206 @@ class _ProfilePageState extends State<ProfilePage> {
             final ImageProvider? imageProvider = _selectedImagePath != null
                 ? FileImage(File(_selectedImagePath!))
                 : user.photoUrl != null
-                ? NetworkImage(user.photoUrl!)
+                ? CachedNetworkImageProvider(user.photoUrl!)
                 : null;
 
             final heroTag = 'profile-photo-${user.id}';
 
             return SafeArea(
-              child: Form(
-                key: _formKey,
-                child: ListView(
-                  padding: const EdgeInsets.all(24),
-                  children: [
-                    Center(
-                      child: Stack(
-                        children: [
-                          GestureDetector(
-                            onTap: imageProvider == null
-                                ? null
-                                : () {
-                                    showProfilePhotoPreview(
-                                      context,
-                                      imageProvider: imageProvider,
-                                      heroTag: heroTag,
-                                    );
-                                  },
-                            child: Hero(
-                              tag: heroTag,
-                              child: CircleAvatar(
-                                radius: 56,
-                                backgroundImage: imageProvider,
-                                child: imageProvider == null
-                                    ? Text(
-                                        _avatarInitial(user),
-                                        style: Theme.of(
-                                          context,
-                                        ).textTheme.headlineMedium,
-                                      )
-                                    : null,
+              child: RefreshIndicator(
+                onRefresh: () => _refreshProfile(user.photoUrl),
+                child: Form(
+                  key: _formKey,
+                  child: ListView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    padding: const EdgeInsets.all(24),
+                    children: [
+                      Center(
+                        child: Stack(
+                          children: [
+                            GestureDetector(
+                              onTap: imageProvider == null
+                                  ? null
+                                  : () {
+                                      showProfilePhotoPreview(
+                                        context,
+                                        imageProvider: imageProvider,
+                                        heroTag: heroTag,
+                                      );
+                                    },
+                              child: Hero(
+                                tag: heroTag,
+                                child: CircleAvatar(
+                                  radius: 56,
+                                  backgroundImage: imageProvider,
+                                  child: imageProvider == null
+                                      ? Text(
+                                          _avatarInitial(user),
+                                          style: Theme.of(
+                                            context,
+                                          ).textTheme.headlineMedium,
+                                        )
+                                      : null,
+                                ),
                               ),
                             ),
-                          ),
-                          Positioned(
-                            right: 0,
-                            bottom: 0,
-                            child: IconButton.filled(
-                              tooltip: context.l10n.changeProfilePhoto,
-                              onPressed: isBusy ? null : _showImageSourcePicker,
-                              icon: const Icon(Icons.camera_alt_outlined),
+                            Positioned(
+                              right: 0,
+                              bottom: 0,
+                              child: IconButton.filled(
+                                tooltip: context.l10n.changeProfilePhoto,
+                                onPressed: isBusy
+                                    ? null
+                                    : _showImageSourcePicker,
+                                icon: const Icon(Icons.camera_alt_outlined),
+                              ),
                             ),
+                          ],
+                        ),
+                      ),
+
+                      const SizedBox(height: 32),
+
+                      TextFormField(
+                        controller: _firstNameController,
+                        enabled: !isBusy,
+                        decoration: InputDecoration(
+                          labelText: context.l10n.firstName,
+                          hintText: context.l10n.enterYourFirstName,
+                          prefixIcon: const Icon(Icons.person_outline),
+                        ),
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty) {
+                            return context.l10n.enterYourFirstName;
+                          }
+
+                          return null;
+                        },
+                        textInputAction: TextInputAction.next,
+                      ),
+
+                      const SizedBox(height: 16),
+
+                      TextFormField(
+                        controller: _lastNameController,
+                        enabled: !isBusy,
+                        decoration: InputDecoration(
+                          labelText: context.l10n.lastName,
+                          hintText: context.l10n.enterYourLastName,
+                          prefixIcon: const Icon(Icons.person_outline),
+                        ),
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty) {
+                            return context.l10n.enterYourLastName;
+                          }
+
+                          return null;
+                        },
+                        textInputAction: TextInputAction.next,
+                      ),
+
+                      const SizedBox(height: 16),
+
+                      TextFormField(
+                        controller: _secondLastNameController,
+                        enabled: !isBusy,
+                        decoration: InputDecoration(
+                          labelText: context.l10n.secondLastName,
+                          hintText: context.l10n.enterYourSecondLastName,
+                          prefixIcon: const Icon(Icons.person_outline),
+                        ),
+                        textInputAction: TextInputAction.next,
+                      ),
+
+                      const SizedBox(height: 16),
+
+                      DropdownButtonFormField<UserGender>(
+                        initialValue: _selectedGender,
+                        decoration: InputDecoration(
+                          labelText: context.l10n.gender,
+                          prefixIcon: const Icon(Icons.badge_outlined),
+                        ),
+                        items: [
+                          DropdownMenuItem(
+                            value: UserGender.male,
+                            child: Text(context.l10n.male),
+                          ),
+                          DropdownMenuItem(
+                            value: UserGender.female,
+                            child: Text(context.l10n.female),
+                          ),
+                          DropdownMenuItem(
+                            value: UserGender.other,
+                            child: Text(context.l10n.other),
+                          ),
+                          DropdownMenuItem(
+                            value: UserGender.preferNotToSay,
+                            child: Text(context.l10n.preferNotToSay),
                           ),
                         ],
+                        onChanged: isBusy
+                            ? null
+                            : (value) {
+                                setState(() {
+                                  _selectedGender = value;
+                                });
+                              },
                       ),
-                    ),
 
-                    const SizedBox(height: 32),
+                      const SizedBox(height: 16),
 
-                    TextFormField(
-                      controller: _firstNameController,
-                      enabled: !isBusy,
-                      decoration: InputDecoration(
-                        labelText: context.l10n.firstName,
-                        hintText: context.l10n.enterYourFirstName,
-                        prefixIcon: const Icon(Icons.person_outline),
-                      ),
-                      validator: (value) {
-                        if (value == null || value.trim().isEmpty) {
-                          return context.l10n.enterYourFirstName;
-                        }
-
-                        return null;
-                      },
-                      textInputAction: TextInputAction.next,
-                    ),
-
-                    const SizedBox(height: 16),
-
-                    TextFormField(
-                      controller: _lastNameController,
-                      enabled: !isBusy,
-                      decoration: InputDecoration(
-                        labelText: context.l10n.lastName,
-                        hintText: context.l10n.enterYourLastName,
-                        prefixIcon: const Icon(Icons.person_outline),
-                      ),
-                      validator: (value) {
-                        if (value == null || value.trim().isEmpty) {
-                          return context.l10n.enterYourLastName;
-                        }
-
-                        return null;
-                      },
-                      textInputAction: TextInputAction.next,
-                    ),
-
-                    const SizedBox(height: 16),
-
-                    TextFormField(
-                      controller: _secondLastNameController,
-                      enabled: !isBusy,
-                      decoration: InputDecoration(
-                        labelText: context.l10n.secondLastName,
-                        hintText: context.l10n.enterYourSecondLastName,
-                        prefixIcon: const Icon(Icons.person_outline),
-                      ),
-                      textInputAction: TextInputAction.next,
-                    ),
-
-                    const SizedBox(height: 16),
-
-                    DropdownButtonFormField<UserGender>(
-                      initialValue: _selectedGender,
-                      decoration: InputDecoration(
-                        labelText: context.l10n.gender,
-                        prefixIcon: const Icon(Icons.badge_outlined),
-                      ),
-                      items: [
-                        DropdownMenuItem(
-                          value: UserGender.male,
-                          child: Text(context.l10n.male),
+                      InkWell(
+                        onTap: isBusy ? null : _selectBirthDate,
+                        child: InputDecorator(
+                          decoration: InputDecoration(
+                            labelText: context.l10n.birthDate,
+                            prefixIcon: const Icon(Icons.cake_outlined),
+                            suffixIcon: const Icon(
+                              Icons.calendar_today_outlined,
+                            ),
+                          ),
+                          child: Text(
+                            _selectedBirthDate == null
+                                ? context.l10n.selectBirthDate
+                                : _formatBirthDate(_selectedBirthDate!),
+                          ),
                         ),
-                        DropdownMenuItem(
-                          value: UserGender.female,
-                          child: Text(context.l10n.female),
-                        ),
-                        DropdownMenuItem(
-                          value: UserGender.other,
-                          child: Text(context.l10n.other),
-                        ),
-                        DropdownMenuItem(
-                          value: UserGender.preferNotToSay,
-                          child: Text(context.l10n.preferNotToSay),
-                        ),
-                      ],
-                      onChanged: isBusy
-                          ? null
-                          : (value) {
-                              setState(() {
-                                _selectedGender = value;
-                              });
-                            },
-                    ),
+                      ),
 
-                    const SizedBox(height: 16),
+                      const SizedBox(height: 16),
 
-                    InkWell(
-                      onTap: isBusy ? null : _selectBirthDate,
-                      child: InputDecorator(
+                      TextFormField(
+                        initialValue: user.email,
+                        enabled: false,
                         decoration: InputDecoration(
-                          labelText: context.l10n.birthDate,
-                          prefixIcon: const Icon(Icons.cake_outlined),
-                          suffixIcon: const Icon(Icons.calendar_today_outlined),
-                        ),
-                        child: Text(
-                          _selectedBirthDate == null
-                              ? context.l10n.selectBirthDate
-                              : _formatBirthDate(_selectedBirthDate!),
+                          labelText: context.l10n.email,
+                          prefixIcon: const Icon(Icons.email_outlined),
                         ),
                       ),
-                    ),
 
-                    const SizedBox(height: 16),
+                      const SizedBox(height: 8),
 
-                    TextFormField(
-                      initialValue: user.email,
-                      enabled: false,
-                      decoration: InputDecoration(
-                        labelText: context.l10n.email,
-                        prefixIcon: const Icon(Icons.email_outlined),
+                      Text(
+                        context.l10n.emailCannotBeChanged,
+                        style: Theme.of(context).textTheme.bodySmall,
                       ),
-                    ),
 
-                    const SizedBox(height: 8),
+                      const SizedBox(height: 32),
 
-                    Text(
-                      context.l10n.emailCannotBeChanged,
-                      style: Theme.of(context).textTheme.bodySmall,
-                    ),
-
-                    const SizedBox(height: 32),
-
-                    FilledButton(
-                      onPressed: isBusy ? null : _saveProfile,
-                      child: isBusy
-                          ? const SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : Text(context.l10n.saveChanges),
-                    ),
-                  ],
+                      FilledButton(
+                        onPressed: isBusy ? null : _saveProfile,
+                        child: isBusy
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : Text(context.l10n.saveChanges),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             );

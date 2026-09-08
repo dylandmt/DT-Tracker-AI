@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../../../../core/constants/app_constants.dart';
-
 /// Header widget for auth pages with logo and title
 class AuthHeader extends StatelessWidget {
   final String title;
@@ -13,27 +11,23 @@ class AuthHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Column(
       children: [
-        // Logo/Icon
-        Container(
-          width: 80,
-          height: 80,
-          decoration: BoxDecoration(
-            color: colorScheme.primaryContainer,
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Icon(
-            Icons.location_on,
-            size: 48,
-            color: colorScheme.onPrimaryContainer,
-          ),
+        // Logo (theme-aware): light logo on dark theme, dark logo on light theme
+        Image.asset(
+          isDark
+              ? 'assets/images/dt_tracker_logo_dark.png'
+              : 'assets/images/dt_tracker_logo_light.png',
+          width: 96,
+          height: 96,
+          fit: BoxFit.contain,
         ),
         const SizedBox(height: 16),
         // App name
         Text(
-          AppConstants.appName,
+          'Tracker',
           style: textTheme.headlineSmall?.copyWith(
             fontWeight: FontWeight.bold,
             color: colorScheme.primary,

@@ -64,6 +64,39 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
+  Future<Either<Failure, UserEntity>> signInWithGoogle() async {
+    if (!await networkInfo.isConnected) {
+      return const Left(NetworkFailure());
+    }
+
+    try {
+      final firebaseUser = await authRemoteDataSource.signInWithGoogle();
+
+      UserModel? userModel = await userRemoteDataSource.getUser(
+        firebaseUser.uid,
+      );
+
+      if (userModel == null) {
+        userModel = UserModel.newUser(
+          id: firebaseUser.uid,
+          email: firebaseUser.email ?? '',
+          legacyDisplayName: firebaseUser.displayName,
+        );
+
+        await userRemoteDataSource.createUser(userModel);
+      }
+
+      return Right(userModel);
+    } on AuthException catch (e) {
+      return Left(AuthFailure.fromCode(e.code ?? 'unknown'));
+    } on ServerException catch (e) {
+      return Left(ServerFailure(message: e.message));
+    } catch (e) {
+      return Left(UnknownFailure(message: e.toString()));
+    }
+  }
+
+  @override
   Future<Either<Failure, UserEntity>> signUpWithEmail({
     required String email,
     required String password,

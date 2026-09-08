@@ -22,6 +22,11 @@ class SignInRequested extends AuthEvent {
   List<Object?> get props => [email, password];
 }
 
+/// Event to sign in with Google
+class GoogleSignInRequested extends AuthEvent {
+  const GoogleSignInRequested();
+}
+
 /// Event to sign up with email and password
 class SignUpRequested extends AuthEvent {
   final String email;

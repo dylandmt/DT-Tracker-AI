@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/route_constants.dart';
 import '../../../../core/utils/extensions.dart';
 import '../../domain/entities/geofence.dart';
+import '../../domain/usecases/geofence_usecases.dart';
 import '../bloc/geofence_bloc.dart';
 
 class GeofencesPage extends StatefulWidget {
@@ -70,6 +71,7 @@ class _GeofencesPageState extends State<GeofencesPage> {
               geofence: state.geofences[index],
               onEdit: () =>
                   context.push('/geofences/${state.geofences[index].id}/edit'),
+              onToggleActive: () => _toggleActive(state.geofences[index]),
               onDelete: () => _confirmDelete(state.geofences[index]),
             ),
           ),
@@ -96,18 +98,40 @@ class _GeofencesPageState extends State<GeofencesPage> {
         ],
       ),
     );
-    if (remove == true && mounted)
+    if (remove == true && mounted) {
       context.read<GeofenceBloc>().add(DeleteGeofenceRequested(geofence.id));
+    }
+  }
+
+  void _toggleActive(GeofenceEntity geofence) {
+    context.read<GeofenceBloc>().add(
+      SubmitGeofence(
+        id: geofence.id,
+        params: GeofenceParams(
+          id: geofence.id,
+          name: geofence.name,
+          latitude: geofence.latitude,
+          longitude: geofence.longitude,
+          radiusMeters: geofence.radiusMeters,
+          vehicleIds: geofence.vehicleIds,
+          triggerOnEnter: geofence.triggerOnEnter,
+          triggerOnExit: geofence.triggerOnExit,
+          isActive: !geofence.isActive,
+        ),
+      ),
+    );
   }
 }
 
 class _GeofenceTile extends StatelessWidget {
   final GeofenceEntity geofence;
   final VoidCallback onEdit;
+  final VoidCallback onToggleActive;
   final VoidCallback onDelete;
   const _GeofenceTile({
     required this.geofence,
     required this.onEdit,
+    required this.onToggleActive,
     required this.onDelete,
   });
   @override
@@ -125,7 +149,7 @@ class _GeofenceTile extends StatelessWidget {
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Switch(value: geofence.isActive, onChanged: null),
+          Switch(value: geofence.isActive, onChanged: (_) => onToggleActive()),
           IconButton(
             icon: const Icon(Icons.delete_outline),
             onPressed: onDelete,

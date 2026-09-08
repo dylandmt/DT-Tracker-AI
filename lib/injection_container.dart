@@ -80,6 +80,8 @@ import 'features/trips/data/repositories/trip_repository_impl.dart';
 import 'features/trips/domain/repositories/trip_repository.dart';
 import 'features/trips/domain/usecases/trip_usecases.dart';
 import 'features/trips/presentation/bloc/trip_bloc.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'features/auth/domain/usecases/sign_in_with_google.dart';
 
 final sl = GetIt.instance;
 
@@ -90,6 +92,9 @@ Future<void> initializeDependencies() async {
 
   // Firebase
   sl.registerLazySingleton<FirebaseAuth>(() => FirebaseAuth.instance);
+
+  sl.registerLazySingleton<GoogleSignIn>(() => GoogleSignIn.instance);
+
   sl.registerLazySingleton<FirebaseFirestore>(
     () => FirebaseConfig.getFirestore(),
   );
@@ -148,7 +153,7 @@ Future<void> initializeDependencies() async {
 
   // Data Sources
   sl.registerLazySingleton<AuthRemoteDataSource>(
-    () => AuthRemoteDataSourceImpl(firebaseAuth: sl()),
+    () => AuthRemoteDataSourceImpl(firebaseAuth: sl(), googleSignIn: sl()),
   );
 
   sl.registerLazySingleton<UserRemoteDataSource>(
@@ -171,6 +176,7 @@ Future<void> initializeDependencies() async {
 
   // Use Cases
   sl.registerLazySingleton(() => SignInWithEmail(sl()));
+  sl.registerLazySingleton(() => SignInWithGoogle(sl()));
   sl.registerLazySingleton(() => SignUpWithEmail(sl()));
   sl.registerLazySingleton(() => SignOut(sl()));
   sl.registerLazySingleton(() => GetCurrentUser(sl()));
@@ -185,6 +191,7 @@ Future<void> initializeDependencies() async {
   sl.registerFactory(
     () => AuthBloc(
       signInWithEmail: sl(),
+      signInWithGoogle: sl(),
       signUpWithEmail: sl(),
       signOut: sl(),
       getCurrentUser: sl(),

@@ -16,8 +16,11 @@ import 'package:dt_tracker_ai/features/auth/domain/usecases/update_user_profile.
 import 'package:dt_tracker_ai/features/auth/domain/usecases/update_user_settings.dart';
 import 'package:dt_tracker_ai/features/auth/domain/usecases/upload_profile_image.dart';
 import 'package:dt_tracker_ai/features/auth/presentation/bloc/auth_bloc.dart';
+import 'package:dt_tracker_ai/features/auth/domain/usecases/sign_in_with_google.dart';
 
 class MockSignInWithEmail extends Mock implements SignInWithEmail {}
+
+class MockSignInWithGoogle extends Mock implements SignInWithGoogle {}
 
 class MockSignUpWithEmail extends Mock implements SignUpWithEmail {}
 
@@ -74,6 +77,7 @@ void main() {
 
   AuthBloc buildBloc() => AuthBloc(
     signInWithEmail: MockSignInWithEmail(),
+    signInWithGoogle: MockSignInWithGoogle(),
     signUpWithEmail: MockSignUpWithEmail(),
     signOut: MockSignOut(),
     getCurrentUser: MockGetCurrentUser(),

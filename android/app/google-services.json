@@ -13,7 +13,20 @@
           "package_name": "com.dttracker.android"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "725005413832-217auv5teokf2ab3v60ujc763iakboic.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.dttracker.android",
+            "certificate_hash": "dc722a4a87eab86c276625cb2243d6eea24ff1cc"
+          }
+        },
+        {
+          "client_id": "725005413832-r7tegs1p1b441lp0hpgamhpbbu8vm12t.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyDCri59_s5vo2hpkL3ZihwYsPF3oefRXKk"
@@ -21,7 +34,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "725005413832-r7tegs1p1b441lp0hpgamhpbbu8vm12t.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "725005413832-35tccif68s87g9kfuin7ksn52gahnpcl.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.dttrackerai.dtTrackerAi"
+              }
+            }
+          ]
         }
       }
     },
@@ -32,7 +57,20 @@
           "package_name": "com.dttracker.android.dev"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "725005413832-7m22d9t5f3q5euo04pv47j9f6n9utfq7.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.dttracker.android.dev",
+            "certificate_hash": "efbabfa8aa029e6c65e8b4b09e92e2ffb05fd4ff"
+          }
+        },
+        {
+          "client_id": "725005413832-r7tegs1p1b441lp0hpgamhpbbu8vm12t.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyDCri59_s5vo2hpkL3ZihwYsPF3oefRXKk"
@@ -40,7 +78,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "725005413832-r7tegs1p1b441lp0hpgamhpbbu8vm12t.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "725005413832-35tccif68s87g9kfuin7ksn52gahnpcl.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.dttrackerai.dtTrackerAi"
+              }
+            }
+          ]
         }
       }
     },
@@ -51,7 +101,20 @@
           "package_name": "com.dttracker.android.staging"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "725005413832-g5buba5d4sllt5ftmqgotqun9m25a6rs.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.dttracker.android.staging",
+            "certificate_hash": "efbabfa8aa029e6c65e8b4b09e92e2ffb05fd4ff"
+          }
+        },
+        {
+          "client_id": "725005413832-r7tegs1p1b441lp0hpgamhpbbu8vm12t.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyDCri59_s5vo2hpkL3ZihwYsPF3oefRXKk"
@@ -59,7 +122,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "725005413832-r7tegs1p1b441lp0hpgamhpbbu8vm12t.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "725005413832-35tccif68s87g9kfuin7ksn52gahnpcl.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.dttrackerai.dtTrackerAi"
+              }
+            }
+          ]
         }
       }
     },
@@ -70,7 +145,12 @@
           "package_name": "com.dttrackerai.dt_tracker_ai"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "725005413832-r7tegs1p1b441lp0hpgamhpbbu8vm12t.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyDCri59_s5vo2hpkL3ZihwYsPF3oefRXKk"
@@ -78,7 +158,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "725005413832-r7tegs1p1b441lp0hpgamhpbbu8vm12t.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "725005413832-35tccif68s87g9kfuin7ksn52gahnpcl.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.dttrackerai.dtTrackerAi"
+              }
+            }
+          ]
         }
       }
     }

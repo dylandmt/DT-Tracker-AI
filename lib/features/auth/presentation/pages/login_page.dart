@@ -50,6 +50,10 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
+  void _onGoogleLogin() {
+    context.read<AuthBloc>().add(const GoogleSignInRequested());
+  }
+
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<AuthBloc, AuthState>(
@@ -124,6 +128,34 @@ class _LoginPageState extends State<LoginPage> {
                         text: context.l10n.signIn,
                         onPressed: _onLogin,
                         isLoading: state.isLoading,
+                      ),
+                      const SizedBox(height: 16),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Divider(
+                              color: Theme.of(context).dividerColor,
+                            ),
+                          ),
+                          const Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 12),
+                            child: Text('OR'),
+                          ),
+                          Expanded(
+                            child: Divider(
+                              color: Theme.of(context).dividerColor,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      OutlinedButton.icon(
+                        onPressed: state.isLoading ? null : _onGoogleLogin,
+                        icon: const Icon(Icons.login),
+                        label: const Text('Continue with Google'),
+                        style: OutlinedButton.styleFrom(
+                          minimumSize: const Size.fromHeight(48),
+                        ),
                       ),
                       const SizedBox(height: 24),
                       AuthLinkButton(

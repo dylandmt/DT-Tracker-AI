@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 
 import '../../../../core/errors/exceptions.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 /// Remote data source for Firebase Authentication operations
 abstract class AuthRemoteDataSource {
@@ -9,6 +10,9 @@ abstract class AuthRemoteDataSource {
     required String email,
     required String password,
   });
+
+  /// Sign in with Google
+  Future<User> signInWithGoogle();
 
   /// Sign up with email and password
   Future<User> signUpWithEmail({
@@ -38,8 +42,21 @@ abstract class AuthRemoteDataSource {
 /// Implementation of AuthRemoteDataSource using Firebase Auth
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   final FirebaseAuth firebaseAuth;
+  final GoogleSignIn googleSignIn;
 
-  AuthRemoteDataSourceImpl({required this.firebaseAuth});
+  bool _googleInitialized = false;
+
+  AuthRemoteDataSourceImpl({
+    required this.firebaseAuth,
+    required this.googleSignIn,
+  });
+
+  Future<void> _ensureGoogleInitialized() async {
+    if (_googleInitialized) return;
+
+    await googleSignIn.initialize();
+    _googleInitialized = true;
+  }
 
   @override
   Future<User> signInWithEmail({
@@ -62,6 +79,44 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       throw AuthException(message: e.message ?? 'Sign in failed', code: e.code);
     } catch (e) {
       if (e is AuthException) rethrow;
+      throw AuthException(message: e.toString());
+    }
+  }
+
+  @override
+  Future<User> signInWithGoogle() async {
+    try {
+      await _ensureGoogleInitialized();
+
+      final googleUser = await googleSignIn.authenticate();
+
+      final googleAuth = googleUser.authentication;
+
+      final credential = GoogleAuthProvider.credential(
+        idToken: googleAuth.idToken,
+      );
+
+      final userCredential = await firebaseAuth.signInWithCredential(
+        credential,
+      );
+
+      final user = userCredential.user;
+
+      if (user == null) {
+        throw const AuthException(
+          message: 'Google sign in failed. Please try again.',
+        );
+      }
+
+      return user;
+    } on FirebaseAuthException catch (e) {
+      throw AuthException(
+        message: e.message ?? 'Google sign in failed',
+        code: e.code,
+      );
+    } catch (e) {
+      if (e is AuthException) rethrow;
+
       throw AuthException(message: e.toString());
     }
   }
@@ -94,6 +149,14 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   @override
   Future<void> signOut() async {
     try {
+      await _ensureGoogleInitialized();
+
+      try {
+        await googleSignIn.signOut();
+      } catch (_) {
+        // User may not have signed in through Google.
+      }
+
       await firebaseAuth.signOut();
     } on FirebaseAuthException catch (e) {
       throw AuthException(

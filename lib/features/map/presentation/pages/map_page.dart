@@ -343,6 +343,9 @@ class _MapPageState extends State<MapPage> with WidgetsBindingObserver {
         markers: markers,
         polylines: polylines,
         circles: _buildGeofenceCircles(geofences),
+        style: Theme.of(context).brightness == Brightness.dark
+            ? _darkMapStyle
+            : null,
         mapType: _getGoogleMapType(state.mapType),
         trafficEnabled: state.showTraffic,
         myLocationEnabled: _locationPermissionGranted,
@@ -901,6 +904,20 @@ class _MapPageState extends State<MapPage> with WidgetsBindingObserver {
     }
   }
 }
+
+const _darkMapStyle = '''[
+  {"elementType":"geometry","stylers":[{"color":"#1d2433"}]},
+  {"elementType":"labels.text.fill","stylers":[{"color":"#c9d2e3"}]},
+  {"elementType":"labels.text.stroke","stylers":[{"color":"#1d2433"}]},
+  {"featureType":"administrative","elementType":"geometry.stroke","stylers":[{"color":"#46536b"}]},
+  {"featureType":"landscape","elementType":"geometry","stylers":[{"color":"#1b2230"}]},
+  {"featureType":"poi","elementType":"geometry","stylers":[{"color":"#242d3e"}]},
+  {"featureType":"poi.park","elementType":"geometry","stylers":[{"color":"#1c3540"}]},
+  {"featureType":"road","elementType":"geometry","stylers":[{"color":"#303b50"}]},
+  {"featureType":"road.highway","elementType":"geometry","stylers":[{"color":"#44516a"}]},
+  {"featureType":"transit","elementType":"geometry","stylers":[{"color":"#293448"}]},
+  {"featureType":"water","elementType":"geometry","stylers":[{"color":"#111b29"}]}
+]''';
 
 class _StatusIndicator extends StatelessWidget {
   final IconData icon;

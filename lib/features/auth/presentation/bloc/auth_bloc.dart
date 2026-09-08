@@ -15,12 +15,14 @@ import '../../domain/usecases/sign_up_with_email.dart';
 import '../../domain/usecases/update_user_profile.dart';
 import '../../domain/usecases/update_user_settings.dart';
 import '../../domain/usecases/upload_profile_image.dart';
+import '../../domain/usecases/sign_in_with_google.dart';
 
 part 'auth_event.dart';
 part 'auth_state.dart';
 
 /// BLoC for handling authentication logic
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
+  final SignInWithGoogle signInWithGoogle;
   final SignInWithEmail signInWithEmail;
   final SignUpWithEmail signUpWithEmail;
   final SignOut signOut;
@@ -35,6 +37,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   StreamSubscription<UserEntity?>? _authStateSubscription;
 
   AuthBloc({
+    required this.signInWithGoogle,
     required this.signInWithEmail,
     required this.signUpWithEmail,
     required this.signOut,
@@ -46,6 +49,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     required this.deleteProfileImage,
     required this.updateUserSettings,
   }) : super(AuthState.initial()) {
+    on<GoogleSignInRequested>(_onGoogleSignInRequested);
     on<CheckAuthStatus>(_onCheckAuthStatus);
     on<SignInRequested>(_onSignInRequested);
     on<SignUpRequested>(_onSignUpRequested);
@@ -123,6 +127,25 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         } else {
           emit(AuthState.unauthenticated());
         }
+      },
+    );
+  }
+
+  Future<void> _onGoogleSignInRequested(
+    GoogleSignInRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(AuthState.loading());
+
+    final result = await signInWithGoogle(const NoParams());
+
+    result.fold(
+      (failure) {
+        emit(AuthState.error(failure.message));
+      },
+      (user) {
+        emit(AuthState.authenticated(user));
+        _startListeningToAuthChanges();
       },
     );
   }

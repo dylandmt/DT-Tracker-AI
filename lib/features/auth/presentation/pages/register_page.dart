@@ -3,6 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/route_constants.dart';
+import '../../../../core/onboarding/onboarding_controller.dart';
+import '../../../../injection_container.dart';
 import '../../../../core/utils/extensions.dart';
 import '../../../../core/utils/validators.dart';
 import '../../domain/entities/user.dart';
@@ -119,8 +121,12 @@ class _RegisterPageState extends State<RegisterPage> {
     return BlocConsumer<AuthBloc, AuthState>(
       listener: (context, state) {
         if (state.isAuthenticated) {
-          // A newly created account must complete the initial setup.
-          context.go(RouteConstants.setup);
+          final user = state.user!;
+          if (!sl<OnboardingController>().hasCompletedGeneral(user.id)) {
+            context.go('${RouteConstants.onboarding}?userId=${user.id}');
+          } else {
+            context.go(RouteConstants.setup);
+          }
         } else if (state.hasError && state.errorMessage != null) {
           context.showErrorSnackBar(state.errorMessage!);
 

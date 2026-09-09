@@ -21,11 +21,12 @@ class SplashPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocListener<AuthBloc, AuthState>(
       listener: (context, state) async {
-        if (!sl<OnboardingController>().hasCompletedGeneral) {
-          context.go(RouteConstants.onboarding);
-          return;
-        }
         if (state.isAuthenticated) {
+          final user = state.user!;
+          if (!sl<OnboardingController>().hasCompletedGeneral(user.id)) {
+            context.go('${RouteConstants.onboarding}?userId=${user.id}');
+            return;
+          }
           // Gate by required permissions: location + notifications
           final handler = sl<AppPermissionHandler>();
           final hasLocation = await handler.isGranted(AppPermission.location);

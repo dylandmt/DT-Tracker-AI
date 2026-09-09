@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/route_constants.dart';
 import '../../../../core/notifications/notification_service.dart';
+import '../../../../core/onboarding/onboarding_controller.dart';
 import '../../../../core/permissions/permission_handler.dart';
 import '../../../../core/permissions/permission_status.dart';
 import '../../../../core/utils/extensions.dart';
@@ -59,6 +61,11 @@ class _LoginPageState extends State<LoginPage> {
     return BlocConsumer<AuthBloc, AuthState>(
       listener: (context, state) async {
         if (state.isAuthenticated) {
+          final user = state.user!;
+          if (!sl<OnboardingController>().hasCompletedGeneral(user.id)) {
+            context.go('${RouteConstants.onboarding}?userId=${user.id}');
+            return;
+          }
           final hasLocation = await sl<AppPermissionHandler>().isGranted(
             AppPermission.location,
           );
@@ -151,7 +158,11 @@ class _LoginPageState extends State<LoginPage> {
                       const SizedBox(height: 16),
                       OutlinedButton.icon(
                         onPressed: state.isLoading ? null : _onGoogleLogin,
-                        icon: const Icon(Icons.login),
+                        icon: SvgPicture.asset(
+                          'assets/icons/google.svg',
+                          width: 20,
+                          height: 20,
+                        ),
                         label: const Text('Continue with Google'),
                         style: OutlinedButton.styleFrom(
                           minimumSize: const Size.fromHeight(48),

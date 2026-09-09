@@ -195,8 +195,14 @@ class SettingsPage extends StatelessWidget {
                 title: l10n.restartGuide,
                 subtitle: l10n.restartGuideSubtitle,
                 onTap: () async {
-                  await sl<OnboardingController>().reset();
-                  if (context.mounted) context.go(RouteConstants.onboarding);
+                  final user = context.read<AuthBloc>().state.user;
+                  if (user == null) return;
+                  await sl<OnboardingController>().reset(user.id);
+                  if (context.mounted) {
+                    context.go(
+                      '${RouteConstants.onboarding}?userId=${user.id}',
+                    );
+                  }
                 },
               ),
               _buildListTile(

@@ -7,7 +7,9 @@ import '../../../../injection_container.dart';
 import '../../../../l10n/app_localizations.dart';
 
 class OnboardingPage extends StatefulWidget {
-  const OnboardingPage({super.key});
+  const OnboardingPage({required this.userId, super.key});
+
+  final String userId;
 
   @override
   State<OnboardingPage> createState() => _OnboardingPageState();
@@ -18,7 +20,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
   var _index = 0;
 
   Future<void> _finish() async {
-    await sl<OnboardingController>().completeGeneral();
+    await sl<OnboardingController>().completeGeneral(widget.userId);
     if (mounted) context.go(RouteConstants.splash);
   }
 

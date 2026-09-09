@@ -58,7 +58,8 @@ class AppRouter {
       GoRoute(
         path: RouteConstants.onboarding,
         name: RouteConstants.onboardingName,
-        builder: (_, __) => const OnboardingPage(),
+        builder: (_, state) =>
+            OnboardingPage(userId: state.uri.queryParameters['userId']!),
       ),
       GoRoute(
         path: RouteConstants.login,

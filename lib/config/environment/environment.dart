@@ -1,13 +1,29 @@
+import 'package:flutter/services.dart' show appFlavor;
+
 enum Environment { dev, staging, prod }
 
 class EnvironmentConfig {
   EnvironmentConfig._();
 
-  /// Current environment, determined at build time
-  static const String _envString = String.fromEnvironment(
+  /// Optional compile-time override.
+  static const String _envOverride = String.fromEnvironment(
     'ENV',
-    defaultValue: 'dev',
+    defaultValue: '',
   );
+
+  /// Current environment.
+  ///
+  /// Priority:
+  /// 1. --dart-define=ENV=...
+  /// 2. --flavor ...
+  /// 3. dev fallback
+  static String get _envString {
+    if (_envOverride.isNotEmpty) {
+      return _envOverride;
+    }
+
+    return appFlavor ?? 'dev';
+  }
 
   /// Parsed environment enum
   static Environment get current {

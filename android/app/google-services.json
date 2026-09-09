@@ -67,6 +67,14 @@
           }
         },
         {
+          "client_id": "725005413832-isu4cd8u8nuvnft8d64hdfecs18th5ot.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.dttracker.android.dev",
+            "certificate_hash": "1e8f6fa2a17a33d8fb8bf8b51180ff521caa60da"
+          }
+        },
+        {
           "client_id": "725005413832-r7tegs1p1b441lp0hpgamhpbbu8vm12t.apps.googleusercontent.com",
           "client_type": 3
         }

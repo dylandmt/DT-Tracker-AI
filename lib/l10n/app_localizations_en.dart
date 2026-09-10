@@ -1061,4 +1061,86 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get restartGuideSubtitle => 'See the welcome guide and tips again';
+
+  @override
+  String get setupSecurityPin => 'Set up your security PIN';
+
+  @override
+  String get changeSecurityPin => 'Change security PIN';
+
+  @override
+  String get securityPin => 'Security PIN';
+
+  @override
+  String get securityPinDescription =>
+      'Protect tracker unlinking with a 6-digit PIN.';
+
+  @override
+  String get securityPinSettingsDescription =>
+      'Set or change the PIN used to unlink trackers';
+
+  @override
+  String get securityPinLength => 'PIN must contain 6 digits';
+
+  @override
+  String get confirmSecurityPin => 'Confirm your PIN';
+
+  @override
+  String get securityPinDoesNotMatch => 'PINs do not match';
+
+  @override
+  String get enableBiometrics => 'Use biometrics';
+
+  @override
+  String get enableBiometricsDescription =>
+      'Use Face ID, face recognition, or fingerprint to authorize unlinking.';
+
+  @override
+  String get securityPinRequired => 'Set up a security PIN';
+
+  @override
+  String get securityPinRequiredDescription =>
+      'Set up a PIN in Settings before unlinking a tracker.';
+
+  @override
+  String get enterSecurityPinToUnlink =>
+      'Enter your PIN to unlink the tracker.';
+
+  @override
+  String get incorrectSecurityPin => 'Incorrect PIN';
+
+  @override
+  String get biometricsFailedUsePin =>
+      'We could not verify your identity. Enter your PIN manually.';
+
+  @override
+  String get biometricsAuthenticationReason =>
+      'Confirm your identity to unlink the tracker.';
+
+  @override
+  String get revokeSecurityPin => 'Revoke security PIN';
+
+  @override
+  String get revokeSecurityPinConfirmation =>
+      'Revoking the PIN will allow tracker unlinking without authentication. Do you want to continue?';
+
+  @override
+  String get revoke => 'Revoke';
+
+  @override
+  String get enterCurrentSecurityPin =>
+      'Enter your current PIN to manage security.';
+
+  @override
+  String get unlinkTrackerBeforeDelete =>
+      'You cannot delete this vehicle while it has a linked tracker. Unlink it first.';
+
+  @override
+  String get security => 'Security';
+
+  @override
+  String get manageAlerts => 'Manage alerts';
+
+  @override
+  String get manageAlertsDescription => 'Configure geofence alerts';
 }

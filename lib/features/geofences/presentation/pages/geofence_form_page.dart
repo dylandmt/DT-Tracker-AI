@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
@@ -30,15 +31,14 @@ class _GeofenceFormPageState extends State<GeofenceFormPage> {
   static const _defaultCenter = LatLng(19.4326, -99.1332);
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
-  final _radiusController = TextEditingController(
-    text: AppConstants.defaultGeofenceRadiusMeters.toStringAsFixed(0),
-  );
+  double _radiusMeters = AppConstants.defaultGeofenceRadiusMeters;
   LatLng _center = _defaultCenter;
   List<VehicleEntity> _linkedVehicles = [];
   Set<String> _vehicleIds = {};
   bool _triggerOnEnter = true;
   bool _triggerOnExit = true;
   bool _isActive = true;
+  bool _hasSelectedArea = false;
   bool _loaded = false;
   bool _loadingVehicles = true;
   GoogleMapController? _mapController;
@@ -71,8 +71,14 @@ class _GeofenceFormPageState extends State<GeofenceFormPage> {
     if (_loaded) return;
     _loaded = true;
     _nameController.text = geofence.name;
-    _radiusController.text = geofence.radiusMeters.toStringAsFixed(0);
+    _radiusMeters = geofence.radiusMeters
+        .clamp(
+          AppConstants.minGeofenceRadiusMeters,
+          AppConstants.maxGeofenceRadiusMeters,
+        )
+        .toDouble();
     _center = LatLng(geofence.latitude, geofence.longitude);
+    _hasSelectedArea = true;
     _vehicleIds = geofence.vehicleIds.toSet();
     _triggerOnEnter = geofence.triggerOnEnter;
     _triggerOnExit = geofence.triggerOnExit;
@@ -97,7 +103,7 @@ class _GeofenceFormPageState extends State<GeofenceFormPage> {
           name: _nameController.text.trim(),
           latitude: _center.latitude,
           longitude: _center.longitude,
-          radiusMeters: double.parse(_radiusController.text),
+          radiusMeters: _radiusMeters,
           vehicleIds: _vehicleIds.toList(),
           triggerOnEnter: _triggerOnEnter,
           triggerOnExit: _triggerOnExit,
@@ -144,11 +150,13 @@ class _GeofenceFormPageState extends State<GeofenceFormPage> {
           timeLimit: Duration(seconds: 10),
         ),
       );
+      final center = LatLng(position.latitude, position.longitude);
+      setState(() {
+        _center = center;
+        _hasSelectedArea = true;
+      });
       await _mapController?.animateCamera(
-        CameraUpdate.newLatLngZoom(
-          LatLng(position.latitude, position.longitude),
-          16,
-        ),
+        CameraUpdate.newLatLngZoom(center, 16),
       );
     } catch (error) {
       if (mounted) context.showErrorSnackBar(error.toString());
@@ -206,7 +214,6 @@ class _GeofenceFormPageState extends State<GeofenceFormPage> {
   @override
   void dispose() {
     _nameController.dispose();
-    _radiusController.dispose();
     super.dispose();
   }
 
@@ -250,18 +257,9 @@ class _GeofenceFormPageState extends State<GeofenceFormPage> {
                 controller: _nameController,
                 decoration: InputDecoration(labelText: context.l10n.name),
                 validator: Validators.validateGeofenceName,
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _radiusController,
-                keyboardType: TextInputType.number,
-                decoration: InputDecoration(
-                  labelText: context.l10n.radiusMeters,
-                ),
-                validator: Validators.validateGeofenceRadius,
                 onChanged: (_) => setState(() {}),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 16),
               Text(
                 context.l10n.center,
                 style: Theme.of(context).textTheme.titleMedium,
@@ -285,7 +283,10 @@ class _GeofenceFormPageState extends State<GeofenceFormPage> {
                             () => EagerGestureRecognizer(),
                           ),
                         },
-                        onTap: (center) => setState(() => _center = center),
+                        onTap: (center) => setState(() {
+                          _center = center;
+                          _hasSelectedArea = true;
+                        }),
                         markers: {
                           Marker(
                             markerId: const MarkerId('geofence-center'),
@@ -296,9 +297,7 @@ class _GeofenceFormPageState extends State<GeofenceFormPage> {
                           Circle(
                             circleId: const CircleId('geofence-preview'),
                             center: _center,
-                            radius:
-                                double.tryParse(_radiusController.text) ??
-                                AppConstants.defaultGeofenceRadiusMeters,
+                            radius: _radiusMeters,
                             fillColor: Theme.of(
                               context,
                             ).colorScheme.primary.withValues(alpha: .16),
@@ -336,6 +335,21 @@ class _GeofenceFormPageState extends State<GeofenceFormPage> {
                 ),
               ),
               const SizedBox(height: 8),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(context.l10n.radiusMeters),
+                  Text('${_radiusMeters.toStringAsFixed(0)} m'),
+                ],
+              ),
+              Slider(
+                min: AppConstants.minGeofenceRadiusMeters,
+                max: AppConstants.maxGeofenceRadiusMeters,
+                divisions: 99,
+                value: _radiusMeters,
+                label: '${_radiusMeters.toStringAsFixed(0)} m',
+                onChanged: (radius) => setState(() => _radiusMeters = radius),
+              ),
               Text(context.l10n.tapMapToSetCenter),
               const SizedBox(height: 4),
               Text(
@@ -359,15 +373,29 @@ class _GeofenceFormPageState extends State<GeofenceFormPage> {
                 )
               else
                 ..._linkedVehicles.map(
-                  (vehicle) => CheckboxListTile(
-                    contentPadding: EdgeInsets.zero,
-                    value: _vehicleIds.contains(vehicle.id),
-                    title: Text(vehicle.name),
-                    subtitle: Text(vehicle.plateNumber),
-                    onChanged: (selected) => setState(
-                      () => selected == true
-                          ? _vehicleIds.add(vehicle.id)
-                          : _vehicleIds.remove(vehicle.id),
+                  (vehicle) => Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        border: Border.all(
+                          color: Theme.of(context).colorScheme.outlineVariant,
+                        ),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: CheckboxListTile(
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                        ),
+                        value: _vehicleIds.contains(vehicle.id),
+                        secondary: _VehicleThumbnail(vehicle: vehicle),
+                        title: Text(vehicle.name),
+                        subtitle: Text(vehicle.plateNumber),
+                        onChanged: (selected) => setState(
+                          () => selected == true
+                              ? _vehicleIds.add(vehicle.id)
+                              : _vehicleIds.remove(vehicle.id),
+                        ),
+                      ),
                     ),
                   ),
                 ),
@@ -392,7 +420,12 @@ class _GeofenceFormPageState extends State<GeofenceFormPage> {
               ),
               const SizedBox(height: 24),
               FilledButton(
-                onPressed: state.isSubmitting ? null : _submit,
+                onPressed:
+                    state.isSubmitting ||
+                        _nameController.text.trim().isEmpty ||
+                        !_hasSelectedArea
+                    ? null
+                    : _submit,
                 child: state.isSubmitting
                     ? const SizedBox(
                         height: 20,
@@ -411,4 +444,41 @@ class _GeofenceFormPageState extends State<GeofenceFormPage> {
       },
     ),
   );
+}
+
+class _VehicleThumbnail extends StatelessWidget {
+  const _VehicleThumbnail({required this.vehicle});
+
+  final VehicleEntity vehicle;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(8),
+      child: SizedBox(
+        width: 52,
+        height: 52,
+        child: vehicle.primaryImageUrl == null
+            ? Container(
+                color: colorScheme.surfaceContainerHighest,
+                child: Icon(
+                  Icons.directions_car_outlined,
+                  color: colorScheme.onSurfaceVariant,
+                ),
+              )
+            : CachedNetworkImage(
+                imageUrl: vehicle.primaryImageUrl!,
+                fit: BoxFit.cover,
+                errorWidget: (_, __, ___) => Container(
+                  color: colorScheme.surfaceContainerHighest,
+                  child: Icon(
+                    Icons.directions_car_outlined,
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
+      ),
+    );
+  }
 }

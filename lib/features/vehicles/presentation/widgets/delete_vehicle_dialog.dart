@@ -27,7 +27,9 @@ class DeleteVehicleDialog extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            context.l10n.deleteVehicleConfirmation(vehicle.name),
+            vehicle.hasTracker
+                ? context.l10n.unlinkTrackerBeforeDelete
+                : context.l10n.deleteVehicleConfirmation(vehicle.name),
             style: textTheme.bodyLarge,
           ),
           const SizedBox(height: 16),
@@ -70,16 +72,19 @@ class DeleteVehicleDialog extends StatelessWidget {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(false),
-          child: Text(context.l10n.cancel),
-        ),
-        FilledButton(
-          onPressed: () => Navigator.of(context).pop(true),
-          style: FilledButton.styleFrom(
-            backgroundColor: colorScheme.error,
-            foregroundColor: colorScheme.onError,
+          child: Text(
+            vehicle.hasTracker ? context.l10n.ok : context.l10n.cancel,
           ),
-          child: Text(context.l10n.delete),
         ),
+        if (!vehicle.hasTracker)
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            style: FilledButton.styleFrom(
+              backgroundColor: colorScheme.error,
+              foregroundColor: colorScheme.onError,
+            ),
+            child: Text(context.l10n.delete),
+          ),
       ],
     );
   }

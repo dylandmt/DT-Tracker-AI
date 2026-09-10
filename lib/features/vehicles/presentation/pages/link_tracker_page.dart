@@ -220,18 +220,6 @@ class _LinkTrackerPageState extends State<LinkTrackerPage> {
                       ),
                       const SizedBox(height: 16),
                       _buildInfoRow(context, 'IMEI', state.trackerInfo!.imei),
-                      if (state.trackerInfo!.model != null)
-                        _buildInfoRow(
-                          context,
-                          context.l10n.model,
-                          state.trackerInfo!.model!,
-                        ),
-                      if (state.trackerInfo!.provider != null)
-                        _buildInfoRow(
-                          context,
-                          context.l10n.provider,
-                          state.trackerInfo!.provider!,
-                        ),
                     ],
                   ),
                 ),

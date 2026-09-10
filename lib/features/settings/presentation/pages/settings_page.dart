@@ -6,6 +6,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import '../../../../core/constants/route_constants.dart';
 import '../../../../core/localization/locale_controller.dart';
 import '../../../../core/onboarding/onboarding_controller.dart';
+import '../../../../core/security/tracker_security_dialogs.dart';
 import '../../../../core/theme/theme_controller.dart';
 import '../../../../core/utils/extensions.dart';
 import '../../../../injection_container.dart';
@@ -129,38 +130,27 @@ class SettingsPage extends StatelessWidget {
 
               const SizedBox(height: 16),
 
-              _buildSectionHeader(context, l10n.tracking),
-              // _buildListTile(
-              //   context,
-              //   icon: Icons.speed_outlined,
-              //   title: l10n.speedAlerts,
-              //   subtitle: l10n.configureSpeedAlerts,
-              //   onTap: () {
-              //     // TODO: Navigate to speed alert settings
-              //     context.showSnackBar(l10n.speedAlertsComingSoon);
-              //   },
-              // ),
-              SwitchListTile(
-                secondary: const Icon(Icons.fence_outlined),
-                title: Text(l10n.geofenceAlerts),
-                subtitle: Text(l10n.geofenceAlertsDescription),
-                value: user?.settings.geofenceAlertEnabled ?? true,
-                onChanged: state.isLoading || user == null
-                    ? null
-                    : (enabled) => context.read<AuthBloc>().add(
-                        GeofenceAlertPreferenceChanged(enabled),
-                      ),
+              _buildSectionHeader(context, l10n.security),
+              _buildListTile(
+                context,
+                icon: Icons.lock_outline,
+                title: l10n.securityPin,
+                subtitle: l10n.securityPinSettingsDescription,
+                onTap: () async {
+                  final authorized = await authorizeSecurityPinSettings(
+                    context,
+                  );
+                  if (authorized && context.mounted) {
+                    context.push(RouteConstants.securityPin);
+                  }
+                },
               ),
-              SwitchListTile(
-                secondary: const Icon(Icons.email_outlined),
-                title: Text(l10n.emailAlerts),
-                subtitle: Text(l10n.emailAlertsDescription),
-                value: user?.settings.emailNotificationsEnabled ?? false,
-                onChanged: state.isLoading || user == null
-                    ? null
-                    : (enabled) => context.read<AuthBloc>().add(
-                        EmailNotificationPreferenceChanged(enabled),
-                      ),
+              _buildListTile(
+                context,
+                icon: Icons.notifications_outlined,
+                title: l10n.manageAlerts,
+                subtitle: l10n.manageAlertsDescription,
+                onTap: () => context.push(RouteConstants.alertsSettings),
               ),
               _buildListTile(
                 context,
@@ -171,6 +161,18 @@ class SettingsPage extends StatelessWidget {
                   context.push(RouteConstants.geofences);
                 },
               ),
+              // Email alerts will be enabled in a future release.
+              // SwitchListTile(
+              //   secondary: const Icon(Icons.email_outlined),
+              //   title: Text(l10n.emailAlerts),
+              //   subtitle: Text(l10n.emailAlertsDescription),
+              //   value: user?.settings.emailNotificationsEnabled ?? false,
+              //   onChanged: state.isLoading || user == null
+              //       ? null
+              //       : (enabled) => context.read<AuthBloc>().add(
+              //           EmailNotificationPreferenceChanged(enabled),
+              //         ),
+              // ),
 
               const SizedBox(height: 16),
 

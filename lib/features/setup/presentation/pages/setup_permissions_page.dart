@@ -6,6 +6,7 @@ import '../../../../core/constants/route_constants.dart';
 import '../../../../core/permissions/permission_handler.dart';
 import '../../../../core/permissions/permission_status.dart';
 import '../../../../core/notifications/notification_service.dart';
+import '../../../../core/security/tracker_security_service.dart';
 import '../../../../core/utils/extensions.dart';
 import '../../../../injection_container.dart';
 
@@ -73,6 +74,14 @@ class _SetupPermissionsPageState extends State<SetupPermissionsPage>
 
   Future<void> _openSettings(AppPermission permission) async {
     await _handler.openSettings();
+  }
+
+  Future<void> _continueSetup() async {
+    if (!await sl<TrackerSecurityService>().hasPin() && mounted) {
+      context.go(RouteConstants.setupSecurityPin);
+      return;
+    }
+    if (mounted) context.go(RouteConstants.home);
   }
 
   @override
@@ -144,9 +153,7 @@ class _SetupPermissionsPageState extends State<SetupPermissionsPage>
           ),
           const SizedBox(height: 12),
           FilledButton(
-            onPressed: _readyToContinue
-                ? () => context.go(RouteConstants.home)
-                : null,
+            onPressed: _readyToContinue ? _continueSetup : null,
             child: Text(context.l10n.continueLabel),
           ),
           const SizedBox(height: 8),

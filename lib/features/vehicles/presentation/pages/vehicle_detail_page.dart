@@ -6,6 +6,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/route_constants.dart';
+import '../../../../core/security/tracker_security_dialogs.dart';
 import '../../../../core/utils/image_cache.dart';
 import '../../../../core/utils/extensions.dart';
 import '../../../../core/utils/vehicle_color_localization.dart';
@@ -398,7 +399,7 @@ class _VehicleDetailPageState extends State<VehicleDetailPage> {
     if (vehicle == null) return;
 
     final confirmed = await showDeleteVehicleDialog(context, vehicle);
-    if (confirmed == true && context.mounted) {
+    if (confirmed == true && !vehicle.hasTracker && context.mounted) {
       context.read<VehiclesBloc>().add(
         DeleteVehicleRequested(vehicleId: vehicle.id),
       );
@@ -424,7 +425,10 @@ class _VehicleDetailPageState extends State<VehicleDetailPage> {
       ),
     );
 
-    if (confirmed == true && context.mounted) {
+    if (confirmed != true || !context.mounted) return;
+
+    final authorized = await authorizeTrackerUnlink(context);
+    if (authorized && context.mounted) {
       context.read<TrackerLinkBloc>().add(
         UnlinkTrackerFromVehicle(vehicleId: vehicleId),
       );

@@ -49,6 +49,8 @@
 	<string>DT Tracker needs continuous access to your location to track vehicles even when the app is in the background.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>DT Tracker needs access to your location to show your position on the map and track vehicles.</string>
+	<key>NSFaceIDUsageDescription</key>
+	<string>DT Tracker uses Face ID to authorize tracker unlinking.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>DT Tracker uses your photo library to select vehicle and profile photos.</string>
 	<key>UIApplicationSceneManifest</key>

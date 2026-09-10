@@ -8,6 +8,7 @@ class RouteConstants {
   static const String register = '/register';
   static const String forgotPassword = '/forgot-password';
   static const String setup = '/setup';
+  static const String setupSecurityPin = '/setup/security-pin';
   static const String onboarding = '/onboarding';
 
   // Main Routes (with bottom nav)
@@ -39,6 +40,8 @@ class RouteConstants {
   // Settings Routes
   static const String settings = '/settings';
   static const String profile = '/home/settings/profile';
+  static const String securityPin = '/home/settings/security-pin';
+  static const String alertsSettings = '/home/settings/alerts';
 
   // Route Names
   static const String splashName = 'splash';
@@ -46,6 +49,7 @@ class RouteConstants {
   static const String registerName = 'register';
   static const String forgotPasswordName = 'forgotPassword';
   static const String setupName = 'setup';
+  static const String setupSecurityPinName = 'setupSecurityPin';
   static const String onboardingName = 'onboarding';
   static const String homeName = 'home';
   static const String homeVehiclesName = 'homeVehicles';
@@ -65,4 +69,6 @@ class RouteConstants {
   static const String alertDetailName = 'alertDetail';
   static const String settingsName = 'settings';
   static const String profileName = 'profile';
+  static const String securityPinName = 'securityPin';
+  static const String alertsSettingsName = 'alertsSettings';
 }

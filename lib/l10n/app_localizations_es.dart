@@ -1078,4 +1078,86 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get restartGuideSubtitle =>
       'Vuelve a ver la bienvenida y los consejos';
+
+  @override
+  String get setupSecurityPin => 'Configura tu PIN de seguridad';
+
+  @override
+  String get changeSecurityPin => 'Cambiar PIN de seguridad';
+
+  @override
+  String get securityPin => 'PIN de seguridad';
+
+  @override
+  String get securityPinDescription =>
+      'Protege la desvinculacion de tus rastreadores con un PIN de 6 digitos.';
+
+  @override
+  String get securityPinSettingsDescription =>
+      'Configura o cambia el PIN para desvincular rastreadores';
+
+  @override
+  String get securityPinLength => 'El PIN debe tener 6 digitos';
+
+  @override
+  String get confirmSecurityPin => 'Confirma tu PIN';
+
+  @override
+  String get securityPinDoesNotMatch => 'Los PIN no coinciden';
+
+  @override
+  String get enableBiometrics => 'Usar datos biometricos';
+
+  @override
+  String get enableBiometricsDescription =>
+      'Usa Face ID, reconocimiento facial o huella para autorizar la desvinculacion.';
+
+  @override
+  String get securityPinRequired => 'Configura un PIN de seguridad';
+
+  @override
+  String get securityPinRequiredDescription =>
+      'Debes configurar un PIN en Ajustes antes de desvincular un rastreador.';
+
+  @override
+  String get enterSecurityPinToUnlink =>
+      'Ingresa tu PIN para desvincular el rastreador.';
+
+  @override
+  String get incorrectSecurityPin => 'El PIN es incorrecto';
+
+  @override
+  String get biometricsFailedUsePin =>
+      'No se pudo verificar tu identidad. Ingresa tu PIN manualmente.';
+
+  @override
+  String get biometricsAuthenticationReason =>
+      'Confirma tu identidad para desvincular el rastreador.';
+
+  @override
+  String get revokeSecurityPin => 'Revocar PIN de seguridad';
+
+  @override
+  String get revokeSecurityPinConfirmation =>
+      'Al revocar el PIN, podras desvincular rastreadores sin autenticacion. Deseas continuar?';
+
+  @override
+  String get revoke => 'Revocar';
+
+  @override
+  String get enterCurrentSecurityPin =>
+      'Ingresa tu PIN actual para administrar la seguridad.';
+
+  @override
+  String get unlinkTrackerBeforeDelete =>
+      'No puedes eliminar este vehiculo mientras tenga un rastreador vinculado. Primero desvinculalo.';
+
+  @override
+  String get security => 'Seguridad';
+
+  @override
+  String get manageAlerts => 'Administrar alertas';
+
+  @override
+  String get manageAlertsDescription => 'Configura las alertas de geocercas';
 }

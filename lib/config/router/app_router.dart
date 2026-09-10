@@ -21,6 +21,8 @@ import '../../features/events/presentation/bloc/events_bloc.dart';
 import '../../features/events/presentation/pages/events_page.dart';
 import '../../features/settings/presentation/pages/settings_page.dart';
 import '../../features/settings/presentation/pages/profile_page.dart';
+import '../../features/settings/presentation/pages/alerts_settings_page.dart';
+import '../../features/settings/presentation/pages/security_pin_page.dart';
 import '../../features/vehicles/presentation/bloc/tracker_link_bloc.dart';
 import '../../features/vehicles/presentation/bloc/vehicle_form_bloc.dart';
 import '../../features/vehicles/presentation/bloc/vehicles_bloc.dart';
@@ -90,6 +92,11 @@ class AppRouter {
         path: RouteConstants.setup,
         name: RouteConstants.setupName,
         builder: (context, state) => const SetupPermissionsPage(),
+      ),
+      GoRoute(
+        path: RouteConstants.setupSecurityPin,
+        name: RouteConstants.setupSecurityPinName,
+        builder: (context, state) => const SecurityPinPage(isSetup: true),
       ),
 
       // Redirect /home to /home/vehicles
@@ -256,6 +263,17 @@ class AppRouter {
                 path: 'profile',
                 name: RouteConstants.profileName,
                 builder: (context, state) => const ProfilePage(),
+              ),
+              GoRoute(
+                path: 'security-pin',
+                name: RouteConstants.securityPinName,
+                builder: (context, state) =>
+                    const SecurityPinPage(isSetup: false),
+              ),
+              GoRoute(
+                path: 'alerts',
+                name: RouteConstants.alertsSettingsName,
+                builder: (context, state) => const AlertsSettingsPage(),
               ),
             ],
           ),

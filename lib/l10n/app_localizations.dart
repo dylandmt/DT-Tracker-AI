@@ -1981,6 +1981,150 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'See the welcome guide and tips again'**
   String get restartGuideSubtitle;
+
+  /// No description provided for @setupSecurityPin.
+  ///
+  /// In en, this message translates to:
+  /// **'Set up your security PIN'**
+  String get setupSecurityPin;
+
+  /// No description provided for @changeSecurityPin.
+  ///
+  /// In en, this message translates to:
+  /// **'Change security PIN'**
+  String get changeSecurityPin;
+
+  /// No description provided for @securityPin.
+  ///
+  /// In en, this message translates to:
+  /// **'Security PIN'**
+  String get securityPin;
+
+  /// No description provided for @securityPinDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Protect tracker unlinking with a 6-digit PIN.'**
+  String get securityPinDescription;
+
+  /// No description provided for @securityPinSettingsDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Set or change the PIN used to unlink trackers'**
+  String get securityPinSettingsDescription;
+
+  /// No description provided for @securityPinLength.
+  ///
+  /// In en, this message translates to:
+  /// **'PIN must contain 6 digits'**
+  String get securityPinLength;
+
+  /// No description provided for @confirmSecurityPin.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm your PIN'**
+  String get confirmSecurityPin;
+
+  /// No description provided for @securityPinDoesNotMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'PINs do not match'**
+  String get securityPinDoesNotMatch;
+
+  /// No description provided for @enableBiometrics.
+  ///
+  /// In en, this message translates to:
+  /// **'Use biometrics'**
+  String get enableBiometrics;
+
+  /// No description provided for @enableBiometricsDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Use Face ID, face recognition, or fingerprint to authorize unlinking.'**
+  String get enableBiometricsDescription;
+
+  /// No description provided for @securityPinRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Set up a security PIN'**
+  String get securityPinRequired;
+
+  /// No description provided for @securityPinRequiredDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Set up a PIN in Settings before unlinking a tracker.'**
+  String get securityPinRequiredDescription;
+
+  /// No description provided for @enterSecurityPinToUnlink.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your PIN to unlink the tracker.'**
+  String get enterSecurityPinToUnlink;
+
+  /// No description provided for @incorrectSecurityPin.
+  ///
+  /// In en, this message translates to:
+  /// **'Incorrect PIN'**
+  String get incorrectSecurityPin;
+
+  /// No description provided for @biometricsFailedUsePin.
+  ///
+  /// In en, this message translates to:
+  /// **'We could not verify your identity. Enter your PIN manually.'**
+  String get biometricsFailedUsePin;
+
+  /// No description provided for @biometricsAuthenticationReason.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm your identity to unlink the tracker.'**
+  String get biometricsAuthenticationReason;
+
+  /// No description provided for @revokeSecurityPin.
+  ///
+  /// In en, this message translates to:
+  /// **'Revoke security PIN'**
+  String get revokeSecurityPin;
+
+  /// No description provided for @revokeSecurityPinConfirmation.
+  ///
+  /// In en, this message translates to:
+  /// **'Revoking the PIN will allow tracker unlinking without authentication. Do you want to continue?'**
+  String get revokeSecurityPinConfirmation;
+
+  /// No description provided for @revoke.
+  ///
+  /// In en, this message translates to:
+  /// **'Revoke'**
+  String get revoke;
+
+  /// No description provided for @enterCurrentSecurityPin.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your current PIN to manage security.'**
+  String get enterCurrentSecurityPin;
+
+  /// No description provided for @unlinkTrackerBeforeDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'You cannot delete this vehicle while it has a linked tracker. Unlink it first.'**
+  String get unlinkTrackerBeforeDelete;
+
+  /// No description provided for @security.
+  ///
+  /// In en, this message translates to:
+  /// **'Security'**
+  String get security;
+
+  /// No description provided for @manageAlerts.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage alerts'**
+  String get manageAlerts;
+
+  /// No description provided for @manageAlertsDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Configure geofence alerts'**
+  String get manageAlertsDescription;
 }
 
 class _AppLocalizationsDelegate

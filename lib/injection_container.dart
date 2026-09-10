@@ -5,7 +5,9 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get_it/get_it.dart';
+import 'package:local_auth/local_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 
@@ -18,6 +20,7 @@ import 'core/notifications/notification_service.dart';
 import 'core/notifications/push_device_backend_datasource.dart';
 import 'core/permissions/permission_handler.dart';
 import 'core/permissions/permission_handler_impl.dart';
+import 'core/security/tracker_security_service.dart';
 import 'core/theme/theme_controller.dart';
 import 'core/utils/image_compressor.dart';
 import 'features/auth/data/datasources/auth_remote_data_source.dart';
@@ -107,6 +110,8 @@ Future<void> initializeDependencies() async {
     FlutterLocalNotificationsPlugin.new,
   );
   sl.registerLazySingleton<Uuid>(Uuid.new);
+  sl.registerLazySingleton<FlutterSecureStorage>(FlutterSecureStorage.new);
+  sl.registerLazySingleton<LocalAuthentication>(LocalAuthentication.new);
 
   // Connectivity
   sl.registerLazySingleton<Connectivity>(() => Connectivity());
@@ -133,6 +138,13 @@ Future<void> initializeDependencies() async {
   );
 
   sl.registerLazySingleton<ImageCompressor>(() => ImageCompressorImpl());
+  sl.registerLazySingleton<TrackerSecurityService>(
+    () => TrackerSecurityService(
+      firebaseAuth: sl(),
+      storage: sl(),
+      localAuthentication: sl(),
+    ),
+  );
 
   sl.registerLazySingleton<PushDeviceBackendDataSource>(
     () => PushDeviceBackendDataSource(firebaseAuth: sl()),

@@ -316,14 +316,17 @@ class VehicleRepositoryImpl implements VehicleRepository {
   }
 
   @override
-  Future<Either<Failure, VehicleEntity>> unlinkTracker(String vehicleId) async {
+  Future<Either<Failure, VehicleEntity>> unlinkTracker(
+    String vehicleId, {
+    String? pin,
+  }) async {
     if (!await networkInfo.isConnected) {
       return const Left(NetworkFailure());
     }
 
     try {
       // Backend will unlink and update Firestore
-      await backendDataSource.unlinkTracker(vehicleId: vehicleId);
+      await backendDataSource.unlinkTracker(vehicleId: vehicleId, pin: pin);
 
       // Get updated vehicle
       final updatedVehicle = await vehicleDataSource.getVehicleById(

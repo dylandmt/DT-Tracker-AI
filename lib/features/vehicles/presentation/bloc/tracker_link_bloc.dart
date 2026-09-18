@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../../../core/usecases/usecase.dart';
 import '../../domain/entities/tracker_info.dart';
 import '../../domain/entities/vehicle.dart';
 import '../../domain/usecases/get_tracker_info.dart';
@@ -111,7 +110,9 @@ class TrackerLinkBloc extends Bloc<TrackerLinkEvent, TrackerLinkState> {
   ) async {
     emit(state.copyWith(status: TrackerLinkStatus.unlinking));
 
-    final result = await unlinkTracker(IdParams(id: event.vehicleId));
+    final result = await unlinkTracker(
+      UnlinkTrackerParams(vehicleId: event.vehicleId, pin: event.pin),
+    );
 
     result.fold(
       (failure) => emit(

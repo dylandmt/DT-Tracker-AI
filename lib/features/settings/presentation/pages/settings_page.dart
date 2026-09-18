@@ -6,7 +6,6 @@ import 'package:cached_network_image/cached_network_image.dart';
 import '../../../../core/constants/route_constants.dart';
 import '../../../../core/localization/locale_controller.dart';
 import '../../../../core/onboarding/onboarding_controller.dart';
-import '../../../../core/security/tracker_security_dialogs.dart';
 import '../../../../core/theme/theme_controller.dart';
 import '../../../../core/utils/extensions.dart';
 import '../../../../injection_container.dart';
@@ -118,6 +117,7 @@ class SettingsPage extends StatelessWidget {
                   context.push(RouteConstants.profile);
                 },
               ),
+
               // _buildListTile(
               //   context,
               //   icon: Icons.notifications_outlined,
@@ -127,7 +127,6 @@ class SettingsPage extends StatelessWidget {
               //     context.push(RouteConstants.alerts);
               //   },
               // ),
-
               const SizedBox(height: 16),
 
               _buildSectionHeader(context, l10n.security),
@@ -136,14 +135,7 @@ class SettingsPage extends StatelessWidget {
                 icon: Icons.lock_outline,
                 title: l10n.securityPin,
                 subtitle: l10n.securityPinSettingsDescription,
-                onTap: () async {
-                  final authorized = await authorizeSecurityPinSettings(
-                    context,
-                  );
-                  if (authorized && context.mounted) {
-                    context.push(RouteConstants.securityPin);
-                  }
-                },
+                onTap: () => context.push(RouteConstants.securityPin),
               ),
               _buildListTile(
                 context,
@@ -161,6 +153,7 @@ class SettingsPage extends StatelessWidget {
                   context.push(RouteConstants.geofences);
                 },
               ),
+
               // Email alerts will be enabled in a future release.
               // SwitchListTile(
               //   secondary: const Icon(Icons.email_outlined),
@@ -173,7 +166,6 @@ class SettingsPage extends StatelessWidget {
               //           EmailNotificationPreferenceChanged(enabled),
               //         ),
               // ),
-
               const SizedBox(height: 16),
 
               _buildSectionHeader(context, l10n.app),

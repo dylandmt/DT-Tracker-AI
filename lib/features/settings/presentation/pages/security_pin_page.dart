@@ -20,11 +20,10 @@ class _SecurityPinPageState extends State<SecurityPinPage> {
   final _formKey = GlobalKey<FormState>();
   final _pinController = TextEditingController();
   final _confirmationController = TextEditingController();
+  final _currentPinController = TextEditingController();
   bool _loading = true;
   bool _saving = false;
   bool _hasPin = false;
-  bool _biometricsAvailable = false;
-  bool _enableBiometrics = false;
 
   @override
   void initState() {
@@ -36,19 +35,16 @@ class _SecurityPinPageState extends State<SecurityPinPage> {
   void dispose() {
     _pinController.dispose();
     _confirmationController.dispose();
+    _currentPinController.dispose();
     super.dispose();
   }
 
   Future<void> _loadSecurityState() async {
     final security = sl<TrackerSecurityService>();
     final hasPin = await security.hasPin();
-    final biometricsAvailable = await security.canUseBiometrics();
-    final biometricsEnabled = await security.isBiometricsEnabled();
     if (!mounted) return;
     setState(() {
       _hasPin = hasPin;
-      _biometricsAvailable = biometricsAvailable;
-      _enableBiometrics = biometricsAvailable && biometricsEnabled;
       _loading = false;
     });
   }
@@ -56,12 +52,16 @@ class _SecurityPinPageState extends State<SecurityPinPage> {
   Future<void> _save() async {
     if (!(_formKey.currentState?.validate() ?? false)) return;
     setState(() => _saving = true);
-    await sl<TrackerSecurityService>().savePin(
-      _pinController.text,
-      biometricsEnabled: _enableBiometrics,
-    );
-    if (!mounted) return;
-    _finish();
+    try {
+      await sl<TrackerSecurityService>().savePin(
+        _pinController.text,
+        currentPin: _hasPin ? _currentPinController.text : null,
+      );
+      if (!mounted) return;
+      _finish();
+    } catch (_) {
+      if (mounted) setState(() => _saving = false);
+    }
   }
 
   Future<void> _revoke() async {
@@ -83,8 +83,12 @@ class _SecurityPinPageState extends State<SecurityPinPage> {
       ),
     );
     if (confirmed != true || !mounted) return;
-    await sl<TrackerSecurityService>().revokePin();
-    if (mounted) context.pop();
+    try {
+      await sl<TrackerSecurityService>().revokePin(_currentPinController.text);
+      if (mounted) context.pop();
+    } catch (_) {
+      if (mounted) setState(() => _saving = false);
+    }
   }
 
   void _finish() {
@@ -131,6 +135,24 @@ class _SecurityPinPageState extends State<SecurityPinPage> {
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 32),
+                    if (_hasPin) ...[
+                      TextFormField(
+                        controller: _currentPinController,
+                        obscureText: true,
+                        keyboardType: TextInputType.number,
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly,
+                          LengthLimitingTextInputFormatter(6),
+                        ],
+                        decoration: InputDecoration(
+                          labelText: context.l10n.enterCurrentSecurityPin,
+                        ),
+                        validator: (value) => value?.length == 6
+                            ? null
+                            : context.l10n.securityPinLength,
+                      ),
+                      const SizedBox(height: 16),
+                    ],
                     TextFormField(
                       controller: _pinController,
                       autofocus: true,
@@ -163,19 +185,6 @@ class _SecurityPinPageState extends State<SecurityPinPage> {
                           ? null
                           : context.l10n.securityPinDoesNotMatch,
                     ),
-                    if (_biometricsAvailable) ...[
-                      const SizedBox(height: 16),
-                      CheckboxListTile(
-                        contentPadding: EdgeInsets.zero,
-                        value: _enableBiometrics,
-                        onChanged: (value) =>
-                            setState(() => _enableBiometrics = value ?? false),
-                        title: Text(context.l10n.enableBiometrics),
-                        subtitle: Text(
-                          context.l10n.enableBiometricsDescription,
-                        ),
-                      ),
-                    ],
                     const SizedBox(height: 24),
                     FilledButton(
                       onPressed: _saving ? null : _save,

@@ -139,11 +139,7 @@ Future<void> initializeDependencies() async {
 
   sl.registerLazySingleton<ImageCompressor>(() => ImageCompressorImpl());
   sl.registerLazySingleton<TrackerSecurityService>(
-    () => TrackerSecurityService(
-      firebaseAuth: sl(),
-      storage: sl(),
-      localAuthentication: sl(),
-    ),
+    () => TrackerSecurityService(firebaseAuth: sl()),
   );
 
   sl.registerLazySingleton<PushDeviceBackendDataSource>(

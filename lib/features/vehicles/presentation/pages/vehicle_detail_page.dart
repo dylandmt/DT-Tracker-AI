@@ -427,10 +427,10 @@ class _VehicleDetailPageState extends State<VehicleDetailPage> {
 
     if (confirmed != true || !context.mounted) return;
 
-    final authorized = await authorizeTrackerUnlink(context);
-    if (authorized && context.mounted) {
+    final authorization = await authorizeTrackerUnlink(context);
+    if (authorization != null && context.mounted) {
       context.read<TrackerLinkBloc>().add(
-        UnlinkTrackerFromVehicle(vehicleId: vehicleId),
+        UnlinkTrackerFromVehicle(vehicleId: vehicleId, pin: authorization.pin),
       );
     }
   }

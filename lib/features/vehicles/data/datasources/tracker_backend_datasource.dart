@@ -108,9 +108,12 @@ class TrackerBackendDataSource {
   }
 
   /// Unlink tracker from vehicle
-  Future<void> unlinkTracker({required String vehicleId}) async {
+  Future<void> unlinkTracker({required String vehicleId, String? pin}) async {
     try {
-      await _post('/vehicles/$vehicleId/unlink');
+      await _post(
+        '/vehicles/$vehicleId/unlink',
+        body: pin == null ? null : {'pin': pin},
+      );
     } on ServerException {
       rethrow;
     } catch (e) {

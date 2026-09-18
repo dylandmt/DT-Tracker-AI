@@ -5,46 +5,33 @@ import '../../injection_container.dart';
 import '../utils/extensions.dart';
 import 'tracker_security_service.dart';
 
-Future<bool> authorizeTrackerUnlink(BuildContext context) async {
-  final security = sl<TrackerSecurityService>();
-  if (!await security.hasPin()) return true;
+class TrackerUnlinkAuthorization {
+  const TrackerUnlinkAuthorization({this.pin});
 
-  if (!context.mounted) return false;
-  return await showDialog<bool>(
-        context: context,
-        barrierDismissible: false,
-        builder: (_) => _TrackerPinAuthorizationDialog(
-          instructions: context.l10n.enterSecurityPinToUnlink,
-          useBiometrics: true,
-        ),
-      ) ??
-      false;
+  final String? pin;
 }
 
-Future<bool> authorizeSecurityPinSettings(BuildContext context) async {
+Future<TrackerUnlinkAuthorization?> authorizeTrackerUnlink(
+  BuildContext context,
+) async {
   final security = sl<TrackerSecurityService>();
-  if (!await security.hasPin()) return true;
+  if (!await security.hasPin()) return const TrackerUnlinkAuthorization();
 
-  if (!context.mounted) return false;
-  return await showDialog<bool>(
-        context: context,
-        barrierDismissible: false,
-        builder: (_) => _TrackerPinAuthorizationDialog(
-          instructions: context.l10n.enterCurrentSecurityPin,
-          useBiometrics: false,
-        ),
-      ) ??
-      false;
+  if (!context.mounted) return null;
+  final pin = await showDialog<String>(
+    context: context,
+    barrierDismissible: false,
+    builder: (_) => _TrackerPinAuthorizationDialog(
+      instructions: context.l10n.enterSecurityPinToUnlink,
+    ),
+  );
+  return pin == null ? null : TrackerUnlinkAuthorization(pin: pin);
 }
 
 class _TrackerPinAuthorizationDialog extends StatefulWidget {
-  const _TrackerPinAuthorizationDialog({
-    required this.instructions,
-    required this.useBiometrics,
-  });
+  const _TrackerPinAuthorizationDialog({required this.instructions});
 
   final String instructions;
-  final bool useBiometrics;
 
   @override
   State<_TrackerPinAuthorizationDialog> createState() =>
@@ -54,47 +41,13 @@ class _TrackerPinAuthorizationDialog extends StatefulWidget {
 class _TrackerPinAuthorizationDialogState
     extends State<_TrackerPinAuthorizationDialog> {
   final _pinController = TextEditingController();
-  bool _authenticatingBiometrics = false;
   bool _verifyingPin = false;
   String? _error;
-
-  @override
-  void initState() {
-    super.initState();
-    if (widget.useBiometrics) {
-      WidgetsBinding.instance.addPostFrameCallback(
-        (_) => _authenticateBiometrics(),
-      );
-    }
-  }
 
   @override
   void dispose() {
     _pinController.dispose();
     super.dispose();
-  }
-
-  Future<void> _authenticateBiometrics() async {
-    final biometricsEnabled = await sl<TrackerSecurityService>()
-        .isBiometricsEnabled();
-    if (!mounted || !biometricsEnabled) return;
-    setState(() {
-      _authenticatingBiometrics = true;
-      _error = null;
-    });
-    final authenticated = await sl<TrackerSecurityService>()
-        .authenticateWithBiometrics(
-          localizedReason: context.l10n.biometricsAuthenticationReason,
-        );
-    if (!mounted) return;
-    if (authenticated) {
-      Navigator.pop(context, true);
-      return;
-    }
-    setState(() {
-      _authenticatingBiometrics = false;
-      _error = context.l10n.biometricsFailedUsePin;
-    });
   }
 
   Future<void> _verifyPin() async {
@@ -107,7 +60,7 @@ class _TrackerPinAuthorizationDialogState
     );
     if (!mounted) return;
     if (valid) {
-      Navigator.pop(context, true);
+      Navigator.pop(context, _pinController.text);
       return;
     }
     setState(() {
@@ -141,16 +94,11 @@ class _TrackerPinAuthorizationDialogState
               errorText: _error,
             ),
           ),
-          if (_authenticatingBiometrics)
-            const Padding(
-              padding: EdgeInsets.only(top: 12),
-              child: CircularProgressIndicator(),
-            ),
         ],
       ),
       actions: [
         TextButton(
-          onPressed: () => Navigator.pop(context, false),
+          onPressed: () => Navigator.pop(context),
           child: Text(context.l10n.cancel),
         ),
         FilledButton(

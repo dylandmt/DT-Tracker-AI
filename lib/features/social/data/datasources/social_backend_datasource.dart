@@ -86,6 +86,9 @@ class SocialBackendDataSource {
   Future<void> removeFriend(String friendUid) =>
       _request('DELETE', '/friends/$friendUid');
 
+  Future<List<Map<String, dynamic>>> vehicles() =>
+      _list('GET', '/vehicles', key: 'vehicles');
+
   Future<void> blockUser(String targetUid) =>
       _request('POST', '/users/me/blocks', body: {'targetUid': targetUid});
   Future<List<Map<String, dynamic>>> blocks() =>

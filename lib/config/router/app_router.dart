@@ -24,6 +24,7 @@ import '../../features/settings/presentation/pages/profile_page.dart';
 import '../../features/settings/presentation/pages/alerts_settings_page.dart';
 import '../../features/settings/presentation/pages/security_pin_page.dart';
 import '../../features/social/presentation/pages/friends_page.dart';
+import '../../features/social/presentation/pages/share_location_page.dart';
 import '../../features/vehicles/presentation/bloc/tracker_link_bloc.dart';
 import '../../features/vehicles/presentation/bloc/vehicle_form_bloc.dart';
 import '../../features/vehicles/presentation/bloc/vehicles_bloc.dart';
@@ -141,6 +142,11 @@ class AppRouter {
           create: (_) => sl<EventsBloc>(),
           child: const EventsPage(),
         ),
+      ),
+      GoRoute(
+        path: RouteConstants.shareLocation,
+        name: RouteConstants.shareLocationName,
+        builder: (context, state) => const ShareLocationPage(),
       ),
 
       // Shell route with bottom navigation

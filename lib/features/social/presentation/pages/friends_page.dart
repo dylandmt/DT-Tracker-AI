@@ -1,7 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../../core/constants/route_constants.dart';
 import '../../../../core/utils/extensions.dart';
 import '../../../../injection_container.dart';
 import '../../data/datasources/social_backend_datasource.dart';
@@ -95,6 +97,12 @@ class _FriendsPageState extends State<FriendsPage> {
   }
 
   Future<void> _startShareFlow() async {
+    await context.push(RouteConstants.shareLocation);
+    if (mounted) await _load();
+  }
+
+  // ignore: unused_element
+  Future<void> _legacyStartShareFlow() async {
     if (_friends.isEmpty) {
       context.showErrorSnackBar(context.l10n.shareNoFriends);
       return;

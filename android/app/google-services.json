@@ -23,6 +23,14 @@
           }
         },
         {
+          "client_id": "725005413832-lltc81se2sa36agak1uckmin7bcruqvh.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.dttracker.android",
+            "certificate_hash": "fd985ed4aeb89eb2dc5bce485150c47e3dc5be9c"
+          }
+        },
+        {
           "client_id": "725005413832-r7tegs1p1b441lp0hpgamhpbbu8vm12t.apps.googleusercontent.com",
           "client_type": 3
         }
@@ -59,6 +67,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "725005413832-2jj79llun7p43s95sgau7i45grm8c0jg.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.dttracker.android.dev",
+            "certificate_hash": "dc722a4a87eab86c276625cb2243d6eea24ff1cc"
+          }
+        },
+        {
           "client_id": "725005413832-7m22d9t5f3q5euo04pv47j9f6n9utfq7.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
@@ -72,6 +88,14 @@
           "android_info": {
             "package_name": "com.dttracker.android.dev",
             "certificate_hash": "1e8f6fa2a17a33d8fb8bf8b51180ff521caa60da"
+          }
+        },
+        {
+          "client_id": "725005413832-sm616gsek7chlvdkcqto5nkbteke3cdq.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.dttracker.android.dev",
+            "certificate_hash": "fd985ed4aeb89eb2dc5bce485150c47e3dc5be9c"
           }
         },
         {
@@ -111,11 +135,27 @@
       },
       "oauth_client": [
         {
+          "client_id": "725005413832-e9e2oce5fg00ckk83n7bvvc9cia8lqg4.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.dttracker.android.staging",
+            "certificate_hash": "fd985ed4aeb89eb2dc5bce485150c47e3dc5be9c"
+          }
+        },
+        {
           "client_id": "725005413832-g5buba5d4sllt5ftmqgotqun9m25a6rs.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.dttracker.android.staging",
             "certificate_hash": "efbabfa8aa029e6c65e8b4b09e92e2ffb05fd4ff"
+          }
+        },
+        {
+          "client_id": "725005413832-tljqvvird14h9odc49a69h6qs960v6cf.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.dttracker.android.staging",
+            "certificate_hash": "dc722a4a87eab86c276625cb2243d6eea24ff1cc"
           }
         },
         {

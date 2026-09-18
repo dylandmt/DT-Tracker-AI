@@ -15,6 +15,7 @@ class RouteConstants {
   static const String home = '/home';
   static const String homeVehicles = '/home/vehicles';
   static const String homeMap = '/home/map';
+  static const String homeFriends = '/home/friends';
   static const String homeTrips = '/home/trips';
   static const String homeSettings = '/home/settings';
 
@@ -42,7 +43,7 @@ class RouteConstants {
   static const String profile = '/home/settings/profile';
   static const String securityPin = '/home/settings/security-pin';
   static const String alertsSettings = '/home/settings/alerts';
-  static const String friends = '/home/settings/friends';
+  static const String friends = homeFriends;
 
   // Route Names
   static const String splashName = 'splash';
@@ -55,6 +56,7 @@ class RouteConstants {
   static const String homeName = 'home';
   static const String homeVehiclesName = 'homeVehicles';
   static const String homeMapName = 'homeMap';
+  static const String homeFriendsName = 'homeFriends';
   static const String homeTripsName = 'homeTrips';
   static const String homeSettingsName = 'homeSettings';
   static const String vehiclesName = 'vehicles';

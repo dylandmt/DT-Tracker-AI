@@ -153,14 +153,6 @@ class SettingsPage extends StatelessWidget {
                   context.push(RouteConstants.geofences);
                 },
               ),
-              _buildListTile(
-                context,
-                icon: Icons.people_outline,
-                title: 'Friends & location sharing',
-                subtitle: 'Manage friends and shared vehicle locations',
-                onTap: () => context.push(RouteConstants.friends),
-              ),
-
               // Email alerts will be enabled in a future release.
               // SwitchListTile(
               //   secondary: const Icon(Icons.email_outlined),

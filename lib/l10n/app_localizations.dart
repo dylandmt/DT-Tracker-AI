@@ -2125,6 +2125,300 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Configure geofence alerts'**
   String get manageAlertsDescription;
+
+  /// No description provided for @friends.
+  ///
+  /// In en, this message translates to:
+  /// **'Friends'**
+  String get friends;
+
+  /// No description provided for @locationSharing.
+  ///
+  /// In en, this message translates to:
+  /// **'Location sharing'**
+  String get locationSharing;
+
+  /// No description provided for @friendRequests.
+  ///
+  /// In en, this message translates to:
+  /// **'Friend requests'**
+  String get friendRequests;
+
+  /// No description provided for @friendSearchLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Exact username or email'**
+  String get friendSearchLabel;
+
+  /// No description provided for @search.
+  ///
+  /// In en, this message translates to:
+  /// **'Search'**
+  String get search;
+
+  /// No description provided for @addFriend.
+  ///
+  /// In en, this message translates to:
+  /// **'Add friend'**
+  String get addFriend;
+
+  /// No description provided for @incomingRequests.
+  ///
+  /// In en, this message translates to:
+  /// **'Incoming requests'**
+  String get incomingRequests;
+
+  /// No description provided for @outgoingRequests.
+  ///
+  /// In en, this message translates to:
+  /// **'Outgoing requests'**
+  String get outgoingRequests;
+
+  /// No description provided for @noIncomingRequests.
+  ///
+  /// In en, this message translates to:
+  /// **'No incoming requests.'**
+  String get noIncomingRequests;
+
+  /// No description provided for @noOutgoingRequests.
+  ///
+  /// In en, this message translates to:
+  /// **'No outgoing requests.'**
+  String get noOutgoingRequests;
+
+  /// No description provided for @noFriendsYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No friends yet.'**
+  String get noFriendsYet;
+
+  /// No description provided for @friendRequestReceived.
+  ///
+  /// In en, this message translates to:
+  /// **'Wants to be your friend'**
+  String get friendRequestReceived;
+
+  /// No description provided for @friendRequestPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Request pending'**
+  String get friendRequestPending;
+
+  /// No description provided for @accept.
+  ///
+  /// In en, this message translates to:
+  /// **'Accept'**
+  String get accept;
+
+  /// No description provided for @reject.
+  ///
+  /// In en, this message translates to:
+  /// **'Reject'**
+  String get reject;
+
+  /// No description provided for @removeFriend.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove friend'**
+  String get removeFriend;
+
+  /// No description provided for @block.
+  ///
+  /// In en, this message translates to:
+  /// **'Block'**
+  String get block;
+
+  /// No description provided for @blocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Blocked'**
+  String get blocked;
+
+  /// No description provided for @blockedUsers.
+  ///
+  /// In en, this message translates to:
+  /// **'Blocked users'**
+  String get blockedUsers;
+
+  /// No description provided for @noBlockedUsers.
+  ///
+  /// In en, this message translates to:
+  /// **'No blocked users.'**
+  String get noBlockedUsers;
+
+  /// No description provided for @unblock.
+  ///
+  /// In en, this message translates to:
+  /// **'Unblock'**
+  String get unblock;
+
+  /// No description provided for @receivedLocationShares.
+  ///
+  /// In en, this message translates to:
+  /// **'Received location shares'**
+  String get receivedLocationShares;
+
+  /// No description provided for @yourLocationShares.
+  ///
+  /// In en, this message translates to:
+  /// **'Your location shares'**
+  String get yourLocationShares;
+
+  /// No description provided for @noReceivedShares.
+  ///
+  /// In en, this message translates to:
+  /// **'No received shares.'**
+  String get noReceivedShares;
+
+  /// No description provided for @noLocationShares.
+  ///
+  /// In en, this message translates to:
+  /// **'No active or previous shares.'**
+  String get noLocationShares;
+
+  /// No description provided for @shareLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Share location'**
+  String get shareLocation;
+
+  /// No description provided for @shareSelectFriendTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Select a friend'**
+  String get shareSelectFriendTitle;
+
+  /// No description provided for @shareSelectVehiclesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Select vehicles to share'**
+  String get shareSelectVehiclesTitle;
+
+  /// No description provided for @shareSelectDurationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Select sharing duration'**
+  String get shareSelectDurationTitle;
+
+  /// No description provided for @shareNoFriends.
+  ///
+  /// In en, this message translates to:
+  /// **'Add an accepted friend before sharing a location.'**
+  String get shareNoFriends;
+
+  /// No description provided for @shareNoLinkedVehicles.
+  ///
+  /// In en, this message translates to:
+  /// **'No vehicles with a linked tracker are available to share.'**
+  String get shareNoLinkedVehicles;
+
+  /// No description provided for @socialAuthenticationRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in again to share a location.'**
+  String get socialAuthenticationRequired;
+
+  /// No description provided for @shareDuration15Minutes.
+  ///
+  /// In en, this message translates to:
+  /// **'15 minutes'**
+  String get shareDuration15Minutes;
+
+  /// No description provided for @shareDuration30Minutes.
+  ///
+  /// In en, this message translates to:
+  /// **'30 minutes'**
+  String get shareDuration30Minutes;
+
+  /// No description provided for @shareDuration1Hour.
+  ///
+  /// In en, this message translates to:
+  /// **'1 hour'**
+  String get shareDuration1Hour;
+
+  /// No description provided for @shareDuration4Hours.
+  ///
+  /// In en, this message translates to:
+  /// **'4 hours'**
+  String get shareDuration4Hours;
+
+  /// No description provided for @shareDuration8Hours.
+  ///
+  /// In en, this message translates to:
+  /// **'8 hours'**
+  String get shareDuration8Hours;
+
+  /// No description provided for @shareDurationUntilRevoked.
+  ///
+  /// In en, this message translates to:
+  /// **'Until revoked'**
+  String get shareDurationUntilRevoked;
+
+  /// No description provided for @shareStatusActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Active'**
+  String get shareStatusActive;
+
+  /// No description provided for @shareStatusRevoked.
+  ///
+  /// In en, this message translates to:
+  /// **'Revoked'**
+  String get shareStatusRevoked;
+
+  /// No description provided for @shareStatusExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'Expired'**
+  String get shareStatusExpired;
+
+  /// No description provided for @shareStatusUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown'**
+  String get shareStatusUnknown;
+
+  /// No description provided for @shareSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} {count, plural, =1{vehicle} other{vehicles}} | {duration} | {status}'**
+  String shareSummary(int count, String duration, String status);
+
+  /// No description provided for @shareFrom.
+  ///
+  /// In en, this message translates to:
+  /// **'Share from {name}'**
+  String shareFrom(String name);
+
+  /// No description provided for @shareTo.
+  ///
+  /// In en, this message translates to:
+  /// **'To {name}'**
+  String shareTo(String name);
+
+  /// No description provided for @locations.
+  ///
+  /// In en, this message translates to:
+  /// **'Locations'**
+  String get locations;
+
+  /// No description provided for @sharedLocationDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Vehicle {vehicleId} | {time}'**
+  String sharedLocationDetails(String vehicleId, String time);
+
+  /// No description provided for @notAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Not available'**
+  String get notAvailable;
+
+  /// No description provided for @noTimestamp.
+  ///
+  /// In en, this message translates to:
+  /// **'No timestamp'**
+  String get noTimestamp;
 }
 
 class _AppLocalizationsDelegate

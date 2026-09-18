@@ -1143,4 +1143,168 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get manageAlertsDescription => 'Configure geofence alerts';
+
+  @override
+  String get friends => 'Friends';
+
+  @override
+  String get locationSharing => 'Location sharing';
+
+  @override
+  String get friendRequests => 'Friend requests';
+
+  @override
+  String get friendSearchLabel => 'Exact username or email';
+
+  @override
+  String get search => 'Search';
+
+  @override
+  String get addFriend => 'Add friend';
+
+  @override
+  String get incomingRequests => 'Incoming requests';
+
+  @override
+  String get outgoingRequests => 'Outgoing requests';
+
+  @override
+  String get noIncomingRequests => 'No incoming requests.';
+
+  @override
+  String get noOutgoingRequests => 'No outgoing requests.';
+
+  @override
+  String get noFriendsYet => 'No friends yet.';
+
+  @override
+  String get friendRequestReceived => 'Wants to be your friend';
+
+  @override
+  String get friendRequestPending => 'Request pending';
+
+  @override
+  String get accept => 'Accept';
+
+  @override
+  String get reject => 'Reject';
+
+  @override
+  String get removeFriend => 'Remove friend';
+
+  @override
+  String get block => 'Block';
+
+  @override
+  String get blocked => 'Blocked';
+
+  @override
+  String get blockedUsers => 'Blocked users';
+
+  @override
+  String get noBlockedUsers => 'No blocked users.';
+
+  @override
+  String get unblock => 'Unblock';
+
+  @override
+  String get receivedLocationShares => 'Received location shares';
+
+  @override
+  String get yourLocationShares => 'Your location shares';
+
+  @override
+  String get noReceivedShares => 'No received shares.';
+
+  @override
+  String get noLocationShares => 'No active or previous shares.';
+
+  @override
+  String get shareLocation => 'Share location';
+
+  @override
+  String get shareSelectFriendTitle => 'Select a friend';
+
+  @override
+  String get shareSelectVehiclesTitle => 'Select vehicles to share';
+
+  @override
+  String get shareSelectDurationTitle => 'Select sharing duration';
+
+  @override
+  String get shareNoFriends =>
+      'Add an accepted friend before sharing a location.';
+
+  @override
+  String get shareNoLinkedVehicles =>
+      'No vehicles with a linked tracker are available to share.';
+
+  @override
+  String get socialAuthenticationRequired =>
+      'Sign in again to share a location.';
+
+  @override
+  String get shareDuration15Minutes => '15 minutes';
+
+  @override
+  String get shareDuration30Minutes => '30 minutes';
+
+  @override
+  String get shareDuration1Hour => '1 hour';
+
+  @override
+  String get shareDuration4Hours => '4 hours';
+
+  @override
+  String get shareDuration8Hours => '8 hours';
+
+  @override
+  String get shareDurationUntilRevoked => 'Until revoked';
+
+  @override
+  String get shareStatusActive => 'Active';
+
+  @override
+  String get shareStatusRevoked => 'Revoked';
+
+  @override
+  String get shareStatusExpired => 'Expired';
+
+  @override
+  String get shareStatusUnknown => 'Unknown';
+
+  @override
+  String shareSummary(int count, String duration, String status) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'vehicles',
+      one: 'vehicle',
+    );
+    return '$count $_temp0 | $duration | $status';
+  }
+
+  @override
+  String shareFrom(String name) {
+    return 'Share from $name';
+  }
+
+  @override
+  String shareTo(String name) {
+    return 'To $name';
+  }
+
+  @override
+  String get locations => 'Locations';
+
+  @override
+  String sharedLocationDetails(String vehicleId, String time) {
+    return 'Vehicle $vehicleId | $time';
+  }
+
+  @override
+  String get notAvailable => 'Not available';
+
+  @override
+  String get noTimestamp => 'No timestamp';
 }

@@ -242,6 +242,14 @@ class AppRouter {
             ),
           ),
 
+          // Friends tab
+          GoRoute(
+            path: RouteConstants.homeFriends,
+            name: RouteConstants.homeFriendsName,
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(child: FriendsPage()),
+          ),
+
           GoRoute(
             path: RouteConstants.homeTrips,
             name: RouteConstants.homeTripsName,
@@ -275,11 +283,6 @@ class AppRouter {
                 path: 'alerts',
                 name: RouteConstants.alertsSettingsName,
                 builder: (context, state) => const AlertsSettingsPage(),
-              ),
-              GoRoute(
-                path: 'friends',
-                name: RouteConstants.friendsName,
-                builder: (context, state) => const FriendsPage(),
               ),
             ],
           ),

@@ -116,20 +116,9 @@ class _ShareLocationPageState extends State<ShareLocationPage> {
                           groupValue: _friend,
                           onChanged: (value) => setState(() => _friend = value),
                           child: Column(
-                            children: _friends.map((friend) {
-                              final user = friend['user'] is Map
-                                  ? Map<String, dynamic>.from(
-                                      friend['user'] as Map,
-                                    )
-                                  : friend;
-                              final name =
-                                  user['username']?.toString() ??
-                                  user['uid'].toString();
-                              return RadioListTile<Map<String, dynamic>>(
-                                value: friend,
-                                title: Text(name),
-                              );
-                            }).toList(),
+                            children: _friends
+                                .map(_friendSelectionCard)
+                                .toList(),
                           ),
                         ),
                 ),
@@ -189,4 +178,74 @@ class _ShareLocationPageState extends State<ShareLocationPage> {
     '8h' => context.l10n.shareDuration8Hours,
     _ => context.l10n.shareDurationUntilRevoked,
   };
+
+  Widget _friendSelectionCard(Map<String, dynamic> friend) {
+    final user = _user(friend);
+    return Card(
+      margin: const EdgeInsets.only(bottom: 10),
+      child: ListTile(
+        onTap: () => setState(() => _friend = friend),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        leading: _avatar(user),
+        title: Text(_name(user)),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (_nickname(user).isNotEmpty) Text(_nickname(user)),
+            _friendsLabel(),
+          ],
+        ),
+        trailing: Radio<Map<String, dynamic>>(value: friend),
+      ),
+    );
+  }
+
+  Widget _friendsLabel() => Row(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      Icon(
+        Icons.check_circle,
+        size: 15,
+        color: Theme.of(context).colorScheme.primary,
+      ),
+      const SizedBox(width: 4),
+      Text(context.l10n.friendsStatus),
+    ],
+  );
+
+  Widget _avatar(Map<String, dynamic> user) {
+    final photoUrl = _photoUrl(user);
+    return CircleAvatar(
+      radius: 26,
+      foregroundImage: photoUrl == null ? null : NetworkImage(photoUrl),
+      child: Text(_name(user).isEmpty ? '?' : _name(user)[0].toUpperCase()),
+    );
+  }
+
+  Map<String, dynamic> _user(Map<String, dynamic> item) => item['user'] is Map
+      ? Map<String, dynamic>.from(item['user'] as Map)
+      : item;
+
+  String _name(Map<String, dynamic> user) {
+    final name = [
+      user['firstName'],
+      user['lastName'],
+    ].whereType<String>().where((value) => value.isNotEmpty).join(' ');
+    return name.isNotEmpty
+        ? name
+        : user['username']?.toString() ?? user['uid']?.toString() ?? '';
+  }
+
+  String _nickname(Map<String, dynamic> user) {
+    final username = user['username']?.toString() ?? '';
+    return username.isEmpty ? '' : '@$username';
+  }
+
+  String? _photoUrl(Map<String, dynamic> user) {
+    for (final key in ['photoUrl', 'photoURL', 'avatarUrl', 'imageUrl']) {
+      final value = user[key]?.toString();
+      if (value != null && value.isNotEmpty) return value;
+    }
+    return null;
+  }
 }

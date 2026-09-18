@@ -16,6 +16,7 @@ import '../../../../injection_container.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../geofences/domain/entities/geofence.dart';
 import '../../../geofences/presentation/bloc/geofence_bloc.dart';
+import '../../../social/data/datasources/social_backend_datasource.dart';
 import '../../domain/entities/trip_point.dart';
 import '../../domain/entities/vehicle_location.dart';
 import '../bloc/map_bloc.dart';
@@ -41,6 +42,8 @@ class _MapPageState extends State<MapPage> with WidgetsBindingObserver {
   bool _isGettingLocation = false;
   bool _locationServicesEnabled = true;
   bool _servicesBannerDismissed = false;
+  List<_SharedVehicleLocation> _sharedLocations = const [];
+  Timer? _sharedLocationsTimer;
 
   // Default camera position (Mexico City)
   static const _defaultPosition = LatLng(19.4326, -99.1332);
@@ -52,6 +55,11 @@ class _MapPageState extends State<MapPage> with WidgetsBindingObserver {
     WidgetsBinding.instance.addObserver(this);
     // Start watching vehicle locations
     context.read<MapBloc>().add(const StartWatchingLocations());
+    _loadSharedLocations();
+    _sharedLocationsTimer = Timer.periodic(
+      const Duration(seconds: 30),
+      (_) => _loadSharedLocations(),
+    );
     // Check location permission
     _checkLocationPermission();
     _checkLocationServices();
@@ -73,6 +81,7 @@ class _MapPageState extends State<MapPage> with WidgetsBindingObserver {
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    _sharedLocationsTimer?.cancel();
     _mapController?.dispose();
     super.dispose();
   }
@@ -317,6 +326,7 @@ class _MapPageState extends State<MapPage> with WidgetsBindingObserver {
       state.selectedVehicle,
       playbackPoint: state.hasTripHistory ? state.currentPlaybackPoint : null,
     );
+    markers.addAll(_buildSharedMarkers(_sharedLocations));
     final polylines = _buildTripPolylines(state);
 
     return SizedBox.expand(
@@ -466,6 +476,62 @@ class _MapPageState extends State<MapPage> with WidgetsBindingObserver {
     }
 
     return markers;
+  }
+
+  Future<void> _loadSharedLocations() async {
+    try {
+      final social = sl<SocialBackendDataSource>();
+      final shares = await social.incomingLocationShares();
+      final visibleShares = shares.where((share) {
+        final status = share['status']?.toString().toLowerCase();
+        return status != 'revoked' && status != 'expired';
+      }).toList();
+      final responses = await Future.wait<Map<String, dynamic>?>(
+        visibleShares.map((share) async {
+          try {
+            return await social.sharedLocations(share['shareId'].toString());
+          } catch (_) {
+            return null;
+          }
+        }),
+      );
+      final locations = responses.indexed
+          .expand((entry) {
+            final response = entry.$2;
+            if (response == null) return const <_SharedVehicleLocation>[];
+            final values = response['locations'];
+            if (values is! List) return const <_SharedVehicleLocation>[];
+            final share = visibleShares[entry.$1];
+            return values.whereType<Map>().map(
+              (location) => _SharedVehicleLocation.fromJson(location, share),
+            );
+          })
+          .whereType<_SharedVehicleLocation>()
+          .toList();
+      if (mounted) setState(() => _sharedLocations = locations);
+    } catch (_) {
+      // Shared locations are optional and should not disrupt owner tracking.
+    }
+  }
+
+  Set<Marker> _buildSharedMarkers(List<_SharedVehicleLocation> locations) {
+    return locations
+        .map(
+          (location) => Marker(
+            markerId: MarkerId(
+              'shared_${location.ownerUid}_${location.vehicleId}',
+            ),
+            position: LatLng(location.latitude, location.longitude),
+            icon: BitmapDescriptor.defaultMarkerWithHue(
+              BitmapDescriptor.hueViolet,
+            ),
+            infoWindow: InfoWindow(
+              title: location.vehicleName,
+              snippet: context.l10n.temporarySharedLocation,
+            ),
+          ),
+        )
+        .toSet();
   }
 
   Set<Polyline> _buildTripPolylines(MapState state) {
@@ -963,4 +1029,58 @@ class _StatusIndicator extends StatelessWidget {
       ],
     );
   }
+}
+
+class _SharedVehicleLocation {
+  const _SharedVehicleLocation({
+    required this.ownerUid,
+    required this.vehicleId,
+    required this.latitude,
+    required this.longitude,
+    required this.vehicleName,
+  });
+
+  final String ownerUid;
+  final String vehicleId;
+  final double latitude;
+  final double longitude;
+  final String vehicleName;
+
+  static _SharedVehicleLocation? fromJson(
+    Map<dynamic, dynamic> json,
+    Map<String, dynamic> share,
+  ) {
+    final point = json['location'] is Map
+        ? json['location'] as Map
+        : json['coordinates'] is Map
+        ? json['coordinates'] as Map
+        : json;
+    final lat = _coordinate(point['lat'] ?? point['latitude']);
+    final lng = _coordinate(point['lng'] ?? point['longitude']);
+    if (lat == null || lng == null) return null;
+
+    final owner = json['owner'];
+    final ownerMap = owner is Map ? owner : const <dynamic, dynamic>{};
+    final ownerUid =
+        ownerMap['uid']?.toString() ?? share['ownerUid']?.toString() ?? '';
+    final ownerName =
+        ownerMap['username']?.toString() ??
+        (share['owner'] is Map
+            ? (share['owner'] as Map)['username']?.toString()
+            : null);
+
+    return _SharedVehicleLocation(
+      ownerUid: ownerUid,
+      vehicleId: json['vehicleId']?.toString() ?? '',
+      latitude: lat,
+      longitude: lng,
+      vehicleName: ownerName?.isNotEmpty == true ? ownerName! : ownerUid,
+    );
+  }
+
+  static double? _coordinate(Object? value) => switch (value) {
+    num value => value.toDouble(),
+    String value => double.tryParse(value),
+    _ => null,
+  };
 }

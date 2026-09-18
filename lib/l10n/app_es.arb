@@ -178,6 +178,10 @@
   "manageAlerts": "Administrar alertas",
     "manageAlertsDescription": "Configura las alertas de geocercas",
     "friends": "Amigos",
+    "myFriends": "Mis amigos",
+    "requests": "Solicitudes",
+    "locationsTab": "Ubicaciones",
+    "friendsStatus": "Amigos",
     "locationSharing": "Compartir ubicacion",
     "friendRequests": "Solicitudes de amistad",
     "friendSearchLabel": "Nombre de usuario o correo exacto",
@@ -187,6 +191,7 @@
     "outgoingRequests": "Solicitudes enviadas",
     "noIncomingRequests": "No hay solicitudes recibidas.",
     "noOutgoingRequests": "No hay solicitudes enviadas.",
+    "noFriendRequests": "No hay solicitudes de amistad.",
     "noFriendsYet": "Aun no tienes amigos.",
     "friendRequestReceived": "Quiere ser tu amigo",
     "friendRequestPending": "Solicitud pendiente",
@@ -229,5 +234,6 @@
     "sharedLocationDetails": "Vehiculo {vehicleId} | {time}",
     "@sharedLocationDetails": {"placeholders": {"vehicleId": {"type": "String"}, "time": {"type": "String"}}},
     "notAvailable": "No disponible",
-    "noTimestamp": "Sin fecha y hora"
+     "noTimestamp": "Sin fecha y hora",
+     "temporarySharedLocation": "Ubicacion compartida temporalmente"
 }

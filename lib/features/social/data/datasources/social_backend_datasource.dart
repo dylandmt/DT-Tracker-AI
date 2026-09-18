@@ -109,8 +109,20 @@ class SocialBackendDataSource {
       _list('GET', '/location-shares/outgoing', key: 'shares');
   Future<List<Map<String, dynamic>>> incomingLocationShares() =>
       _list('GET', '/location-shares/incoming', key: 'shares');
-  Future<Map<String, dynamic>> sharedLocations(String shareId) =>
-      _request('GET', '/location-shares/$shareId/locations');
+  Future<Map<String, dynamic>> sharedLocations(String shareId) async {
+    final response = await _request(
+      'GET',
+      '/location-shares/$shareId/locations',
+    );
+    final result = response['result'];
+    if (result is! Map) {
+      throw const ServerException(
+        message: 'Unexpected shared locations response',
+      );
+    }
+    return Map<String, dynamic>.from(result);
+  }
+
   Future<void> revokeLocationShare(String shareId) =>
       _request('DELETE', '/location-shares/$shareId');
 

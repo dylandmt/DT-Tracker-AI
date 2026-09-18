@@ -179,6 +179,10 @@
    "manageAlerts": "Manage alerts",
     "manageAlertsDescription": "Configure geofence alerts",
     "friends": "Friends",
+    "myFriends": "My friends",
+    "requests": "Requests",
+    "locationsTab": "Locations",
+    "friendsStatus": "Friends",
     "locationSharing": "Location sharing",
     "friendRequests": "Friend requests",
     "friendSearchLabel": "Exact username or email",
@@ -188,6 +192,7 @@
     "outgoingRequests": "Outgoing requests",
     "noIncomingRequests": "No incoming requests.",
     "noOutgoingRequests": "No outgoing requests.",
+    "noFriendRequests": "No friend requests.",
     "noFriendsYet": "No friends yet.",
     "friendRequestReceived": "Wants to be your friend",
     "friendRequestPending": "Request pending",
@@ -230,5 +235,6 @@
     "sharedLocationDetails": "Vehicle {vehicleId} | {time}",
     "@sharedLocationDetails": {"placeholders": {"vehicleId": {"type": "String"}, "time": {"type": "String"}}},
     "notAvailable": "Not available",
-    "noTimestamp": "No timestamp"
+     "noTimestamp": "No timestamp",
+     "temporarySharedLocation": "Temporarily shared location"
 }

@@ -2132,6 +2132,30 @@ abstract class AppLocalizations {
   /// **'Friends'**
   String get friends;
 
+  /// No description provided for @myFriends.
+  ///
+  /// In en, this message translates to:
+  /// **'My friends'**
+  String get myFriends;
+
+  /// No description provided for @requests.
+  ///
+  /// In en, this message translates to:
+  /// **'Requests'**
+  String get requests;
+
+  /// No description provided for @locationsTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Locations'**
+  String get locationsTab;
+
+  /// No description provided for @friendsStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Friends'**
+  String get friendsStatus;
+
   /// No description provided for @locationSharing.
   ///
   /// In en, this message translates to:
@@ -2185,6 +2209,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No outgoing requests.'**
   String get noOutgoingRequests;
+
+  /// No description provided for @noFriendRequests.
+  ///
+  /// In en, this message translates to:
+  /// **'No friend requests.'**
+  String get noFriendRequests;
 
   /// No description provided for @noFriendsYet.
   ///
@@ -2419,6 +2449,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No timestamp'**
   String get noTimestamp;
+
+  /// No description provided for @temporarySharedLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Temporarily shared location'**
+  String get temporarySharedLocation;
 }
 
 class _AppLocalizationsDelegate

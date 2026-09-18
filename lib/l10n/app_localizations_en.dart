@@ -1148,6 +1148,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get friends => 'Friends';
 
   @override
+  String get myFriends => 'My friends';
+
+  @override
+  String get requests => 'Requests';
+
+  @override
+  String get locationsTab => 'Locations';
+
+  @override
+  String get friendsStatus => 'Friends';
+
+  @override
   String get locationSharing => 'Location sharing';
 
   @override
@@ -1173,6 +1185,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get noOutgoingRequests => 'No outgoing requests.';
+
+  @override
+  String get noFriendRequests => 'No friend requests.';
 
   @override
   String get noFriendsYet => 'No friends yet.';
@@ -1307,4 +1322,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get noTimestamp => 'No timestamp';
+
+  @override
+  String get temporarySharedLocation => 'Temporarily shared location';
 }

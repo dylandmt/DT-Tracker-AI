@@ -34,9 +34,15 @@ class _DTTrackerAppState extends State<DTTrackerApp> {
   void initState() {
     super.initState();
     final notifications = sl<NotificationService>();
-    _notificationSubscription = notifications.notificationActions.listen((_) {
+    _notificationSubscription = notifications.notificationActions.listen((
+      payload,
+    ) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        AppRouter.router.go(RouteConstants.alerts);
+        AppRouter.router.go(
+          payload.isSocialEvent
+              ? RouteConstants.friends
+              : RouteConstants.alerts,
+        );
       });
     });
     notifications.initialize();

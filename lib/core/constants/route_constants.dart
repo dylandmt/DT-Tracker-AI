@@ -42,6 +42,7 @@ class RouteConstants {
   static const String profile = '/home/settings/profile';
   static const String securityPin = '/home/settings/security-pin';
   static const String alertsSettings = '/home/settings/alerts';
+  static const String friends = '/home/settings/friends';
 
   // Route Names
   static const String splashName = 'splash';
@@ -71,4 +72,5 @@ class RouteConstants {
   static const String profileName = 'profile';
   static const String securityPinName = 'securityPin';
   static const String alertsSettingsName = 'alertsSettings';
+  static const String friendsName = 'friends';
 }

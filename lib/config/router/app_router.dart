@@ -23,6 +23,7 @@ import '../../features/settings/presentation/pages/settings_page.dart';
 import '../../features/settings/presentation/pages/profile_page.dart';
 import '../../features/settings/presentation/pages/alerts_settings_page.dart';
 import '../../features/settings/presentation/pages/security_pin_page.dart';
+import '../../features/social/presentation/pages/friends_page.dart';
 import '../../features/vehicles/presentation/bloc/tracker_link_bloc.dart';
 import '../../features/vehicles/presentation/bloc/vehicle_form_bloc.dart';
 import '../../features/vehicles/presentation/bloc/vehicles_bloc.dart';
@@ -274,6 +275,11 @@ class AppRouter {
                 path: 'alerts',
                 name: RouteConstants.alertsSettingsName,
                 builder: (context, state) => const AlertsSettingsPage(),
+              ),
+              GoRoute(
+                path: 'friends',
+                name: RouteConstants.friendsName,
+                builder: (context, state) => const FriendsPage(),
               ),
             ],
           ),

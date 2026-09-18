@@ -20,6 +20,15 @@ class NotificationPayload {
   bool get isGeofenceEvent =>
       type == 'geofence_enter' || type == 'geofence_exit';
 
+  bool get isSocialEvent => const {
+    'friend_request',
+    'friend_request_accepted',
+    'location_share',
+    'location_share_revoked',
+  }.contains(type);
+
+  bool get isSupportedEvent => isGeofenceEvent || isSocialEvent;
+
   factory NotificationPayload.fromData(Map<String, dynamic> data) {
     String? value(String key) => data[key]?.toString();
 
@@ -40,7 +49,7 @@ class NotificationPayload {
       final decoded = jsonDecode(value);
       if (decoded is! Map<String, dynamic>) return null;
       final payload = NotificationPayload.fromData(decoded);
-      return payload.isGeofenceEvent ? payload : null;
+      return payload.isSupportedEvent ? payload : null;
     } on FormatException {
       return null;
     }

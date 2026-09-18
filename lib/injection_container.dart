@@ -41,6 +41,7 @@ import 'features/auth/domain/usecases/upload_profile_image.dart';
 import 'features/auth/presentation/bloc/auth_bloc.dart';
 import 'features/vehicles/data/datasources/tracker_remote_datasource.dart';
 import 'features/vehicles/data/datasources/tracker_backend_datasource.dart';
+import 'features/social/data/datasources/social_backend_datasource.dart';
 import 'features/vehicles/data/datasources/vehicle_image_datasource.dart';
 import 'features/vehicles/data/datasources/vehicle_remote_datasource.dart';
 import 'features/vehicles/data/repositories/tracker_repository_impl.dart';
@@ -256,6 +257,9 @@ Future<void> initializeDependencies() async {
       firebaseAuth: sl(),
       baseUrl: EnvironmentConfig.apiBaseUrl,
     ),
+  );
+  sl.registerLazySingleton<SocialBackendDataSource>(
+    () => SocialBackendDataSource(firebaseAuth: sl()),
   );
 
   sl.registerLazySingleton<VehicleImageDataSource>(

@@ -34,7 +34,7 @@ class TrackerBackendDataSource {
     HttpClientRequest request;
     try {
       final url = Uri.parse('$_baseUrl$path');
-      request = await client.postUrl(url);
+      request = await client.openUrl('POST', url);
     } catch (e) {
       client.close(force: true);
       throw ServerException(message: 'Failed to create request: $e');
@@ -70,6 +70,43 @@ class TrackerBackendDataSource {
           message: 'HTTP ${response.statusCode}: $responseBody',
         );
       }
+    } finally {
+      client.close();
+    }
+  }
+
+  Future<Map<String, dynamic>> _get(String path) async {
+    final user = _auth.currentUser;
+    if (user == null) {
+      throw const AuthException(message: 'User not authenticated');
+    }
+
+    final client = HttpClient();
+    try {
+      final request = await client.openUrl('GET', Uri.parse('$_baseUrl$path'));
+      request.headers.set(
+        HttpHeaders.authorizationHeader,
+        'Bearer ${await user.getIdToken()}',
+      );
+      final response = await request.close();
+      final responseBody = await response.transform(utf8.decoder).join();
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        return responseBody.isEmpty
+            ? <String, dynamic>{}
+            : jsonDecode(responseBody) as Map<String, dynamic>;
+      }
+
+      final decoded = responseBody.isEmpty
+          ? <String, dynamic>{}
+          : jsonDecode(responseBody) as Map<String, dynamic>;
+      throw ServerException(
+        message:
+            decoded['message']?.toString() ?? 'HTTP ${response.statusCode}',
+      );
+    } catch (error) {
+      if (error is ServerException) rethrow;
+      throw ServerException(message: 'Failed to load relay state: $error');
     } finally {
       client.close();
     }
@@ -119,5 +156,22 @@ class TrackerBackendDataSource {
     } catch (e) {
       throw ServerException(message: 'Failed to unlink tracker: $e');
     }
+  }
+
+  /// Request a physical relay state. The backend validates vehicle ownership
+  /// and the security PIN before creating the asynchronous device command.
+  Future<Map<String, dynamic>> requestRelayCommand({
+    required String vehicleId,
+    required String desiredState,
+    required String pin,
+  }) {
+    return _post(
+      '/vehicles/$vehicleId/relay-commands',
+      body: {'desiredState': desiredState, 'pin': pin},
+    );
+  }
+
+  Future<Map<String, dynamic>> getRelayState(String vehicleId) {
+    return _get('/vehicles/$vehicleId/relay');
   }
 }

@@ -18,6 +18,7 @@ import '../bloc/vehicle_form_bloc.dart';
 import '../bloc/vehicles_bloc.dart';
 import '../widgets/delete_vehicle_dialog.dart';
 import '../widgets/tracker_status_card.dart';
+import '../widgets/relay_control_card.dart';
 import '../widgets/vehicle_photo_gallery.dart';
 
 /// Page displaying vehicle details
@@ -306,6 +307,11 @@ class _VehicleDetailPageState extends State<VehicleDetailPage> {
                                   },
                                 ),
                               ),
+
+                              if (vehicle.hasTracker) ...[
+                                const SizedBox(height: 16),
+                                RelayControlCard(vehicleId: vehicle.id),
+                              ],
                             ],
                           ),
                         ),

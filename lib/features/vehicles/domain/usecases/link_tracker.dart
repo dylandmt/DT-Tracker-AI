@@ -11,10 +11,7 @@ class LinkTrackerParams extends Equatable {
   final String vehicleId;
   final String trackerId;
 
-  const LinkTrackerParams({
-    required this.vehicleId,
-    required this.trackerId,
-  });
+  const LinkTrackerParams({required this.vehicleId, required this.trackerId});
 
   @override
   List<Object?> get props => [vehicleId, trackerId];

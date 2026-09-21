@@ -31,9 +31,7 @@ class TrackerLinkState extends Equatable {
 
   /// Initial state
   factory TrackerLinkState.initial() {
-    return const TrackerLinkState(
-      status: TrackerLinkStatus.initial,
-    );
+    return const TrackerLinkState(status: TrackerLinkStatus.initial);
   }
 
   /// State helpers
@@ -45,8 +43,7 @@ class TrackerLinkState extends Equatable {
   bool get isUnlinking => status == TrackerLinkStatus.unlinking;
   bool get isUnlinked => status == TrackerLinkStatus.unlinked;
   bool get hasError => status == TrackerLinkStatus.error;
-  bool get isLoading =>
-      isValidating || isLinking || isUnlinking;
+  bool get isLoading => isValidating || isLinking || isUnlinking;
 
   /// Copy with modified fields
   TrackerLinkState copyWith({
@@ -66,11 +63,5 @@ class TrackerLinkState extends Equatable {
   }
 
   @override
-  List<Object?> get props => [
-        status,
-        imei,
-        trackerInfo,
-        vehicle,
-        errorMessage,
-      ];
+  List<Object?> get props => [status, imei, trackerInfo, vehicle, errorMessage];
 }

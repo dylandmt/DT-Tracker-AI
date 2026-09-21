@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/extensions.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/vehicle_location.dart';
 
 /// Bottom sheet card showing selected vehicle information
@@ -21,6 +23,7 @@ class VehicleInfoCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
 
@@ -63,17 +66,18 @@ class VehicleInfoCard extends StatelessWidget {
                 width: 56,
                 height: 56,
                 decoration: BoxDecoration(
-                  color: _getVehicleColor(vehicle.color)?.withValues(alpha: 0.2) ??
+                  color:
+                      _getVehicleColor(vehicle.color)?.withValues(alpha: 0.2) ??
                       colorScheme.primaryContainer,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: vehicle.imageUrl != null
                     ? ClipRRect(
                         borderRadius: BorderRadius.circular(12),
-                        child: Image.network(
-                          vehicle.imageUrl!,
+                        child: CachedNetworkImage(
+                          imageUrl: vehicle.imageUrl!,
                           fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) => Icon(
+                          errorWidget: (_, __, ___) => Icon(
                             Icons.directions_car,
                             color: colorScheme.primary,
                             size: 28,
@@ -82,7 +86,8 @@ class VehicleInfoCard extends StatelessWidget {
                       )
                     : Icon(
                         Icons.directions_car,
-                        color: _getVehicleColor(vehicle.color) ??
+                        color:
+                            _getVehicleColor(vehicle.color) ??
                             colorScheme.primary,
                         size: 28,
                       ),
@@ -135,15 +140,15 @@ class VehicleInfoCard extends StatelessWidget {
             children: [
               _StatItem(
                 icon: Icons.speed,
-                label: 'Speed',
-                value: vehicle.formattedSpeed,
+                label: l10n.speed,
+                value: vehicle.speed.localizedSpeed(context),
                 color: vehicle.speed > 100
                     ? AppColors.statusAlert
                     : colorScheme.primary,
               ),
               _StatItem(
                 icon: Icons.battery_std,
-                label: 'Battery',
+                label: l10n.battery,
                 value: '${vehicle.battery}%',
                 color: vehicle.isBatteryLow
                     ? AppColors.statusAlert
@@ -151,8 +156,8 @@ class VehicleInfoCard extends StatelessWidget {
               ),
               _StatItem(
                 icon: Icons.access_time,
-                label: 'Updated',
-                value: vehicle.lastUpdate.timeAgo,
+                label: l10n.updated,
+                value: vehicle.lastUpdate.localizedTimeAgo(context),
                 color: colorScheme.onSurfaceVariant,
               ),
             ],
@@ -169,11 +174,7 @@ class VehicleInfoCard extends StatelessWidget {
             ),
             child: Row(
               children: [
-                Icon(
-                  Icons.location_on,
-                  size: 16,
-                  color: colorScheme.primary,
-                ),
+                Icon(Icons.location_on, size: 16, color: colorScheme.primary),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
@@ -196,7 +197,7 @@ class VehicleInfoCard extends StatelessWidget {
                 child: OutlinedButton.icon(
                   onPressed: onViewHistory,
                   icon: const Icon(Icons.timeline),
-                  label: const Text('History'),
+                  label: Text(l10n.history),
                 ),
               ),
               const SizedBox(width: 12),
@@ -204,7 +205,7 @@ class VehicleInfoCard extends StatelessWidget {
                 child: FilledButton.icon(
                   onPressed: onNavigate,
                   icon: const Icon(Icons.navigation),
-                  label: const Text('Navigate'),
+                  label: Text(l10n.navigate),
                 ),
               ),
             ],
@@ -251,10 +252,19 @@ class _StatusBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final (color, label, icon) = switch (status) {
-      VehicleStatus.moving => (AppColors.statusMoving, 'Moving', Icons.play_arrow),
-      VehicleStatus.idle => (AppColors.statusIdle, 'Idle', Icons.pause),
-      VehicleStatus.offline => (AppColors.statusOffline, 'Offline', Icons.cloud_off),
+      VehicleStatus.moving => (
+        AppColors.statusMoving,
+        l10n.moving,
+        Icons.play_arrow,
+      ),
+      VehicleStatus.idle => (AppColors.statusIdle, l10n.idle, Icons.pause),
+      VehicleStatus.offline => (
+        AppColors.statusOffline,
+        l10n.offline,
+        Icons.cloud_off,
+      ),
     };
 
     return Container(

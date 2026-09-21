@@ -1,5 +1,18 @@
 import 'package:equatable/equatable.dart';
 
+enum VehiclePlan {
+  essential,
+  protect,
+  total;
+
+  static VehiclePlan? fromStorage(String? value) => switch (value) {
+    'essential' => VehiclePlan.essential,
+    'protect' => VehiclePlan.protect,
+    'total' => VehiclePlan.total,
+    _ => null,
+  };
+}
+
 /// Vehicle entity representing a user's vehicle
 class VehicleEntity extends Equatable {
   /// Unique identifier for the vehicle
@@ -38,6 +51,12 @@ class VehicleEntity extends Equatable {
   /// When the vehicle was last updated
   final DateTime updatedAt;
 
+  /// Server-assigned entitlement plan. Present only in development for now.
+  final VehiclePlan? plan;
+
+  /// Maximum geofence assignments allowed for this vehicle.
+  final int? geofenceLimit;
+
   const VehicleEntity({
     required this.id,
     required this.name,
@@ -51,6 +70,8 @@ class VehicleEntity extends Equatable {
     this.trackerLinkedAt,
     required this.createdAt,
     required this.updatedAt,
+    this.plan,
+    this.geofenceLimit,
   });
 
   /// Maximum number of images allowed per vehicle
@@ -101,6 +122,8 @@ class VehicleEntity extends Equatable {
     DateTime? trackerLinkedAt,
     DateTime? createdAt,
     DateTime? updatedAt,
+    VehiclePlan? plan,
+    int? geofenceLimit,
   }) {
     return VehicleEntity(
       id: id ?? this.id,
@@ -115,6 +138,8 @@ class VehicleEntity extends Equatable {
       trackerLinkedAt: trackerLinkedAt ?? this.trackerLinkedAt,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      plan: plan ?? this.plan,
+      geofenceLimit: geofenceLimit ?? this.geofenceLimit,
     );
   }
 
@@ -133,22 +158,26 @@ class VehicleEntity extends Equatable {
       trackerLinkedAt: null,
       createdAt: createdAt,
       updatedAt: DateTime.now(),
+      plan: plan,
+      geofenceLimit: geofenceLimit,
     );
   }
 
   @override
   List<Object?> get props => [
-        id,
-        name,
-        plateNumber,
-        brand,
-        model,
-        year,
-        color,
-        imageUrls,
-        trackerId,
-        trackerLinkedAt,
-        createdAt,
-        updatedAt,
-      ];
+    id,
+    name,
+    plateNumber,
+    brand,
+    model,
+    year,
+    color,
+    imageUrls,
+    trackerId,
+    trackerLinkedAt,
+    createdAt,
+    updatedAt,
+    plan,
+    geofenceLimit,
+  ];
 }

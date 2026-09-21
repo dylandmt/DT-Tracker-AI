@@ -10,10 +10,7 @@ import '../bloc/tracker_link_bloc.dart';
 class LinkTrackerPage extends StatefulWidget {
   final String vehicleId;
 
-  const LinkTrackerPage({
-    super.key,
-    required this.vehicleId,
-  });
+  const LinkTrackerPage({super.key, required this.vehicleId});
 
   @override
   State<LinkTrackerPage> createState() => _LinkTrackerPageState();
@@ -41,18 +38,18 @@ class _LinkTrackerPageState extends State<LinkTrackerPage> {
   void _validateImei() {
     if (_formKey.currentState?.validate() ?? false) {
       context.read<TrackerLinkBloc>().add(
-            ValidateImei(imei: _imeiController.text.trim()),
-          );
+        ValidateImei(imei: _imeiController.text.trim()),
+      );
     }
   }
 
   void _linkTracker() {
     context.read<TrackerLinkBloc>().add(
-          LinkTrackerToVehicle(
-            vehicleId: widget.vehicleId,
-            imei: _imeiController.text.trim(),
-          ),
-        );
+      LinkTrackerToVehicle(
+        vehicleId: widget.vehicleId,
+        imei: _imeiController.text.trim(),
+      ),
+    );
   }
 
   @override
@@ -61,9 +58,7 @@ class _LinkTrackerPageState extends State<LinkTrackerPage> {
     final textTheme = Theme.of(context).textTheme;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Link GPS Tracker'),
-      ),
+      appBar: AppBar(title: Text(context.l10n.linkGpsTracker)),
       body: BlocConsumer<TrackerLinkBloc, TrackerLinkState>(
         listener: (context, state) {
           if (state.hasError && state.errorMessage != null) {
@@ -72,7 +67,7 @@ class _LinkTrackerPageState extends State<LinkTrackerPage> {
           }
 
           if (state.isLinked) {
-            context.showSuccessSnackBar('Tracker linked successfully');
+            context.showSuccessSnackBar(context.l10n.trackerLinkedSuccessfully);
             context.pop();
           }
         },
@@ -92,13 +87,10 @@ class _LinkTrackerPageState extends State<LinkTrackerPage> {
                   children: [
                     Row(
                       children: [
-                        Icon(
-                          Icons.info_outline,
-                          color: colorScheme.primary,
-                        ),
+                        Icon(Icons.info_outline, color: colorScheme.primary),
                         const SizedBox(width: 12),
                         Text(
-                          'How to link a tracker',
+                          context.l10n.howToLinkTracker,
                           style: textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.w600,
                           ),
@@ -107,10 +99,7 @@ class _LinkTrackerPageState extends State<LinkTrackerPage> {
                     ),
                     const SizedBox(height: 12),
                     Text(
-                      '1. Find the IMEI number on your GPS tracker device\n'
-                      '2. Enter the 15-digit IMEI number below\n'
-                      '3. Verify the tracker information\n'
-                      '4. Confirm to link the tracker',
+                      context.l10n.linkTrackerInstructions,
                       style: textTheme.bodyMedium?.copyWith(
                         color: colorScheme.onSurfaceVariant,
                       ),
@@ -128,14 +117,14 @@ class _LinkTrackerPageState extends State<LinkTrackerPage> {
                   controller: _imeiController,
                   focusNode: _imeiFocusNode,
                   decoration: InputDecoration(
-                    labelText: 'IMEI Number',
-                    hintText: 'Enter 15-digit IMEI',
+                    labelText: context.l10n.imeiNumber,
+                    hintText: context.l10n.enterImei,
                     prefixIcon: const Icon(Icons.qr_code),
                     suffixIcon: state.isValid
                         ? Icon(Icons.check_circle, color: colorScheme.primary)
                         : state.isInvalid
-                            ? Icon(Icons.error, color: colorScheme.error)
-                            : null,
+                        ? Icon(Icons.error, color: colorScheme.error)
+                        : null,
                   ),
                   keyboardType: TextInputType.number,
                   inputFormatters: [
@@ -145,10 +134,10 @@ class _LinkTrackerPageState extends State<LinkTrackerPage> {
                   enabled: !state.isLoading,
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'Please enter the IMEI number';
+                      return context.l10n.imeiRequired;
                     }
                     if (value.length != 15) {
-                      return 'IMEI must be 15 digits';
+                      return context.l10n.imeiLength;
                     }
                     return null;
                   },
@@ -171,7 +160,7 @@ class _LinkTrackerPageState extends State<LinkTrackerPage> {
                             color: Colors.white,
                           ),
                         )
-                      : const Text('Verify Tracker'),
+                      : Text(context.l10n.verifyTracker),
                 ),
 
               // Invalid tracker message
@@ -192,10 +181,8 @@ class _LinkTrackerPageState extends State<LinkTrackerPage> {
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
-                          state.errorMessage ?? 'Tracker not found or already in use',
-                          style: TextStyle(
-                            color: colorScheme.onErrorContainer,
-                          ),
+                          state.errorMessage ?? context.l10n.trackerNotFound,
+                          style: TextStyle(color: colorScheme.onErrorContainer),
                         ),
                       ),
                     ],
@@ -209,25 +196,21 @@ class _LinkTrackerPageState extends State<LinkTrackerPage> {
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: colorScheme.secondaryContainer.withValues(alpha: 0.5),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: colorScheme.primary,
-                      width: 2,
+                    color: colorScheme.secondaryContainer.withValues(
+                      alpha: 0.5,
                     ),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: colorScheme.primary, width: 2),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(
                         children: [
-                          Icon(
-                            Icons.check_circle,
-                            color: colorScheme.primary,
-                          ),
+                          Icon(Icons.check_circle, color: colorScheme.primary),
                           const SizedBox(width: 12),
                           Text(
-                            'Tracker Found',
+                            context.l10n.trackerFound,
                             style: textTheme.titleMedium?.copyWith(
                               fontWeight: FontWeight.w600,
                               color: colorScheme.primary,
@@ -236,23 +219,7 @@ class _LinkTrackerPageState extends State<LinkTrackerPage> {
                         ],
                       ),
                       const SizedBox(height: 16),
-                      _buildInfoRow(
-                        context,
-                        'IMEI',
-                        state.trackerInfo!.imei,
-                      ),
-                      if (state.trackerInfo!.model != null)
-                        _buildInfoRow(
-                          context,
-                          'Model',
-                          state.trackerInfo!.model!,
-                        ),
-                      if (state.trackerInfo!.provider != null)
-                        _buildInfoRow(
-                          context,
-                          'Provider',
-                          state.trackerInfo!.provider!,
-                        ),
+                      _buildInfoRow(context, 'IMEI', state.trackerInfo!.imei),
                     ],
                   ),
                 ),
@@ -272,7 +239,7 @@ class _LinkTrackerPageState extends State<LinkTrackerPage> {
                           ),
                         )
                       : const Icon(Icons.link),
-                  label: const Text('Link Tracker to Vehicle'),
+                  label: Text(context.l10n.linkTrackerToVehicle),
                 ),
               ],
 
@@ -280,8 +247,7 @@ class _LinkTrackerPageState extends State<LinkTrackerPage> {
 
               // Help text
               Text(
-                'The IMEI number can usually be found on a sticker on the device '
-                'or in the device documentation. QR code scanning will be available soon.',
+                context.l10n.imeiHelp,
                 style: textTheme.bodySmall?.copyWith(
                   color: colorScheme.onSurfaceVariant,
                 ),

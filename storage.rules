@@ -1,0 +1,30 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    function isOwner(uid) {
+      return request.auth != null && request.auth.uid == uid;
+    }
+
+    function isValidImage() {
+      return request.resource.size <= 5 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
+    }
+
+    match /users/{uid}/vehicles/{vehicleId}/images/{fileName} {
+      allow get: if isOwner(uid);
+      allow create, update: if isOwner(uid) && isValidImage();
+      allow delete: if isOwner(uid);
+    }
+
+    match /users/{uid}/profile/images/{fileName} {
+      allow get: if isOwner(uid);
+      allow create, update: if isOwner(uid) && isValidImage();
+      allow delete: if isOwner(uid);
+    }
+
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

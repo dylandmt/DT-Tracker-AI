@@ -27,9 +27,11 @@ class NetworkInfoImpl implements NetworkInfo {
   }
 
   bool _isConnected(List<ConnectivityResult> result) {
-    return result.any((r) =>
-        r == ConnectivityResult.mobile ||
-        r == ConnectivityResult.wifi ||
-        r == ConnectivityResult.ethernet);
+    return result.any(
+      (r) =>
+          r == ConnectivityResult.mobile ||
+          r == ConnectivityResult.wifi ||
+          r == ConnectivityResult.ethernet,
+    );
   }
 }

@@ -1,16 +1,22 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../core/permissions/permission_handler.dart';
 import '../../../../core/permissions/permission_status.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/extensions.dart';
 import '../../../../injection_container.dart';
+import '../../../../l10n/app_localizations.dart';
+import '../../../geofences/domain/entities/geofence.dart';
+import '../../../geofences/presentation/bloc/geofence_bloc.dart';
+import '../../../social/data/datasources/social_backend_datasource.dart';
 import '../../domain/entities/trip_point.dart';
 import '../../domain/entities/vehicle_location.dart';
 import '../bloc/map_bloc.dart';
@@ -27,13 +33,17 @@ class MapPage extends StatefulWidget {
   State<MapPage> createState() => _MapPageState();
 }
 
-class _MapPageState extends State<MapPage> {
+class _MapPageState extends State<MapPage> with WidgetsBindingObserver {
   GoogleMapController? _mapController;
   final Completer<GoogleMapController> _controllerCompleter = Completer();
 
   bool _showVehicleList = false;
   bool _locationPermissionGranted = false;
   bool _isGettingLocation = false;
+  bool _locationServicesEnabled = true;
+  bool _servicesBannerDismissed = false;
+  List<_SharedVehicleLocation> _sharedLocations = const [];
+  Timer? _sharedLocationsTimer;
 
   // Default camera position (Mexico City)
   static const _defaultPosition = LatLng(19.4326, -99.1332);
@@ -42,10 +52,17 @@ class _MapPageState extends State<MapPage> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     // Start watching vehicle locations
     context.read<MapBloc>().add(const StartWatchingLocations());
+    _loadSharedLocations();
+    _sharedLocationsTimer = Timer.periodic(
+      const Duration(seconds: 30),
+      (_) => _loadSharedLocations(),
+    );
     // Check location permission
     _checkLocationPermission();
+    _checkLocationServices();
   }
 
   Future<void> _checkLocationPermission() async {
@@ -63,8 +80,17 @@ class _MapPageState extends State<MapPage> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _sharedLocationsTimer?.cancel();
     _mapController?.dispose();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _checkLocationServices();
+    }
   }
 
   @override
@@ -87,7 +113,9 @@ class _MapPageState extends State<MapPage> {
             if (state.hasTripHistory) {
               _fitTripPoints(state.tripPoints);
             } else {
-              context.showSnackBar('No trip data for this date');
+              context.showSnackBar(
+                AppLocalizations.of(context)!.noTripDataForDate,
+              );
             }
           }
           if (state.currentPlaybackPoint != null &&
@@ -96,10 +124,11 @@ class _MapPageState extends State<MapPage> {
           }
         },
         builder: (context, state) {
+          final geofences = context.watch<GeofenceBloc>().state.geofences;
           return Stack(
             children: [
               // Google Map
-              _buildMap(context, state),
+              _buildMap(context, state, geofences),
 
               // Safe area overlay for status bar
               Positioned(
@@ -121,6 +150,15 @@ class _MapPageState extends State<MapPage> {
                 right: 16,
                 child: _buildTopBar(context, state),
               ),
+
+              // Location services banner
+              if (!_locationServicesEnabled && !_servicesBannerDismissed)
+                Positioned(
+                  top: MediaQuery.of(context).padding.top + 60,
+                  left: 16,
+                  right: 16,
+                  child: _buildServicesBanner(context),
+                ),
 
               // Map controls (right side)
               Positioned(
@@ -226,6 +264,32 @@ class _MapPageState extends State<MapPage> {
                     child: Center(child: CircularProgressIndicator()),
                   ),
                 ),
+
+              if (state.isTripLoading)
+                Positioned.fill(
+                  child: ColoredBox(
+                    color: Colors.black26,
+                    child: Center(
+                      child: Card(
+                        child: Padding(
+                          padding: const EdgeInsets.all(24),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const CircularProgressIndicator(),
+                              const SizedBox(height: 16),
+                              Text(
+                                AppLocalizations.of(
+                                  context,
+                                )!.loadingTripHistory,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
             ],
           );
         },
@@ -233,12 +297,36 @@ class _MapPageState extends State<MapPage> {
     );
   }
 
-  Widget _buildMap(BuildContext context, MapState state) {
+  Future<void> _checkLocationServices() async {
+    final enabled = await Geolocator.isLocationServiceEnabled();
+    if (mounted) {
+      // Show toast when services become enabled after being disabled
+      final wasEnabled = _locationServicesEnabled;
+      setState(() {
+        _locationServicesEnabled = enabled;
+      });
+      if (!wasEnabled && enabled) {
+        // Services transitioned to enabled
+        context.showSuccessSnackBar(
+          AppLocalizations.of(context)!.locationServicesEnabled,
+        );
+        // Reset dismissal so banner stays hidden naturally
+        setState(() => _servicesBannerDismissed = false);
+      }
+    }
+  }
+
+  Widget _buildMap(
+    BuildContext context,
+    MapState state,
+    List<GeofenceEntity> geofences,
+  ) {
     final markers = _buildMarkers(
       state.vehicleLocations,
       state.selectedVehicle,
       playbackPoint: state.hasTripHistory ? state.currentPlaybackPoint : null,
     );
+    markers.addAll(_buildSharedMarkers(_sharedLocations));
     final polylines = _buildTripPolylines(state);
 
     return SizedBox.expand(
@@ -264,6 +352,10 @@ class _MapPageState extends State<MapPage> {
         },
         markers: markers,
         polylines: polylines,
+        circles: _buildGeofenceCircles(geofences),
+        style: Theme.of(context).brightness == Brightness.dark
+            ? _darkMapStyle
+            : null,
         mapType: _getGoogleMapType(state.mapType),
         trafficEnabled: state.showTraffic,
         myLocationEnabled: _locationPermissionGranted,
@@ -321,19 +413,19 @@ class _MapPageState extends State<MapPage> {
                 children: [
                   _StatusIndicator(
                     icon: Icons.directions_car,
-                    label: 'Total',
+                    label: AppLocalizations.of(context)!.total,
                     count: state.vehicleLocations.length,
                     color: colorScheme.primary,
                   ),
                   _StatusIndicator(
                     icon: Icons.wifi,
-                    label: 'Online',
+                    label: AppLocalizations.of(context)!.online,
                     count: state.onlineVehicleCount,
                     color: AppColors.statusOnline,
                   ),
                   _StatusIndicator(
                     icon: Icons.play_arrow,
-                    label: 'Moving',
+                    label: AppLocalizations.of(context)!.moving,
                     count: state.movingVehicleCount,
                     color: AppColors.statusMoving,
                   ),
@@ -375,8 +467,8 @@ class _MapPageState extends State<MapPage> {
             BitmapDescriptor.hueAzure,
           ),
           infoWindow: InfoWindow(
-            title: 'Trip replay',
-            snippet: playbackPoint.timestamp.formattedDateTime,
+            title: AppLocalizations.of(context)!.tripReplay,
+            snippet: playbackPoint.timestamp.localizedDateTime(context),
           ),
           zIndexInt: 2,
         ),
@@ -384,6 +476,62 @@ class _MapPageState extends State<MapPage> {
     }
 
     return markers;
+  }
+
+  Future<void> _loadSharedLocations() async {
+    try {
+      final social = sl<SocialBackendDataSource>();
+      final shares = await social.incomingLocationShares();
+      final visibleShares = shares.where((share) {
+        final status = share['status']?.toString().toLowerCase();
+        return status != 'revoked' && status != 'expired';
+      }).toList();
+      final responses = await Future.wait<Map<String, dynamic>?>(
+        visibleShares.map((share) async {
+          try {
+            return await social.sharedLocations(share['shareId'].toString());
+          } catch (_) {
+            return null;
+          }
+        }),
+      );
+      final locations = responses.indexed
+          .expand((entry) {
+            final response = entry.$2;
+            if (response == null) return const <_SharedVehicleLocation>[];
+            final values = response['locations'];
+            if (values is! List) return const <_SharedVehicleLocation>[];
+            final share = visibleShares[entry.$1];
+            return values.whereType<Map>().map(
+              (location) => _SharedVehicleLocation.fromJson(location, share),
+            );
+          })
+          .whereType<_SharedVehicleLocation>()
+          .toList();
+      if (mounted) setState(() => _sharedLocations = locations);
+    } catch (_) {
+      // Shared locations are optional and should not disrupt owner tracking.
+    }
+  }
+
+  Set<Marker> _buildSharedMarkers(List<_SharedVehicleLocation> locations) {
+    return locations
+        .map(
+          (location) => Marker(
+            markerId: MarkerId(
+              'shared_${location.ownerUid}_${location.vehicleId}',
+            ),
+            position: LatLng(location.latitude, location.longitude),
+            icon: BitmapDescriptor.defaultMarkerWithHue(
+              BitmapDescriptor.hueViolet,
+            ),
+            infoWindow: InfoWindow(
+              title: location.vehicleName,
+              snippet: context.l10n.temporarySharedLocation,
+            ),
+          ),
+        )
+        .toSet();
   }
 
   Set<Polyline> _buildTripPolylines(MapState state) {
@@ -435,6 +583,20 @@ class _MapPageState extends State<MapPage> {
 
     return polylines;
   }
+
+  Set<Circle> _buildGeofenceCircles(List<GeofenceEntity> geofences) => geofences
+      .where((geofence) => geofence.isActive)
+      .map(
+        (geofence) => Circle(
+          circleId: CircleId('geofence-${geofence.id}'),
+          center: LatLng(geofence.latitude, geofence.longitude),
+          radius: geofence.radiusMeters,
+          fillColor: AppColors.geofenceFill,
+          strokeColor: AppColors.geofenceStroke,
+          strokeWidth: 2,
+        ),
+      )
+      .toSet();
 
   double _getMarkerColor(VehicleStatus status) {
     return switch (status) {
@@ -528,6 +690,10 @@ class _MapPageState extends State<MapPage> {
     if (_isGettingLocation) return;
 
     setState(() => _isGettingLocation = true);
+    // Re-show banner once user tries to go to My Location again
+    if (mounted) {
+      setState(() => _servicesBannerDismissed = false);
+    }
 
     try {
       final permissionHandler = sl<AppPermissionHandler>();
@@ -550,7 +716,7 @@ class _MapPageState extends State<MapPage> {
         final serviceEnabled = await Geolocator.isLocationServiceEnabled();
         if (!serviceEnabled) {
           if (mounted) {
-            context.showErrorSnackBar('Please enable location services');
+            _showEnableLocationServicesDialog();
           }
           return;
         }
@@ -574,12 +740,14 @@ class _MapPageState extends State<MapPage> {
         }
       } else {
         if (mounted) {
-          context.showErrorSnackBar('Location permission denied');
+          context.showErrorSnackBar(
+            AppLocalizations.of(context)!.locationPermissionDenied,
+          );
         }
       }
     } catch (e) {
       if (mounted) {
-        context.showErrorSnackBar('Failed to get location: ${e.toString()}');
+        context.showErrorSnackBar(e.toString());
       }
     } finally {
       if (mounted) {
@@ -592,24 +760,82 @@ class _MapPageState extends State<MapPage> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Location Permission Required'),
-        content: const Text(
-          'Location permission is permanently denied. '
-          'Please enable it in app settings to use this feature.',
-        ),
+        title: Text(context.l10n.locationPermissionRequired),
+        content: Text(context.l10n.locationPermissionPermanentlyDenied),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: Text(context.l10n.cancel),
           ),
           FilledButton(
             onPressed: () {
               Navigator.pop(context);
               sl<AppPermissionHandler>().openSettings();
             },
-            child: const Text('Open Settings'),
+            child: Text(context.l10n.openSettings),
           ),
         ],
+      ),
+    );
+  }
+
+  void _showEnableLocationServicesDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(context.l10n.enableLocationServices),
+        content: Text(context.l10n.locationServicesTurnedOff),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(context.l10n.cancel),
+          ),
+          FilledButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              await Geolocator.openLocationSettings();
+            },
+            child: Text(context.l10n.openSettings),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildServicesBanner(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Material(
+      elevation: 2,
+      borderRadius: BorderRadius.circular(12),
+      color: colorScheme.errorContainer,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        child: Row(
+          children: [
+            Icon(Icons.gps_off, color: colorScheme.onErrorContainer),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                context.l10n.locationServicesOffBanner,
+                style: TextStyle(color: colorScheme.onErrorContainer),
+              ),
+            ),
+            TextButton(
+              onPressed: () async {
+                await Geolocator.openLocationSettings();
+                await _checkLocationServices();
+              },
+              child: Text(context.l10n.enable),
+            ),
+            IconButton(
+              tooltip: context.l10n.dismiss,
+              icon: Icon(Icons.close, color: colorScheme.onErrorContainer),
+              onPressed: () {
+                setState(() => _servicesBannerDismissed = true);
+              },
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -703,7 +929,7 @@ class _MapPageState extends State<MapPage> {
       firstDate: firstDate,
       lastDate: now,
     ).then((selectedDate) {
-      if (selectedDate != null) {
+      if (selectedDate != null && context.mounted) {
         context.read<MapBloc>().add(
           LoadTripHistory(
             startDate: DateTime(
@@ -725,11 +951,39 @@ class _MapPageState extends State<MapPage> {
     });
   }
 
-  void _openNavigation(VehicleLocationEntity vehicle) {
-    // TODO: Open Google Maps or Apple Maps for navigation
-    context.showSnackBar('Opening navigation to ${vehicle.vehicleName}...');
+  Future<void> _openNavigation(VehicleLocationEntity vehicle) async {
+    final destination = '${vehicle.latitude},${vehicle.longitude}';
+    final navigationUri = Platform.isIOS
+        ? Uri.http('maps.apple.com', '/', {'daddr': destination})
+        : Uri(scheme: 'google.navigation', queryParameters: {'q': destination});
+    final fallbackUri = Uri.https('www.google.com', '/maps/dir/', {
+      'api': '1',
+      'destination': destination,
+    });
+
+    final launched = await launchUrl(
+      navigationUri,
+      mode: LaunchMode.externalApplication,
+    );
+    if (!launched) {
+      await launchUrl(fallbackUri, mode: LaunchMode.externalApplication);
+    }
   }
 }
+
+const _darkMapStyle = '''[
+  {"elementType":"geometry","stylers":[{"color":"#1d2433"}]},
+  {"elementType":"labels.text.fill","stylers":[{"color":"#c9d2e3"}]},
+  {"elementType":"labels.text.stroke","stylers":[{"color":"#1d2433"}]},
+  {"featureType":"administrative","elementType":"geometry.stroke","stylers":[{"color":"#46536b"}]},
+  {"featureType":"landscape","elementType":"geometry","stylers":[{"color":"#1b2230"}]},
+  {"featureType":"poi","elementType":"geometry","stylers":[{"color":"#242d3e"}]},
+  {"featureType":"poi.park","elementType":"geometry","stylers":[{"color":"#1c3540"}]},
+  {"featureType":"road","elementType":"geometry","stylers":[{"color":"#303b50"}]},
+  {"featureType":"road.highway","elementType":"geometry","stylers":[{"color":"#44516a"}]},
+  {"featureType":"transit","elementType":"geometry","stylers":[{"color":"#293448"}]},
+  {"featureType":"water","elementType":"geometry","stylers":[{"color":"#111b29"}]}
+]''';
 
 class _StatusIndicator extends StatelessWidget {
   final IconData icon;
@@ -775,4 +1029,58 @@ class _StatusIndicator extends StatelessWidget {
       ],
     );
   }
+}
+
+class _SharedVehicleLocation {
+  const _SharedVehicleLocation({
+    required this.ownerUid,
+    required this.vehicleId,
+    required this.latitude,
+    required this.longitude,
+    required this.vehicleName,
+  });
+
+  final String ownerUid;
+  final String vehicleId;
+  final double latitude;
+  final double longitude;
+  final String vehicleName;
+
+  static _SharedVehicleLocation? fromJson(
+    Map<dynamic, dynamic> json,
+    Map<String, dynamic> share,
+  ) {
+    final point = json['location'] is Map
+        ? json['location'] as Map
+        : json['coordinates'] is Map
+        ? json['coordinates'] as Map
+        : json;
+    final lat = _coordinate(point['lat'] ?? point['latitude']);
+    final lng = _coordinate(point['lng'] ?? point['longitude']);
+    if (lat == null || lng == null) return null;
+
+    final owner = json['owner'];
+    final ownerMap = owner is Map ? owner : const <dynamic, dynamic>{};
+    final ownerUid =
+        ownerMap['uid']?.toString() ?? share['ownerUid']?.toString() ?? '';
+    final ownerName =
+        ownerMap['username']?.toString() ??
+        (share['owner'] is Map
+            ? (share['owner'] as Map)['username']?.toString()
+            : null);
+
+    return _SharedVehicleLocation(
+      ownerUid: ownerUid,
+      vehicleId: json['vehicleId']?.toString() ?? '',
+      latitude: lat,
+      longitude: lng,
+      vehicleName: ownerName?.isNotEmpty == true ? ownerName! : ownerUid,
+    );
+  }
+
+  static double? _coordinate(Object? value) => switch (value) {
+    num value => value.toDouble(),
+    String value => double.tryParse(value),
+    _ => null,
+  };
 }

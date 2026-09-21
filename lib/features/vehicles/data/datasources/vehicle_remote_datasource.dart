@@ -30,11 +30,7 @@ abstract class VehicleRemoteDataSource {
   Future<void> removeImageUrl(String userId, String vehicleId, String imageUrl);
 
   /// Set the tracker ID for a vehicle
-  Future<void> setTrackerId(
-    String userId,
-    String vehicleId,
-    String? trackerId,
-  );
+  Future<void> setTrackerId(String userId, String vehicleId, String? trackerId);
 }
 
 /// Implementation of [VehicleRemoteDataSource] using Firestore
@@ -51,9 +47,9 @@ class VehicleRemoteDataSourceImpl implements VehicleRemoteDataSource {
   @override
   Future<List<VehicleModel>> getVehicles(String userId) async {
     try {
-      final snapshot = await _vehiclesRef(userId)
-          .orderBy('createdAt', descending: true)
-          .get();
+      final snapshot = await _vehiclesRef(
+        userId,
+      ).orderBy('createdAt', descending: true).get();
 
       return snapshot.docs
           .map((doc) => VehicleModel.fromFirestore(doc))
@@ -84,12 +80,18 @@ class VehicleRemoteDataSourceImpl implements VehicleRemoteDataSource {
     return _vehiclesRef(userId)
         .orderBy('createdAt', descending: true)
         .snapshots()
-        .map((snapshot) =>
-            snapshot.docs.map((doc) => VehicleModel.fromFirestore(doc)).toList());
+        .map(
+          (snapshot) => snapshot.docs
+              .map((doc) => VehicleModel.fromFirestore(doc))
+              .toList(),
+        );
   }
 
   @override
-  Future<VehicleModel> createVehicle(String userId, VehicleModel vehicle) async {
+  Future<VehicleModel> createVehicle(
+    String userId,
+    VehicleModel vehicle,
+  ) async {
     try {
       final docRef = _vehiclesRef(userId).doc(vehicle.id);
       await docRef.set(vehicle.toJson());
@@ -102,7 +104,10 @@ class VehicleRemoteDataSourceImpl implements VehicleRemoteDataSource {
   }
 
   @override
-  Future<VehicleModel> updateVehicle(String userId, VehicleModel vehicle) async {
+  Future<VehicleModel> updateVehicle(
+    String userId,
+    VehicleModel vehicle,
+  ) async {
     try {
       final docRef = _vehiclesRef(userId).doc(vehicle.id);
       await docRef.update(vehicle.toUpdateJson());
@@ -164,8 +169,9 @@ class VehicleRemoteDataSourceImpl implements VehicleRemoteDataSource {
     try {
       await _vehiclesRef(userId).doc(vehicleId).update({
         'trackerId': trackerId,
-        'trackerLinkedAt':
-            trackerId != null ? Timestamp.fromDate(DateTime.now()) : null,
+        'trackerLinkedAt': trackerId != null
+            ? Timestamp.fromDate(DateTime.now())
+            : null,
         'updatedAt': Timestamp.fromDate(DateTime.now()),
       });
     } catch (e) {

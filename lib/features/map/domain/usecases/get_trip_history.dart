@@ -43,10 +43,7 @@ class DayTripParams extends Equatable {
   final String vehicleId;
   final DateTime date;
 
-  const DayTripParams({
-    required this.vehicleId,
-    required this.date,
-  });
+  const DayTripParams({required this.vehicleId, required this.date});
 
   @override
   List<Object?> get props => [vehicleId, date];

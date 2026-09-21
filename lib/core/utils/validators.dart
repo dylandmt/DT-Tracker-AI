@@ -54,7 +54,10 @@ class Validators {
   }
 
   /// Validate required field
-  static String? validateRequired(String? value, [String fieldName = 'This field']) {
+  static String? validateRequired(
+    String? value, [
+    String fieldName = 'This field',
+  ]) {
     if (value == null || value.trim().isEmpty) {
       return '$fieldName is required';
     }
@@ -97,10 +100,6 @@ class Validators {
       return 'Vehicle name is required';
     }
 
-    if (value.trim().length < 2) {
-      return 'Name must be at least 2 characters';
-    }
-
     if (value.trim().length > 100) {
       return 'Name must be less than 100 characters';
     }
@@ -112,10 +111,6 @@ class Validators {
   static String? validateGeofenceName(String? value) {
     if (value == null || value.trim().isEmpty) {
       return 'Geofence name is required';
-    }
-
-    if (value.trim().length < 2) {
-      return 'Name must be at least 2 characters';
     }
 
     if (value.trim().length > 100) {

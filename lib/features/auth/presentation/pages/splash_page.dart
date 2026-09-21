@@ -4,6 +4,13 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/constants/route_constants.dart';
+import '../../../../core/permissions/permission_handler.dart';
+import '../../../../core/permissions/permission_status.dart';
+import '../../../../core/notifications/notification_service.dart';
+import '../../../../core/onboarding/onboarding_controller.dart';
+import '../../../../core/utils/extensions.dart';
+import '../../utils/permission_gate.dart';
+import '../../../../injection_container.dart';
 import '../bloc/auth_bloc.dart';
 
 /// Splash screen that checks authentication status
@@ -12,10 +19,29 @@ class SplashPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return BlocListener<AuthBloc, AuthState>(
-      listener: (context, state) {
+      listener: (context, state) async {
         if (state.isAuthenticated) {
-          context.go(RouteConstants.home);
+          final user = state.user!;
+          if (!sl<OnboardingController>().hasCompletedGeneral(user.id)) {
+            context.go('${RouteConstants.onboarding}?userId=${user.id}');
+            return;
+          }
+          // Gate by required permissions: location + notifications
+          final handler = sl<AppPermissionHandler>();
+          final hasLocation = await handler.isGranted(AppPermission.location);
+          final hasNotifications = await sl<NotificationService>()
+              .notificationPermissionStatus()
+              .then((status) => status.isGranted);
+
+          final target = resolvePostAuthRoute(
+            hasLocation: hasLocation,
+            hasNotifications: hasNotifications,
+          );
+          if (!context.mounted) return;
+          context.go(target);
         } else if (state.isUnauthenticated) {
           context.go(RouteConstants.login);
         }
@@ -25,33 +51,28 @@ class SplashPage extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Container(
-                width: 120,
-                height: 120,
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primaryContainer,
-                  borderRadius: BorderRadius.circular(30),
-                ),
-                child: Icon(
-                  Icons.location_on,
-                  size: 72,
-                  color: Theme.of(context).colorScheme.onPrimaryContainer,
-                ),
+              Image.asset(
+                isDark
+                    ? 'assets/images/dt_tracker_logo_dark.png'
+                    : 'assets/images/dt_tracker_logo_light.png',
+                width: 144,
+                height: 144,
+                fit: BoxFit.contain,
               ),
               const SizedBox(height: 24),
               Text(
                 AppConstants.appName,
                 style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
               ),
               const SizedBox(height: 8),
               Text(
-                'Real-time GPS Tracking',
+                context.l10n.realTimeGpsTracking,
                 style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
               ),
               const SizedBox(height: 48),
               const CircularProgressIndicator(),

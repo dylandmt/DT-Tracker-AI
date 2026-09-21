@@ -8,10 +8,7 @@ class HomePage extends StatelessWidget {
   /// The child widget to display (current tab content)
   final Widget child;
 
-  const HomePage({
-    super.key,
-    required this.child,
-  });
+  const HomePage({super.key, required this.child});
 
   @override
   Widget build(BuildContext context) {
@@ -19,7 +16,8 @@ class HomePage extends StatelessWidget {
       body: child,
       bottomNavigationBar: AppNavigationBar(
         currentIndex: _calculateSelectedIndex(context),
-        onDestinationSelected: (index) => _onDestinationSelected(context, index),
+        onDestinationSelected: (index) =>
+            _onDestinationSelected(context, index),
       ),
     );
   }
@@ -31,8 +29,11 @@ class HomePage extends StatelessWidget {
     if (location.startsWith('/home/map')) {
       return 1;
     }
-    if (location.startsWith('/home/settings')) {
+    if (location.startsWith('/home/friends')) {
       return 2;
+    }
+    if (location.startsWith('/home/settings')) {
+      return 3;
     }
     // Default to vehicles
     return 0;
@@ -48,6 +49,9 @@ class HomePage extends StatelessWidget {
         context.go('/home/map');
         break;
       case 2:
+        context.go('/home/friends');
+        break;
+      case 3:
         context.go('/home/settings');
         break;
     }

@@ -10,10 +10,7 @@ class UploadImageParams extends Equatable {
   final String vehicleId;
   final String filePath;
 
-  const UploadImageParams({
-    required this.vehicleId,
-    required this.filePath,
-  });
+  const UploadImageParams({required this.vehicleId, required this.filePath});
 
   @override
   List<Object?> get props => [vehicleId, filePath];

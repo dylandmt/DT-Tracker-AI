@@ -3,7 +3,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/route_constants.dart';
+import '../../../../core/utils/image_cache.dart';
 import '../../../../core/utils/extensions.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../bloc/vehicles_bloc.dart';
 import '../widgets/delete_vehicle_dialog.dart';
 import '../widgets/vehicle_card.dart';
@@ -27,9 +29,10 @@ class _VehiclesPageState extends State<VehiclesPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('My Vehicles'),
+        title: Text(l10n.myVehicles),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
@@ -46,14 +49,12 @@ class _VehiclesPageState extends State<VehiclesPage> {
             context.read<VehiclesBloc>().add(const ClearVehiclesError());
           }
           if (state.isDeleted) {
-            context.showSuccessSnackBar('Vehicle deleted successfully');
+            context.showSuccessSnackBar(l10n.vehicleDeleted);
           }
         },
         builder: (context, state) {
           if (state.isLoading && state.vehicles.isEmpty) {
-            return const Center(
-              child: CircularProgressIndicator(),
-            );
+            return const Center(child: CircularProgressIndicator());
           }
 
           if (state.isEmpty) {
@@ -64,6 +65,10 @@ class _VehiclesPageState extends State<VehiclesPage> {
 
           return RefreshIndicator(
             onRefresh: () async {
+              await refreshCachedImages(
+                state.vehicles.expand((vehicle) => vehicle.imageUrls),
+              );
+              if (!context.mounted) return;
               context.read<VehiclesBloc>().add(const RefreshVehicles());
             },
             child: GridView.builder(
@@ -80,7 +85,10 @@ class _VehiclesPageState extends State<VehiclesPage> {
                 return VehicleCard(
                   vehicle: vehicle,
                   onTap: () => context.push(
-                    RouteConstants.vehicleDetail.replaceFirst(':id', vehicle.id),
+                    RouteConstants.vehicleDetail.replaceFirst(
+                      ':id',
+                      vehicle.id,
+                    ),
                   ),
                   onLongPress: () => _showDeleteDialog(context, vehicle),
                 );
@@ -92,17 +100,17 @@ class _VehiclesPageState extends State<VehiclesPage> {
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => context.push(RouteConstants.vehicleAdd),
         icon: const Icon(Icons.add),
-        label: const Text('Add Vehicle'),
+        label: Text(l10n.addVehicle),
       ),
     );
   }
 
   Future<void> _showDeleteDialog(BuildContext context, vehicle) async {
     final confirmed = await showDeleteVehicleDialog(context, vehicle);
-    if (confirmed == true && mounted) {
+    if (confirmed == true && context.mounted) {
       context.read<VehiclesBloc>().add(
-            DeleteVehicleRequested(vehicleId: vehicle.id),
-          );
+        DeleteVehicleRequested(vehicleId: vehicle.id),
+      );
     }
   }
 }

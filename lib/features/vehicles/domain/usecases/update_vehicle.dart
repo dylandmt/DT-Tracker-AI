@@ -37,7 +37,9 @@ class UpdateVehicle implements UseCase<VehicleEntity, UpdateVehicleParams> {
   UpdateVehicle(this.repository);
 
   @override
-  Future<Either<Failure, VehicleEntity>> call(UpdateVehicleParams params) async {
+  Future<Either<Failure, VehicleEntity>> call(
+    UpdateVehicleParams params,
+  ) async {
     return await repository.updateVehicle(
       id: params.id,
       name: params.name,

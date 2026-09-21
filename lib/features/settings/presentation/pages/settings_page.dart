@@ -1,9 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 import '../../../../core/constants/route_constants.dart';
+import '../../../../core/localization/locale_controller.dart';
+import '../../../../core/onboarding/onboarding_controller.dart';
+import '../../../../core/theme/theme_controller.dart';
 import '../../../../core/utils/extensions.dart';
+import '../../../../injection_container.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../widgets/profile_photo_preview.dart';
 
@@ -13,11 +19,12 @@ class SettingsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Settings')),
+      appBar: AppBar(title: Text(l10n.settings)),
       body: BlocConsumer<AuthBloc, AuthState>(
         listener: (context, state) {
           if (state.isUnauthenticated) {
@@ -45,18 +52,20 @@ class SettingsPage extends StatelessWidget {
                           ? GestureDetector(
                               onTap: () => showProfilePhotoPreview(
                                 context,
-                                imageProvider: NetworkImage(user.photoUrl!),
+                                imageProvider: CachedNetworkImageProvider(
+                                  user.photoUrl!,
+                                ),
                                 heroTag: 'profile-photo-${user.id}',
                               ),
                               child: Hero(
                                 tag: 'profile-photo-${user.id}',
                                 child: ClipOval(
-                                  child: Image.network(
-                                    user.photoUrl!,
+                                  child: CachedNetworkImage(
+                                    imageUrl: user.photoUrl!,
                                     width: 64,
                                     height: 64,
                                     fit: BoxFit.cover,
-                                    errorBuilder: (_, __, ___) =>
+                                    errorWidget: (_, __, ___) =>
                                         _buildAvatarText(
                                           user.displayName ?? user.email,
                                           colorScheme,
@@ -76,7 +85,7 @@ class SettingsPage extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            user?.displayName ?? 'User',
+                            user?.displayName ?? l10n.user,
                             style: textTheme.titleLarge?.copyWith(
                               fontWeight: FontWeight.bold,
                             ),
@@ -98,73 +107,116 @@ class SettingsPage extends StatelessWidget {
               const SizedBox(height: 16),
 
               // Settings sections
-              _buildSectionHeader(context, 'Account'),
+              _buildSectionHeader(context, l10n.account),
               _buildListTile(
                 context,
                 icon: Icons.person_outline,
-                title: 'Profile',
-                subtitle: 'Edit your profile information',
+                title: l10n.profile,
+                subtitle: l10n.editProfileInformation,
                 onTap: () {
                   context.push(RouteConstants.profile);
                 },
               ),
+
+              // _buildListTile(
+              //   context,
+              //   icon: Icons.notifications_outlined,
+              //   title: l10n.trackerEvents,
+              //   subtitle: l10n.viewTrackerActivity,
+              //   onTap: () {
+              //     context.push(RouteConstants.alerts);
+              //   },
+              // ),
+              const SizedBox(height: 16),
+
+              _buildSectionHeader(context, l10n.security),
+              _buildListTile(
+                context,
+                icon: Icons.lock_outline,
+                title: l10n.securityPin,
+                subtitle: l10n.securityPinSettingsDescription,
+                onTap: () => context.push(RouteConstants.securityPin),
+              ),
               _buildListTile(
                 context,
                 icon: Icons.notifications_outlined,
-                title: 'Notifications',
-                subtitle: 'Manage notification preferences',
-                onTap: () {
-                  // TODO: Navigate to notification settings
-                  context.showSnackBar('Notification settings coming soon');
-                },
-              ),
-
-              const SizedBox(height: 16),
-
-              _buildSectionHeader(context, 'Tracking'),
-              _buildListTile(
-                context,
-                icon: Icons.speed_outlined,
-                title: 'Speed Alerts',
-                subtitle: 'Configure speed limit alerts',
-                onTap: () {
-                  // TODO: Navigate to speed alert settings
-                  context.showSnackBar('Speed alerts coming soon');
-                },
+                title: l10n.manageAlerts,
+                subtitle: l10n.manageAlertsDescription,
+                onTap: () => context.push(RouteConstants.alertsSettings),
               ),
               _buildListTile(
                 context,
                 icon: Icons.fence_outlined,
-                title: 'Geofences',
-                subtitle: 'Manage geofence zones',
+                title: l10n.geofences,
+                subtitle: l10n.manageGeofenceZones,
                 onTap: () {
-                  // TODO: Navigate to geofence management
-                  context.showSnackBar('Geofences coming soon');
+                  context.push(RouteConstants.geofences);
                 },
               ),
-
+              // Email alerts will be enabled in a future release.
+              // SwitchListTile(
+              //   secondary: const Icon(Icons.email_outlined),
+              //   title: Text(l10n.emailAlerts),
+              //   subtitle: Text(l10n.emailAlertsDescription),
+              //   value: user?.settings.emailNotificationsEnabled ?? false,
+              //   onChanged: state.isLoading || user == null
+              //       ? null
+              //       : (enabled) => context.read<AuthBloc>().add(
+              //           EmailNotificationPreferenceChanged(enabled),
+              //         ),
+              // ),
               const SizedBox(height: 16),
 
-              _buildSectionHeader(context, 'App'),
+              _buildSectionHeader(context, l10n.app),
+              _buildListTile(
+                context,
+                icon: Icons.language_outlined,
+                title: l10n.language,
+                subtitle: _languageName(context, sl<LocaleController>().locale),
+                onTap: () => _showLanguagePicker(context),
+              ),
+              _buildListTile(
+                context,
+                icon: Icons.brightness_6_outlined,
+                title: l10n.theme,
+                subtitle: _themeName(context, sl<ThemeController>().themeMode),
+                onTap: () => _showThemePicker(context),
+              ),
+              _buildListTile(
+                context,
+                icon: Icons.tips_and_updates_outlined,
+                title: l10n.restartGuide,
+                subtitle: l10n.restartGuideSubtitle,
+                onTap: () async {
+                  final user = context.read<AuthBloc>().state.user;
+                  if (user == null) return;
+                  await sl<OnboardingController>().reset(user.id);
+                  if (context.mounted) {
+                    context.go(
+                      '${RouteConstants.onboarding}?userId=${user.id}',
+                    );
+                  }
+                },
+              ),
               _buildListTile(
                 context,
                 icon: Icons.info_outline,
-                title: 'About',
+                title: l10n.about,
                 subtitle: 'Version 1.0.0',
                 onTap: () {
                   _showAboutDialog(context);
                 },
               ),
-              _buildListTile(
-                context,
-                icon: Icons.help_outline,
-                title: 'Help & Support',
-                subtitle: 'Get help with the app',
-                onTap: () {
-                  context.showSnackBar('Help & Support coming soon');
-                },
-              ),
 
+              // _buildListTile(
+              //   context,
+              //   icon: Icons.help_outline,
+              //   title: l10n.helpAndSupport,
+              //   subtitle: l10n.getHelpWithApp,
+              //   onTap: () {
+              //     context.showSnackBar(l10n.helpComingSoon);
+              //   },
+              // ),
               const SizedBox(height: 32),
 
               // Sign out button
@@ -181,7 +233,7 @@ class SettingsPage extends StatelessWidget {
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
                       : const Icon(Icons.logout),
-                  label: const Text('Sign Out'),
+                  label: Text(l10n.signOut),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: colorScheme.error,
                     side: BorderSide(color: colorScheme.error),
@@ -242,22 +294,23 @@ class SettingsPage extends StatelessWidget {
   }
 
   void _showSignOutDialog(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Sign Out'),
-        content: const Text('Are you sure you want to sign out?'),
+        title: Text(l10n.signOut),
+        content: Text(l10n.signOutConfirmation),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('Cancel'),
+            child: Text(l10n.cancel),
           ),
           FilledButton(
             onPressed: () {
               Navigator.pop(dialogContext);
               context.read<AuthBloc>().add(SignOutRequested());
             },
-            child: const Text('Sign Out'),
+            child: Text(l10n.signOut),
           ),
         ],
       ),
@@ -265,6 +318,7 @@ class SettingsPage extends StatelessWidget {
   }
 
   void _showAboutDialog(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     showAboutDialog(
       context: context,
       applicationName: 'DT Tracker',
@@ -282,11 +336,82 @@ class SettingsPage extends StatelessWidget {
           color: Theme.of(context).colorScheme.primary,
         ),
       ),
-      children: [
-        const Text(
-          'Real-time GPS vehicle tracking app with geofencing and alerts.',
+      children: [Text(l10n.aboutDescription)],
+    );
+  }
+
+  String _languageName(BuildContext context, Locale? locale) {
+    final l10n = AppLocalizations.of(context)!;
+    return switch (locale?.languageCode) {
+      'en' => l10n.english,
+      'es' => l10n.spanish,
+      _ => l10n.systemDefault,
+    };
+  }
+
+  void _showLanguagePicker(BuildContext context) {
+    final controller = sl<LocaleController>();
+    final l10n = AppLocalizations.of(context)!;
+    showDialog<void>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(l10n.language),
+        content: RadioGroup<Locale?>(
+          groupValue: controller.locale,
+          onChanged: (locale) async {
+            await controller.setLocale(locale);
+            if (dialogContext.mounted) Navigator.pop(dialogContext);
+          },
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _languageOption(null, l10n.systemDefault),
+              _languageOption(const Locale('en'), l10n.english),
+              _languageOption(const Locale('es'), l10n.spanish),
+            ],
+          ),
         ),
-      ],
+      ),
+    );
+  }
+
+  Widget _languageOption(Locale? locale, String label) =>
+      RadioListTile<Locale?>(value: locale, title: Text(label));
+
+  String _themeName(BuildContext context, ThemeMode themeMode) {
+    final l10n = AppLocalizations.of(context)!;
+    return themeMode == ThemeMode.dark ? l10n.darkTheme : l10n.lightTheme;
+  }
+
+  void _showThemePicker(BuildContext context) {
+    final controller = sl<ThemeController>();
+    final l10n = AppLocalizations.of(context)!;
+    showDialog<void>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(l10n.theme),
+        content: RadioGroup<ThemeMode>(
+          groupValue: controller.themeMode,
+          onChanged: (themeMode) async {
+            if (themeMode == null) return;
+            await controller.setThemeMode(themeMode);
+            if (dialogContext.mounted) Navigator.pop(dialogContext);
+          },
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              RadioListTile<ThemeMode>(
+                value: ThemeMode.light,
+                title: Text(l10n.lightTheme),
+              ),
+              RadioListTile<ThemeMode>(
+                value: ThemeMode.dark,
+                title: Text(l10n.darkTheme),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

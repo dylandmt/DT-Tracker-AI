@@ -98,10 +98,7 @@ class AuthFailure extends Failure {
           code: 'invalid-credential',
         );
       default:
-        return AuthFailure(
-          message: 'Authentication failed: $code',
-          code: code,
-        );
+        return AuthFailure(message: 'Authentication failed: $code', code: code);
     }
   }
 }
@@ -137,6 +134,24 @@ class ValidationFailure extends Failure {
 class NotFoundFailure extends Failure {
   const NotFoundFailure({
     super.message = 'The requested resource was not found.',
+  });
+}
+
+class ForbiddenFailure extends Failure {
+  const ForbiddenFailure({
+    super.message = 'You do not have permission to perform this operation.',
+  });
+}
+
+class ConflictFailure extends Failure {
+  const ConflictFailure({
+    super.message = 'This operation conflicts with the current server state.',
+  });
+}
+
+class ActiveTripExistsFailure extends ConflictFailure {
+  const ActiveTripExistsFailure({
+    super.message = 'You already have an active trip.',
   });
 }
 

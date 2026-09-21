@@ -23,10 +23,7 @@ class LinkTrackerToVehicle extends TrackerLinkEvent {
   final String vehicleId;
   final String imei;
 
-  const LinkTrackerToVehicle({
-    required this.vehicleId,
-    required this.imei,
-  });
+  const LinkTrackerToVehicle({required this.vehicleId, required this.imei});
 
   @override
   List<Object?> get props => [vehicleId, imei];
@@ -35,11 +32,12 @@ class LinkTrackerToVehicle extends TrackerLinkEvent {
 /// Unlink a tracker from a vehicle
 class UnlinkTrackerFromVehicle extends TrackerLinkEvent {
   final String vehicleId;
+  final String? pin;
 
-  const UnlinkTrackerFromVehicle({required this.vehicleId});
+  const UnlinkTrackerFromVehicle({required this.vehicleId, this.pin});
 
   @override
-  List<Object?> get props => [vehicleId];
+  List<Object?> get props => [vehicleId, pin];
 }
 
 /// Reset tracker link state

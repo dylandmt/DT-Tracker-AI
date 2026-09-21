@@ -7,11 +7,16 @@ class RouteConstants {
   static const String login = '/login';
   static const String register = '/register';
   static const String forgotPassword = '/forgot-password';
+  static const String setup = '/setup';
+  static const String setupSecurityPin = '/setup/security-pin';
+  static const String onboarding = '/onboarding';
 
   // Main Routes (with bottom nav)
   static const String home = '/home';
   static const String homeVehicles = '/home/vehicles';
   static const String homeMap = '/home/map';
+  static const String homeFriends = '/home/friends';
+  static const String homeTrips = '/home/trips';
   static const String homeSettings = '/home/settings';
 
   // Vehicle Routes (nested under home)
@@ -36,15 +41,24 @@ class RouteConstants {
   // Settings Routes
   static const String settings = '/settings';
   static const String profile = '/home/settings/profile';
+  static const String securityPin = '/home/settings/security-pin';
+  static const String alertsSettings = '/home/settings/alerts';
+  static const String friends = homeFriends;
+  static const String shareLocation = '/share-location';
 
   // Route Names
   static const String splashName = 'splash';
   static const String loginName = 'login';
   static const String registerName = 'register';
   static const String forgotPasswordName = 'forgotPassword';
+  static const String setupName = 'setup';
+  static const String setupSecurityPinName = 'setupSecurityPin';
+  static const String onboardingName = 'onboarding';
   static const String homeName = 'home';
   static const String homeVehiclesName = 'homeVehicles';
   static const String homeMapName = 'homeMap';
+  static const String homeFriendsName = 'homeFriends';
+  static const String homeTripsName = 'homeTrips';
   static const String homeSettingsName = 'homeSettings';
   static const String vehiclesName = 'vehicles';
   static const String vehicleDetailName = 'vehicleDetail';
@@ -59,4 +73,8 @@ class RouteConstants {
   static const String alertDetailName = 'alertDetail';
   static const String settingsName = 'settings';
   static const String profileName = 'profile';
+  static const String securityPinName = 'securityPin';
+  static const String alertsSettingsName = 'alertsSettings';
+  static const String friendsName = 'friends';
+  static const String shareLocationName = 'shareLocation';
 }

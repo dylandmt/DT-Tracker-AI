@@ -35,7 +35,9 @@ class CreateVehicle implements UseCase<VehicleEntity, CreateVehicleParams> {
   CreateVehicle(this.repository);
 
   @override
-  Future<Either<Failure, VehicleEntity>> call(CreateVehicleParams params) async {
+  Future<Either<Failure, VehicleEntity>> call(
+    CreateVehicleParams params,
+  ) async {
     return await repository.createVehicle(
       name: params.name,
       plateNumber: params.plateNumber,

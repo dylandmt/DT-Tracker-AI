@@ -1,14 +1,7 @@
 part of 'vehicles_bloc.dart';
 
 /// Status enum for vehicles state
-enum VehiclesStatus {
-  initial,
-  loading,
-  loaded,
-  error,
-  deleting,
-  deleted,
-}
+enum VehiclesStatus { initial, loading, loaded, error, deleting, deleted }
 
 /// State for the VehiclesBloc
 class VehiclesState extends Equatable {
@@ -24,10 +17,7 @@ class VehiclesState extends Equatable {
 
   /// Initial state
   factory VehiclesState.initial() {
-    return const VehiclesState(
-      status: VehiclesStatus.initial,
-      vehicles: [],
-    );
+    return const VehiclesState(status: VehiclesStatus.initial, vehicles: []);
   }
 
   /// State helpers

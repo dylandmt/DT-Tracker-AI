@@ -6,8 +6,7 @@ import '../entities/vehicle_location.dart';
 import '../repositories/map_repository.dart';
 
 /// Use case to get a single vehicle location by vehicle ID
-class GetVehicleLocation
-    implements UseCase<VehicleLocationEntity, IdParams> {
+class GetVehicleLocation implements UseCase<VehicleLocationEntity, IdParams> {
   final MapRepository repository;
 
   GetVehicleLocation(this.repository);

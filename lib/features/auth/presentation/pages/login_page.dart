@@ -1,10 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/route_constants.dart';
+import '../../../../core/notifications/notification_service.dart';
+import '../../../../core/onboarding/onboarding_controller.dart';
+import '../../../../core/permissions/permission_handler.dart';
+import '../../../../core/permissions/permission_status.dart';
 import '../../../../core/utils/extensions.dart';
 import '../../../../core/utils/validators.dart';
+import '../../../../injection_container.dart';
+import '../../utils/permission_gate.dart';
 import '../bloc/auth_bloc.dart';
 import '../widgets/auth_button.dart';
 import '../widgets/auth_header.dart';
@@ -37,20 +44,41 @@ class _LoginPageState extends State<LoginPage> {
   void _onLogin() {
     if (_formKey.currentState?.validate() ?? false) {
       context.read<AuthBloc>().add(
-            SignInRequested(
-              email: _emailController.text.trim(),
-              password: _passwordController.text,
-            ),
-          );
+        SignInRequested(
+          email: _emailController.text.trim(),
+          password: _passwordController.text,
+        ),
+      );
     }
+  }
+
+  void _onGoogleLogin() {
+    context.read<AuthBloc>().add(const GoogleSignInRequested());
   }
 
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<AuthBloc, AuthState>(
-      listener: (context, state) {
+      listener: (context, state) async {
         if (state.isAuthenticated) {
-          context.go(RouteConstants.home);
+          final user = state.user!;
+          if (!sl<OnboardingController>().hasCompletedGeneral(user.id)) {
+            context.go('${RouteConstants.onboarding}?userId=${user.id}');
+            return;
+          }
+          final hasLocation = await sl<AppPermissionHandler>().isGranted(
+            AppPermission.location,
+          );
+          final hasNotifications = await sl<NotificationService>()
+              .notificationPermissionStatus()
+              .then((status) => status.isGranted);
+          if (!context.mounted) return;
+          context.go(
+            resolvePostAuthRoute(
+              hasLocation: hasLocation,
+              hasNotifications: hasNotifications,
+            ),
+          );
         } else if (state.hasError && state.errorMessage != null) {
           context.showErrorSnackBar(state.errorMessage!);
           context.read<AuthBloc>().add(ClearAuthError());
@@ -68,9 +96,9 @@ class _LoginPageState extends State<LoginPage> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      const AuthHeader(
-                        title: 'Welcome Back',
-                        subtitle: 'Sign in to continue tracking',
+                      AuthHeader(
+                        title: context.l10n.welcomeBack,
+                        subtitle: context.l10n.signInToContinueTracking,
                       ),
                       EmailTextField(
                         controller: _emailController,
@@ -87,7 +115,7 @@ class _LoginPageState extends State<LoginPage> {
                         focusNode: _passwordFocusNode,
                         validator: (value) => Validators.validateRequired(
                           value,
-                          'Password',
+                          context.l10n.password,
                         ),
                         enabled: !state.isLoading,
                         onFieldSubmitted: (_) => _onLogin(),
@@ -96,7 +124,7 @@ class _LoginPageState extends State<LoginPage> {
                       Align(
                         alignment: Alignment.centerRight,
                         child: AuthTextButton(
-                          text: 'Forgot Password?',
+                          text: context.l10n.forgotPassword,
                           onPressed: () {
                             context.push(RouteConstants.forgotPassword);
                           },
@@ -104,14 +132,46 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                       const SizedBox(height: 24),
                       AuthButton(
-                        text: 'Sign In',
+                        text: context.l10n.signIn,
                         onPressed: _onLogin,
                         isLoading: state.isLoading,
                       ),
+                      const SizedBox(height: 16),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Divider(
+                              color: Theme.of(context).dividerColor,
+                            ),
+                          ),
+                          const Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 12),
+                            child: Text('OR'),
+                          ),
+                          Expanded(
+                            child: Divider(
+                              color: Theme.of(context).dividerColor,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      OutlinedButton.icon(
+                        onPressed: state.isLoading ? null : _onGoogleLogin,
+                        icon: SvgPicture.asset(
+                          'assets/icons/google.svg',
+                          width: 20,
+                          height: 20,
+                        ),
+                        label: const Text('Continue with Google'),
+                        style: OutlinedButton.styleFrom(
+                          minimumSize: const Size.fromHeight(48),
+                        ),
+                      ),
                       const SizedBox(height: 24),
                       AuthLinkButton(
-                        prefixText: "Don't have an account?",
-                        linkText: 'Sign Up',
+                        prefixText: context.l10n.dontHaveAccount,
+                        linkText: context.l10n.signUp,
                         onPressed: () {
                           context.push(RouteConstants.register);
                         },

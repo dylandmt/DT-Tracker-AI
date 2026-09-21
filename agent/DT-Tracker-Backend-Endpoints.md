@@ -220,3 +220,42 @@ curl -X POST "https://dev.dt-tracker.com/api/v1/vehicles/$VEHICLE_ID/unlink" \
   "message": "Tracker is not available for linking"
 }
 ```
+
+---
+
+## Mobile Integration Notes (Jul 2026)
+
+- Auth
+  - All Flutter calls include `Authorization: Bearer <Firebase ID Token>`.
+  - Backend validates tokens via Firebase Admin SDK.
+
+- Linking/Unlinking
+  - Mobile uses:
+    - `POST /api/v1/trackers/validate`
+    - `POST /api/v1/vehicles/{vehicleId}/link`
+    - `POST /api/v1/vehicles/{vehicleId}/unlink`
+  - Backend responsibilities per link:
+    - Set `trackers_info/{imei}/ownerId = uid`, `linkedAt = now`
+    - Set `users/{uid}/devices/{imei} = true`
+    - Update Firestore `users/{uid}/vehicles/{vehicleId}` with `trackerId` and `trackerLinkedAt`
+
+- RTDB Rules
+  - Clients have read-only access; writes are backend-only.
+  - Clients can read trackers data only when `users/{uid}/devices/{imei} = true`.
+
+- Trip History
+  - Data shape: `trackers_history/{imei}/{yyyy-MM-dd}/{pushId}` with fields: `datetime` (ISO), `ts` (device-relative), `lat`, `lng`, `speed`, `battery`.
+  - Mobile filters by datetime in [start, end]. It attempts an indexed `orderByChild('ts')` per day; if index missing or empty, it reads the full day and filters client-side.
+  - Recommended rule index for performance:
+    ```json
+    "trackers_history": {
+      "$imei": {
+        "$date": {
+          ".read": "auth != null && root.child('users').child(auth.uid).child('devices').child($imei).val() === true",
+          ".write": false,
+          ".indexOn": ["ts"]
+        }
+      }
+    }
+    ```
+  - No backend code change required for adding these indexes.

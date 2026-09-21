@@ -47,8 +47,8 @@ class TrackerRepositoryImpl implements TrackerRepository {
     }
 
     try {
-      final exists = await trackerDataSource.trackerExists(imei);
-      return Right(exists);
+      final (info, _) = await backendDataSource.validateImei(imei);
+      return Right(info != null);
     } on ServerException catch (e) {
       return Left(ServerFailure(message: e.message));
     } catch (e) {
@@ -125,23 +125,26 @@ class TrackerRepositoryImpl implements TrackerRepository {
 
   @override
   Stream<Either<Failure, TrackerLiveEntity>> watchTrackerLive(String imei) {
-    return trackerDataSource.watchTrackerLive(imei).map((live) {
-      return Right<Failure, TrackerLiveEntity>(live);
-    }).handleError((error) {
-      if (error is ServerException) {
-        if (error.message.contains('not found')) {
+    return trackerDataSource
+        .watchTrackerLive(imei)
+        .map((live) {
+          return Right<Failure, TrackerLiveEntity>(live);
+        })
+        .handleError((error) {
+          if (error is ServerException) {
+            if (error.message.contains('not found')) {
+              return Left<Failure, TrackerLiveEntity>(
+                NotFoundFailure(message: error.message),
+              );
+            }
+            return Left<Failure, TrackerLiveEntity>(
+              ServerFailure(message: error.message),
+            );
+          }
           return Left<Failure, TrackerLiveEntity>(
-            NotFoundFailure(message: error.message),
+            UnknownFailure(message: error.toString()),
           );
-        }
-        return Left<Failure, TrackerLiveEntity>(
-          ServerFailure(message: error.message),
-        );
-      }
-      return Left<Failure, TrackerLiveEntity>(
-        UnknownFailure(message: error.toString()),
-      );
-    });
+        });
   }
 
   @override
@@ -167,22 +170,25 @@ class TrackerRepositoryImpl implements TrackerRepository {
 
   @override
   Stream<Either<Failure, TrackerStatusEntity>> watchTrackerStatus(String imei) {
-    return trackerDataSource.watchTrackerStatus(imei).map((status) {
-      return Right<Failure, TrackerStatusEntity>(status);
-    }).handleError((error) {
-      if (error is ServerException) {
-        if (error.message.contains('not found')) {
+    return trackerDataSource
+        .watchTrackerStatus(imei)
+        .map((status) {
+          return Right<Failure, TrackerStatusEntity>(status);
+        })
+        .handleError((error) {
+          if (error is ServerException) {
+            if (error.message.contains('not found')) {
+              return Left<Failure, TrackerStatusEntity>(
+                NotFoundFailure(message: error.message),
+              );
+            }
+            return Left<Failure, TrackerStatusEntity>(
+              ServerFailure(message: error.message),
+            );
+          }
           return Left<Failure, TrackerStatusEntity>(
-            NotFoundFailure(message: error.message),
+            UnknownFailure(message: error.toString()),
           );
-        }
-        return Left<Failure, TrackerStatusEntity>(
-          ServerFailure(message: error.message),
-        );
-      }
-      return Left<Failure, TrackerStatusEntity>(
-        UnknownFailure(message: error.toString()),
-      );
-    });
+        });
   }
 }

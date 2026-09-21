@@ -2,6 +2,92 @@
 
 Instructions for AI agents working on DT Tracker.
 
+## Recent Updates (Jul 2026)
+
+This section captures the latest mobile app changes and how they affect workflows and integration.
+
+- Backend-driven tracker linking
+  - The app no longer writes to RTDB to link/unlink trackers. It calls backend endpoints using a Firebase ID token.
+  - Endpoints (see DT-Tracker-Backend-Endpoints.md):
+    - POST /api/v1/trackers/validate
+    - POST /api/v1/vehicles/{vehicleId}/link
+    - POST /api/v1/vehicles/{vehicleId}/unlink
+  - DI: new TrackerBackendDataSource wraps HTTP + ID token.
+  - Repos: VehicleRepositoryImpl and TrackerRepositoryImpl now route link/unlink/validate via backend; RTDB reads for live/status/history remain unchanged.
+
+- Strict RTDB rules supported
+  - Client reads of trackers_live/status/history are allowed only when users/{uid}/devices/{imei} = true.
+  - The backend link endpoint writes the users/{uid}/devices mapping and updates ownership in trackers_registry/{imei}.
+
+- Environment config adds API Base URL
+  - EnvironmentConfig.apiBaseUrl:
+    - dev: https://dev.dt-tracker.com/api/v1
+    - staging: https://staging.dt-tracker.com/api/v1
+    - prod: https://api.dt-tracker.com/api/v1
+  - DI wires TrackerBackendDataSource with the current environment base URL.
+
+- Setup Permissions gate before dashboard
+  - New route: /setup. Users must grant Location (When in Use) and Notifications before entering /home.
+  - Splash routing: after auth, checks Location permission, Notifications permission, and OS Location Services (via Geolocator). If any missing/off, navigates to /setup.
+  - SetupPermissionsPage:
+    - Request individually or "Request All"
+    - Explainer modal (why permissions are needed)
+    - Location Services tile with "Open Settings"
+    - Continue is enabled only when permissions granted AND services are ON
+
+- Map page UX for Location Services
+  - Dismissible banner when OS Location Services are off, with an Enable action (opens system settings, refreshes on resume)
+  - Success toast when services turn ON
+  - "My Location" action shows dialog to enable services if off and opens settings
+
+- Trip History behavior and data
+  - Data shape (per-day buckets): trackers_history/{IMEI}/{yyyy-MM-dd}/{nodeId}
+    - Keys include: datetime (ISO), ts (device-relative), lat, lng, speed, battery
+  - History retrieval:
+    - Uses vehicle trackerId from Firestore (does not depend on trackers_live)
+    - Queries per-day buckets; primary filter is datetime in selected range
+    - Falls back to full-day read and client-side filtering if indexed query returns empty or index is missing
+  - UI behavior on load:
+    - Snackbar: "Loaded N points" or "No trip points for selected range"
+    - Draws route polyline and auto-zooms to fit
+  - RTDB rule optimization (recommended): per-day index on ts at /trackers_history/$imei/$date { 
+    ".indexOn": ["ts"] }
+
+- Vehicle detail UX fixes
+  - After returning from edit or link pages, the Vehicle Detail page auto-reloads the vehicle and restarts tracker status watching.
+  - Tracker card "Last Update" text now truncates with ellipsis to avoid overflow.
+
+- Image picker robustness
+  - Camera permission still requested before camera use.
+  - On Android, gallery selection attempts directly (no pre-permission gate); errors show a snackbar. On iOS, Photos permission is requested first.
+
+- Small test coverage
+  - Added a unit test for the permission gate route decision logic.
+
+Key code references
+- Environment
+  - lib/config/environment/environment.dart (apiBaseUrl)
+  - lib/config/environment/firebase_config.dart (multi-env instances)
+- DI
+  - lib/injection_container.dart (registers TrackerBackendDataSource and injects into repos)
+- Backend data source
+  - lib/features/vehicles/data/datasources/tracker_backend_datasource.dart
+- Repositories
+  - lib/features/vehicles/data/repositories/vehicle_repository_impl.dart (link/unlink via backend)
+  - lib/features/vehicles/data/repositories/tracker_repository_impl.dart (validate via backend)
+- Setup flow
+  - lib/features/auth/presentation/pages/splash_page.dart (post-auth permission + services gate)
+  - lib/features/setup/presentation/pages/setup_permissions_page.dart (permissions UI)
+  - lib/features/auth/utils/permission_gate.dart (testable route decision)
+  - test/permission_gate_test.dart
+- Map UX
+  - lib/features/map/presentation/pages/map_page.dart (banner + dialog)
+  - Polyline draw + auto-fit on trip load; snackbars for success/empty
+- Vehicles UX
+  - lib/features/vehicles/presentation/pages/vehicle_detail_page.dart (auto-refresh on return)
+  - lib/features/vehicles/presentation/widgets/tracker_status_card.dart (overflow fix)
+  - lib/features/vehicles/presentation/widgets/vehicle_image_picker.dart (Android gallery logic + feedback)
+
 ## Quick Reference
 
 ```bash
@@ -109,8 +195,8 @@ Environment is set at **build time** via `--dart-define=ENV=dev|prod`.
 ## Android Build Gotchas
 
 **Pinned versions in `android/settings.gradle.kts`** - required for compatibility:
-- AGP 8.9.1, Kotlin 2.1.0
-- Gradle 8.11.1 (in `gradle-wrapper.properties`)
+- AGP 8.11.1, Kotlin 2.2.20
+- Gradle 8.14 (in `gradle-wrapper.properties`)
 - `android-maps-utils` pinned to 4.0.0 (in `build.gradle.kts`)
 
 If build fails with version conflicts, check these pins first.

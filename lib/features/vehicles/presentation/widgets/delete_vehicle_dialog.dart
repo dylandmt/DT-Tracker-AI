@@ -1,15 +1,13 @@
 import 'package:flutter/material.dart';
 
 import '../../domain/entities/vehicle.dart';
+import '../../../../core/utils/extensions.dart';
 
 /// Dialog for confirming vehicle deletion
 class DeleteVehicleDialog extends StatelessWidget {
   final VehicleEntity vehicle;
 
-  const DeleteVehicleDialog({
-    super.key,
-    required this.vehicle,
-  });
+  const DeleteVehicleDialog({super.key, required this.vehicle});
 
   @override
   Widget build(BuildContext context) {
@@ -19,12 +17,9 @@ class DeleteVehicleDialog extends StatelessWidget {
     return AlertDialog(
       title: Row(
         children: [
-          Icon(
-            Icons.warning_amber_rounded,
-            color: colorScheme.error,
-          ),
+          Icon(Icons.warning_amber_rounded, color: colorScheme.error),
           const SizedBox(width: 12),
-          const Text('Delete Vehicle'),
+          Text(context.l10n.deleteVehicle),
         ],
       ),
       content: Column(
@@ -32,7 +27,9 @@ class DeleteVehicleDialog extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Are you sure you want to delete "${vehicle.name}"?',
+            vehicle.hasTracker
+                ? context.l10n.unlinkTrackerBeforeDelete
+                : context.l10n.deleteVehicleConfirmation(vehicle.name),
             style: textTheme.bodyLarge,
           ),
           const SizedBox(height: 16),
@@ -53,7 +50,7 @@ class DeleteVehicleDialog extends StatelessWidget {
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      'The tracker (${vehicle.trackerId}) will be unlinked and become available for linking to another vehicle.',
+                      context.l10n.unlinkTrackerOnDelete(vehicle.trackerId!),
                       style: textTheme.bodySmall?.copyWith(
                         color: colorScheme.onSecondaryContainer,
                       ),
@@ -64,7 +61,7 @@ class DeleteVehicleDialog extends StatelessWidget {
             ),
           ] else ...[
             Text(
-              'This action cannot be undone.',
+              context.l10n.cannotUndo,
               style: textTheme.bodyMedium?.copyWith(
                 color: colorScheme.onSurfaceVariant,
               ),
@@ -75,16 +72,19 @@ class DeleteVehicleDialog extends StatelessWidget {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(false),
-          child: const Text('Cancel'),
-        ),
-        FilledButton(
-          onPressed: () => Navigator.of(context).pop(true),
-          style: FilledButton.styleFrom(
-            backgroundColor: colorScheme.error,
-            foregroundColor: colorScheme.onError,
+          child: Text(
+            vehicle.hasTracker ? context.l10n.ok : context.l10n.cancel,
           ),
-          child: const Text('Delete'),
         ),
+        if (!vehicle.hasTracker)
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            style: FilledButton.styleFrom(
+              backgroundColor: colorScheme.error,
+              foregroundColor: colorScheme.onError,
+            ),
+            child: Text(context.l10n.delete),
+          ),
       ],
     );
   }

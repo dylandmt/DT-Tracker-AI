@@ -16,8 +16,8 @@ class TrackerBackendDataSource {
   TrackerBackendDataSource({
     required FirebaseAuth firebaseAuth,
     String? baseUrl,
-  })  : _auth = firebaseAuth,
-        _baseUrl = baseUrl ?? EnvironmentConfig.apiBaseUrl;
+  }) : _auth = firebaseAuth,
+       _baseUrl = baseUrl ?? EnvironmentConfig.apiBaseUrl;
 
   Future<Map<String, dynamic>> _post(
     String path, {
@@ -34,7 +34,7 @@ class TrackerBackendDataSource {
     HttpClientRequest request;
     try {
       final url = Uri.parse('$_baseUrl$path');
-      request = await client.postUrl(url);
+      request = await client.openUrl('POST', url);
     } catch (e) {
       client.close(force: true);
       throw ServerException(message: 'Failed to create request: $e');
@@ -57,14 +57,62 @@ class TrackerBackendDataSource {
         return decoded;
       }
 
-      // Try parse error payload
+      Map<String, dynamic> decoded;
       try {
-        final decoded = jsonDecode(responseBody) as Map<String, dynamic>;
-        final msg = decoded['message'] as String? ?? decoded['error']?.toString() ?? 'HTTP ${response.statusCode}';
-        throw ServerException(message: msg);
+        decoded = jsonDecode(responseBody) as Map<String, dynamic>;
       } catch (_) {
-        throw ServerException(message: 'HTTP ${response.statusCode}: $responseBody');
+        throw ServerException(
+          message: 'HTTP ${response.statusCode}: $responseBody',
+          statusCode: response.statusCode,
+        );
       }
+      final message =
+          decoded['message'] as String? ??
+          decoded['error']?.toString() ??
+          'HTTP ${response.statusCode}';
+      throw ServerException(
+        message: message,
+        statusCode: response.statusCode,
+        errorCode:
+            decoded['errorCode']?.toString() ?? decoded['error']?.toString(),
+      );
+    } finally {
+      client.close();
+    }
+  }
+
+  Future<Map<String, dynamic>> _get(String path) async {
+    final user = _auth.currentUser;
+    if (user == null) {
+      throw const AuthException(message: 'User not authenticated');
+    }
+
+    final client = HttpClient();
+    try {
+      final request = await client.openUrl('GET', Uri.parse('$_baseUrl$path'));
+      request.headers.set(
+        HttpHeaders.authorizationHeader,
+        'Bearer ${await user.getIdToken()}',
+      );
+      final response = await request.close();
+      final responseBody = await response.transform(utf8.decoder).join();
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        return responseBody.isEmpty
+            ? <String, dynamic>{}
+            : jsonDecode(responseBody) as Map<String, dynamic>;
+      }
+
+      final decoded = responseBody.isEmpty
+          ? <String, dynamic>{}
+          : jsonDecode(responseBody) as Map<String, dynamic>;
+      throw ServerException(
+        message:
+            decoded['message']?.toString() ?? 'HTTP ${response.statusCode}',
+      );
+    } catch (error) {
+      if (error is ServerException) rethrow;
+      throw ServerException(message: 'Failed to load relay state: $error');
     } finally {
       client.close();
     }
@@ -89,7 +137,10 @@ class TrackerBackendDataSource {
   }
 
   /// Link tracker to vehicle
-  Future<void> linkTracker({required String vehicleId, required String imei}) async {
+  Future<void> linkTracker({
+    required String vehicleId,
+    required String imei,
+  }) async {
     try {
       await _post('/vehicles/$vehicleId/link', body: {'imei': imei});
     } on ServerException {
@@ -100,13 +151,33 @@ class TrackerBackendDataSource {
   }
 
   /// Unlink tracker from vehicle
-  Future<void> unlinkTracker({required String vehicleId}) async {
+  Future<void> unlinkTracker({required String vehicleId, String? pin}) async {
     try {
-      await _post('/vehicles/$vehicleId/unlink');
+      await _post(
+        '/vehicles/$vehicleId/unlink',
+        body: pin == null ? null : {'pin': pin},
+      );
     } on ServerException {
       rethrow;
     } catch (e) {
       throw ServerException(message: 'Failed to unlink tracker: $e');
     }
+  }
+
+  /// Request a physical relay state. The backend validates vehicle ownership
+  /// and the security PIN before creating the asynchronous device command.
+  Future<Map<String, dynamic>> requestRelayCommand({
+    required String vehicleId,
+    required String desiredState,
+    required String pin,
+  }) {
+    return _post(
+      '/vehicles/$vehicleId/relay-commands',
+      body: {'desiredState': desiredState, 'pin': pin},
+    );
+  }
+
+  Future<Map<String, dynamic>> getRelayState(String vehicleId) {
+    return _get('/vehicles/$vehicleId/relay');
   }
 }

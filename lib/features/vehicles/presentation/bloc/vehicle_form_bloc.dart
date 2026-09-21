@@ -46,15 +46,19 @@ class VehicleFormBloc extends Bloc<VehicleFormEvent, VehicleFormState> {
     final result = await getVehicleById(IdParams(id: event.vehicleId));
 
     result.fold(
-      (failure) => emit(state.copyWith(
-        status: VehicleFormStatus.error,
-        errorMessage: failure.message,
-      )),
-      (vehicle) => emit(state.copyWith(
-        status: VehicleFormStatus.loaded,
-        vehicle: vehicle,
-        isEditing: true,
-      )),
+      (failure) => emit(
+        state.copyWith(
+          status: VehicleFormStatus.error,
+          errorMessage: failure.message,
+        ),
+      ),
+      (vehicle) => emit(
+        state.copyWith(
+          status: VehicleFormStatus.loaded,
+          vehicle: vehicle,
+          isEditing: true,
+        ),
+      ),
     );
   }
 
@@ -66,46 +70,52 @@ class VehicleFormBloc extends Bloc<VehicleFormEvent, VehicleFormState> {
 
     if (state.isEditing && state.vehicle != null) {
       // Update existing vehicle
-      final result = await updateVehicle(UpdateVehicleParams(
-        id: state.vehicle!.id,
-        name: event.name,
-        plateNumber: event.plateNumber,
-        brand: event.brand,
-        model: event.model,
-        year: event.year,
-        color: event.color,
-      ));
+      final result = await updateVehicle(
+        UpdateVehicleParams(
+          id: state.vehicle!.id,
+          name: event.name,
+          plateNumber: event.plateNumber,
+          brand: event.brand,
+          model: event.model,
+          year: event.year,
+          color: event.color,
+        ),
+      );
 
       result.fold(
-        (failure) => emit(state.copyWith(
-          status: VehicleFormStatus.error,
-          errorMessage: failure.message,
-        )),
-        (vehicle) => emit(state.copyWith(
-          status: VehicleFormStatus.success,
-          vehicle: vehicle,
-        )),
+        (failure) => emit(
+          state.copyWith(
+            status: VehicleFormStatus.error,
+            errorMessage: failure.message,
+          ),
+        ),
+        (vehicle) => emit(
+          state.copyWith(status: VehicleFormStatus.success, vehicle: vehicle),
+        ),
       );
     } else {
       // Create new vehicle
-      final result = await createVehicle(CreateVehicleParams(
-        name: event.name,
-        plateNumber: event.plateNumber,
-        brand: event.brand,
-        model: event.model,
-        year: event.year,
-        color: event.color,
-      ));
+      final result = await createVehicle(
+        CreateVehicleParams(
+          name: event.name,
+          plateNumber: event.plateNumber,
+          brand: event.brand,
+          model: event.model,
+          year: event.year,
+          color: event.color,
+        ),
+      );
 
       result.fold(
-        (failure) => emit(state.copyWith(
-          status: VehicleFormStatus.error,
-          errorMessage: failure.message,
-        )),
-        (vehicle) => emit(state.copyWith(
-          status: VehicleFormStatus.success,
-          vehicle: vehicle,
-        )),
+        (failure) => emit(
+          state.copyWith(
+            status: VehicleFormStatus.error,
+            errorMessage: failure.message,
+          ),
+        ),
+        (vehicle) => emit(
+          state.copyWith(status: VehicleFormStatus.success, vehicle: vehicle),
+        ),
       );
     }
   }
@@ -115,40 +125,47 @@ class VehicleFormBloc extends Bloc<VehicleFormEvent, VehicleFormState> {
     Emitter<VehicleFormState> emit,
   ) async {
     if (state.vehicle == null) {
-      emit(state.copyWith(
-        status: VehicleFormStatus.error,
-        errorMessage: 'Please save the vehicle first before adding images',
-      ));
+      emit(
+        state.copyWith(
+          status: VehicleFormStatus.error,
+          errorMessage: 'Please save the vehicle first before adding images',
+        ),
+      );
       return;
     }
 
-    emit(state.copyWith(
-      status: VehicleFormStatus.uploadingImage,
-      uploadingImageIndex: state.vehicle!.imageUrls.length,
-    ));
+    emit(
+      state.copyWith(
+        status: VehicleFormStatus.uploadingImage,
+        uploadingImageIndex: state.vehicle!.imageUrls.length,
+      ),
+    );
 
-    final result = await uploadVehicleImage(UploadImageParams(
-      vehicleId: state.vehicle!.id,
-      filePath: event.filePath,
-    ));
+    final result = await uploadVehicleImage(
+      UploadImageParams(vehicleId: state.vehicle!.id, filePath: event.filePath),
+    );
 
     result.fold(
-      (failure) => emit(state.copyWith(
-        status: VehicleFormStatus.error,
-        errorMessage: failure.message,
-        uploadingImageIndex: null,
-      )),
+      (failure) => emit(
+        state.copyWith(
+          status: VehicleFormStatus.error,
+          errorMessage: failure.message,
+          uploadingImageIndex: null,
+        ),
+      ),
       (imageUrl) {
         // Update local vehicle state with new image
         final updatedImageUrls = [...state.vehicle!.imageUrls, imageUrl];
         final updatedVehicle = state.vehicle!.copyWith(
           imageUrls: updatedImageUrls,
         );
-        emit(state.copyWith(
-          status: VehicleFormStatus.loaded,
-          vehicle: updatedVehicle,
-          uploadingImageIndex: null,
-        ));
+        emit(
+          state.copyWith(
+            status: VehicleFormStatus.loaded,
+            vehicle: updatedVehicle,
+            uploadingImageIndex: null,
+          ),
+        );
       },
     );
   }
@@ -161,16 +178,17 @@ class VehicleFormBloc extends Bloc<VehicleFormEvent, VehicleFormState> {
 
     emit(state.copyWith(status: VehicleFormStatus.deletingImage));
 
-    final result = await deleteVehicleImage(DeleteImageParams(
-      vehicleId: state.vehicle!.id,
-      imageUrl: event.imageUrl,
-    ));
+    final result = await deleteVehicleImage(
+      DeleteImageParams(vehicleId: state.vehicle!.id, imageUrl: event.imageUrl),
+    );
 
     result.fold(
-      (failure) => emit(state.copyWith(
-        status: VehicleFormStatus.error,
-        errorMessage: failure.message,
-      )),
+      (failure) => emit(
+        state.copyWith(
+          status: VehicleFormStatus.error,
+          errorMessage: failure.message,
+        ),
+      ),
       (_) {
         // Update local vehicle state
         final updatedImageUrls = state.vehicle!.imageUrls
@@ -179,10 +197,12 @@ class VehicleFormBloc extends Bloc<VehicleFormEvent, VehicleFormState> {
         final updatedVehicle = state.vehicle!.copyWith(
           imageUrls: updatedImageUrls,
         );
-        emit(state.copyWith(
-          status: VehicleFormStatus.loaded,
-          vehicle: updatedVehicle,
-        ));
+        emit(
+          state.copyWith(
+            status: VehicleFormStatus.loaded,
+            vehicle: updatedVehicle,
+          ),
+        );
       },
     );
   }
@@ -194,15 +214,14 @@ class VehicleFormBloc extends Bloc<VehicleFormEvent, VehicleFormState> {
     emit(VehicleFormState.initial());
   }
 
-  void _onClearFormError(
-    ClearFormError event,
-    Emitter<VehicleFormState> emit,
-  ) {
-    emit(state.copyWith(
-      status: state.vehicle != null
-          ? VehicleFormStatus.loaded
-          : VehicleFormStatus.initial,
-      errorMessage: null,
-    ));
+  void _onClearFormError(ClearFormError event, Emitter<VehicleFormState> emit) {
+    emit(
+      state.copyWith(
+        status: state.vehicle != null
+            ? VehicleFormStatus.loaded
+            : VehicleFormStatus.initial,
+        errorMessage: null,
+      ),
+    );
   }
 }

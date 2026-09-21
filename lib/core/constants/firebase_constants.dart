@@ -47,6 +47,7 @@ class FirebaseConstants {
 
   // Field Names - Geofence
   static const String fieldRadius = 'radius';
+  static const String fieldRadiusMeters = 'radiusMeters';
   static const String fieldIsActive = 'isActive';
   static const String fieldUserId = 'userId';
 

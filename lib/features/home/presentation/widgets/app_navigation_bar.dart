@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/utils/extensions.dart';
+
 /// Navigation destinations for the app
-enum AppDestination {
-  vehicles,
-  map,
-  settings,
-}
+enum AppDestination { vehicles, map, friends, trips, settings }
 
 /// App bottom navigation bar using Material 3 NavigationBar
 class AppNavigationBar extends StatelessWidget {
@@ -24,21 +22,31 @@ class AppNavigationBar extends StatelessWidget {
       selectedIndex: currentIndex,
       onDestinationSelected: onDestinationSelected,
       labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
-      destinations: const [
+      destinations: [
         NavigationDestination(
           icon: Icon(Icons.directions_car_outlined),
           selectedIcon: Icon(Icons.directions_car),
-          label: 'Vehicles',
+          label: context.l10n.vehicles,
         ),
         NavigationDestination(
           icon: Icon(Icons.map_outlined),
           selectedIcon: Icon(Icons.map),
-          label: 'Map',
+          label: context.l10n.map,
+        ),
+        // NavigationDestination(
+        //   icon: Icon(Icons.route_outlined),
+        //   selectedIcon: Icon(Icons.route),
+        //   label: context.l10n.trips,
+        // ),
+        NavigationDestination(
+          icon: Icon(Icons.people_outline),
+          selectedIcon: Icon(Icons.people),
+          label: context.l10n.friends,
         ),
         NavigationDestination(
           icon: Icon(Icons.settings_outlined),
           selectedIcon: Icon(Icons.settings),
-          label: 'Settings',
+          label: context.l10n.settings,
         ),
       ],
     );

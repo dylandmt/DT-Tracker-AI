@@ -49,8 +49,7 @@ extension AppPermissionStatusX on AppPermissionStatus {
 
   /// Whether the permission can be requested again
   bool get canRequest =>
-      this == AppPermissionStatus.denied ||
-      this == AppPermissionStatus.unknown;
+      this == AppPermissionStatus.denied || this == AppPermissionStatus.unknown;
 
   /// Whether the user must go to settings to grant permission
   bool get requiresSettings =>

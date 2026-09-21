@@ -57,13 +57,7 @@ class TrackerInfoEntity extends Equatable {
   }
 
   @override
-  List<Object?> get props => [
-        imei,
-        model,
-        provider,
-        ownerId,
-        linkedAt,
-      ];
+  List<Object?> get props => [imei, model, provider, ownerId, linkedAt];
 }
 
 /// Tracker live data entity representing real-time tracker status
@@ -123,15 +117,15 @@ class TrackerLiveEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-        imei,
-        battery,
-        lat,
-        lng,
-        speed,
-        online,
-        datetime,
-        ts,
-      ];
+    imei,
+    battery,
+    lat,
+    lng,
+    speed,
+    online,
+    datetime,
+    ts,
+  ];
 }
 
 /// Tracker status entity for quick status checks
@@ -167,11 +161,5 @@ class TrackerStatusEntity extends Equatable {
   }
 
   @override
-  List<Object?> get props => [
-        imei,
-        battery,
-        online,
-        speed,
-        lastUpdate,
-      ];
+  List<Object?> get props => [imei, battery, online, speed, lastUpdate];
 }

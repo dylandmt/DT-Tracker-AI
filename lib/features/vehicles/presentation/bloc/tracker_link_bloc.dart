@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../../../core/usecases/usecase.dart';
 import '../../domain/entities/tracker_info.dart';
 import '../../domain/entities/vehicle.dart';
 import '../../domain/usecases/get_tracker_info.dart';
@@ -37,30 +36,32 @@ class TrackerLinkBloc extends Bloc<TrackerLinkEvent, TrackerLinkState> {
     ValidateImei event,
     Emitter<TrackerLinkState> emit,
   ) async {
-    emit(state.copyWith(
-      status: TrackerLinkStatus.validating,
-      imei: event.imei,
-    ));
-
-    // First check if tracker is available
-    final availableResult = await isTrackerAvailable(ImeiParams(imei: event.imei));
-
-    final isAvailable = availableResult.fold(
-      (failure) {
-        emit(state.copyWith(
-          status: TrackerLinkStatus.invalid,
-          errorMessage: failure.message,
-        ));
-        return false;
-      },
-      (available) => available,
+    emit(
+      state.copyWith(status: TrackerLinkStatus.validating, imei: event.imei),
     );
 
+    // First check if tracker is available
+    final availableResult = await isTrackerAvailable(
+      ImeiParams(imei: event.imei),
+    );
+
+    final isAvailable = availableResult.fold((failure) {
+      emit(
+        state.copyWith(
+          status: TrackerLinkStatus.invalid,
+          errorMessage: failure.message,
+        ),
+      );
+      return false;
+    }, (available) => available);
+
     if (!isAvailable) {
-      emit(state.copyWith(
-        status: TrackerLinkStatus.invalid,
-        errorMessage: 'Tracker not found or already in use',
-      ));
+      emit(
+        state.copyWith(
+          status: TrackerLinkStatus.invalid,
+          errorMessage: 'Tracker not found or already in use',
+        ),
+      );
       return;
     }
 
@@ -68,14 +69,15 @@ class TrackerLinkBloc extends Bloc<TrackerLinkEvent, TrackerLinkState> {
     final infoResult = await getTrackerInfo(ImeiParams(imei: event.imei));
 
     infoResult.fold(
-      (failure) => emit(state.copyWith(
-        status: TrackerLinkStatus.invalid,
-        errorMessage: failure.message,
-      )),
-      (tracker) => emit(state.copyWith(
-        status: TrackerLinkStatus.valid,
-        trackerInfo: tracker,
-      )),
+      (failure) => emit(
+        state.copyWith(
+          status: TrackerLinkStatus.invalid,
+          errorMessage: failure.message,
+        ),
+      ),
+      (tracker) => emit(
+        state.copyWith(status: TrackerLinkStatus.valid, trackerInfo: tracker),
+      ),
     );
   }
 
@@ -85,20 +87,20 @@ class TrackerLinkBloc extends Bloc<TrackerLinkEvent, TrackerLinkState> {
   ) async {
     emit(state.copyWith(status: TrackerLinkStatus.linking));
 
-    final result = await linkTracker(LinkTrackerParams(
-      vehicleId: event.vehicleId,
-      trackerId: event.imei,
-    ));
+    final result = await linkTracker(
+      LinkTrackerParams(vehicleId: event.vehicleId, trackerId: event.imei),
+    );
 
     result.fold(
-      (failure) => emit(state.copyWith(
-        status: TrackerLinkStatus.error,
-        errorMessage: failure.message,
-      )),
-      (vehicle) => emit(state.copyWith(
-        status: TrackerLinkStatus.linked,
-        vehicle: vehicle,
-      )),
+      (failure) => emit(
+        state.copyWith(
+          status: TrackerLinkStatus.error,
+          errorMessage: failure.message,
+        ),
+      ),
+      (vehicle) => emit(
+        state.copyWith(status: TrackerLinkStatus.linked, vehicle: vehicle),
+      ),
     );
   }
 
@@ -108,17 +110,20 @@ class TrackerLinkBloc extends Bloc<TrackerLinkEvent, TrackerLinkState> {
   ) async {
     emit(state.copyWith(status: TrackerLinkStatus.unlinking));
 
-    final result = await unlinkTracker(IdParams(id: event.vehicleId));
+    final result = await unlinkTracker(
+      UnlinkTrackerParams(vehicleId: event.vehicleId, pin: event.pin),
+    );
 
     result.fold(
-      (failure) => emit(state.copyWith(
-        status: TrackerLinkStatus.error,
-        errorMessage: failure.message,
-      )),
-      (vehicle) => emit(state.copyWith(
-        status: TrackerLinkStatus.unlinked,
-        vehicle: vehicle,
-      )),
+      (failure) => emit(
+        state.copyWith(
+          status: TrackerLinkStatus.error,
+          errorMessage: failure.message,
+        ),
+      ),
+      (vehicle) => emit(
+        state.copyWith(status: TrackerLinkStatus.unlinked, vehicle: vehicle),
+      ),
     );
   }
 
@@ -133,9 +138,6 @@ class TrackerLinkBloc extends Bloc<TrackerLinkEvent, TrackerLinkState> {
     ClearTrackerError event,
     Emitter<TrackerLinkState> emit,
   ) {
-    emit(state.copyWith(
-      status: TrackerLinkStatus.initial,
-      errorMessage: null,
-    ));
+    emit(state.copyWith(status: TrackerLinkStatus.initial, errorMessage: null));
   }
 }

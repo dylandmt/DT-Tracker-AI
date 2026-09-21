@@ -89,5 +89,8 @@ abstract class VehicleRepository {
   /// [vehicleId] - The vehicle to unlink the tracker from
   ///
   /// Returns the updated [VehicleEntity] on success or [Failure] on error
-  Future<Either<Failure, VehicleEntity>> unlinkTracker(String vehicleId);
+  Future<Either<Failure, VehicleEntity>> unlinkTracker(
+    String vehicleId, {
+    String? pin,
+  });
 }

@@ -61,8 +61,7 @@ class AppPermissionHandlerImpl implements AppPermissionHandler {
   Future<Map<AppPermission, AppPermissionStatus>> requestPermissions(
     List<AppPermission> permissions,
   ) async {
-    final packagePermissions =
-        permissions.map(_toPackagePermission).toList();
+    final packagePermissions = permissions.map(_toPackagePermission).toList();
 
     final statuses = await packagePermissions.request();
 

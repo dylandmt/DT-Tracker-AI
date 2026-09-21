@@ -22,6 +22,9 @@ abstract class MapRemoteDataSource {
   /// Stream of single vehicle location
   Stream<VehicleLocationModel> watchVehicleLocation(String vehicleId);
 
+  /// Get the linked tracker ID for a vehicle.
+  Future<String> getVehicleTrackerId(String vehicleId);
+
   /// Get trip history points for a date range
   Future<List<TripPointModel>> getTripPoints({
     required String trackerId,
@@ -48,6 +51,25 @@ class MapRemoteDataSourceImpl implements MapRemoteDataSource {
       throw const AuthException(message: 'User not authenticated');
     }
     return user.uid;
+  }
+
+  @override
+  Future<String> getVehicleTrackerId(String vehicleId) async {
+    try {
+      final vehicleDoc = await _vehiclesCollection.doc(vehicleId).get();
+      if (!vehicleDoc.exists) {
+        throw const ServerException(message: 'Vehicle not found');
+      }
+      final data = vehicleDoc.data()!;
+      final trackerId = data['trackerId'] as String?;
+      if (trackerId == null || trackerId.isEmpty) {
+        throw const ServerException(message: 'Vehicle has no linked tracker');
+      }
+      return trackerId;
+    } catch (e) {
+      if (e is ServerException || e is AuthException) rethrow;
+      throw ServerException(message: 'Failed to get vehicle tracker: $e');
+    }
   }
 
   CollectionReference<Map<String, dynamic>> get _vehiclesCollection {
@@ -399,5 +421,36 @@ class MapRemoteDataSourceImpl implements MapRemoteDataSource {
     } catch (e) {
       throw ServerException(message: 'Failed to get trip history: $e');
     }
+  }
+
+  String _formatDate(DateTime d) {
+    final y = d.year.toString().padLeft(4, '0');
+    final m = d.month.toString().padLeft(2, '0');
+    final day = d.day.toString().padLeft(2, '0');
+    return '$y-$m-$day';
+  }
+
+  int? _extractEventMillis(Map<dynamic, dynamic> m) {
+    // Prefer absolute datetime if available
+    final dt = m['datetime'];
+    if (dt is String) {
+      try {
+        return DateTime.parse(dt).millisecondsSinceEpoch;
+      } catch (_) {
+        // fallthrough
+      }
+    }
+    // Fallback to timestamp/ts if they look like epoch
+    dynamic raw = m['timestamp'];
+    raw ??= m['ts'];
+    if (raw != null) {
+      int? t;
+      if (raw is num) t = raw.toInt();
+      if (raw is String) t = int.tryParse(raw);
+      if (t != null) {
+        return t < 1000000000000 ? t * 1000 : t;
+      }
+    }
+    return null;
   }
 }

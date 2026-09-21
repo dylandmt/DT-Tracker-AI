@@ -150,7 +150,53 @@ class AppLocalizationsEs extends AppLocalizations {
   String get dateTimeFormat => 'd MMM y HH:mm';
 
   @override
-  String get justNow => 'Ahora mismo';
+  String get justNow => 'Ahora';
+
+  @override
+  String get vehicleImmobilized => 'Vehiculo inmovilizado';
+
+  @override
+  String get vehicleActive => 'Vehiculo activo';
+
+  @override
+  String get activateVehicle => 'Activar vehiculo';
+
+  @override
+  String get immobilizeVehicle => 'Inmovilizar vehiculo';
+
+  @override
+  String get confirmingVehicleState => 'Confirmando cambio de estado...';
+
+  @override
+  String get vehicleStateConfirmed => 'Estado confirmado por el vehiculo';
+
+  @override
+  String get enterPinToImmobilizeVehicle =>
+      'Ingresa tu PIN para inmovilizar el vehiculo.';
+
+  @override
+  String get enterPinToActivateVehicle =>
+      'Ingresa tu PIN para activar el vehiculo.';
+
+  @override
+  String get unableToChangeVehicleState => 'No se pudo cambiar el estado';
+
+  @override
+  String get vehiclePlan => 'Plan';
+
+  @override
+  String get planEssential => 'Essential';
+
+  @override
+  String get planProtect => 'Protect';
+
+  @override
+  String get planTotal => 'Total';
+
+  @override
+  String geofenceLimitReached(String vehicleName, int limit) {
+    return '$vehicleName alcanzo su limite de $limit geocercas.';
+  }
 
   @override
   String timeAgoMinutes(int count) {

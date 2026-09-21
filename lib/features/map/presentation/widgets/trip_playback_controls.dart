@@ -49,7 +49,7 @@ class TripPlaybackControls extends StatelessWidget {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    currentPoint.timestamp.formattedDateTime,
+                    currentPoint.timestamp.localizedDateTime(context),
                     style: Theme.of(context).textTheme.labelLarge,
                   ),
                 ),

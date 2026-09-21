@@ -57,19 +57,25 @@ class TrackerBackendDataSource {
         return decoded;
       }
 
-      // Try parse error payload
+      Map<String, dynamic> decoded;
       try {
-        final decoded = jsonDecode(responseBody) as Map<String, dynamic>;
-        final msg =
-            decoded['message'] as String? ??
-            decoded['error']?.toString() ??
-            'HTTP ${response.statusCode}';
-        throw ServerException(message: msg);
+        decoded = jsonDecode(responseBody) as Map<String, dynamic>;
       } catch (_) {
         throw ServerException(
           message: 'HTTP ${response.statusCode}: $responseBody',
+          statusCode: response.statusCode,
         );
       }
+      final message =
+          decoded['message'] as String? ??
+          decoded['error']?.toString() ??
+          'HTTP ${response.statusCode}';
+      throw ServerException(
+        message: message,
+        statusCode: response.statusCode,
+        errorCode:
+            decoded['errorCode']?.toString() ?? decoded['error']?.toString(),
+      );
     } finally {
       client.close();
     }

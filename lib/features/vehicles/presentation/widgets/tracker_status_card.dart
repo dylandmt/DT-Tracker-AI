@@ -40,7 +40,6 @@ class TrackerStatusCard extends StatelessWidget {
     TextTheme textTheme,
   ) {
     return Card(
-      color: colorScheme.errorContainer.withValues(alpha: 0.3),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -104,7 +103,6 @@ class TrackerStatusCard extends StatelessWidget {
         : AppColors.statusOffline;
 
     return Card(
-      color: colorScheme.primaryContainer.withValues(alpha: 0.3),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -189,7 +187,7 @@ class TrackerStatusCard extends StatelessWidget {
                   _buildStatItem(
                     context,
                     Icons.access_time,
-                    trackerStatus!.lastUpdate.timeAgo,
+                    trackerStatus!.lastUpdate.localizedTimeAgo(context),
                     context.l10n.lastUpdate,
                     colorScheme.onSurfaceVariant,
                   ),

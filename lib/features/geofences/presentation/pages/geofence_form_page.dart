@@ -7,6 +7,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 import '../../../../core/constants/app_constants.dart';
+import '../../../../config/environment/environment.dart';
 import '../../../../core/permissions/permission_handler.dart';
 import '../../../../core/permissions/permission_status.dart';
 import '../../../../core/usecases/usecase.dart';
@@ -85,7 +86,7 @@ class _GeofenceFormPageState extends State<GeofenceFormPage> {
     _isActive = geofence.isActive;
   }
 
-  void _submit() {
+  Future<void> _submit() async {
     if (!(_formKey.currentState?.validate() ?? false)) return;
     if (_vehicleIds.isEmpty) {
       context.showErrorSnackBar(context.l10n.selectLinkedVehicle);
@@ -95,6 +96,8 @@ class _GeofenceFormPageState extends State<GeofenceFormPage> {
       context.showErrorSnackBar(context.l10n.enableGeofenceTrigger);
       return;
     }
+    if (!await _canSaveWithinPlanLimit()) return;
+    if (!mounted) return;
     context.read<GeofenceBloc>().add(
       SubmitGeofence(
         id: widget.geofenceId,
@@ -110,6 +113,44 @@ class _GeofenceFormPageState extends State<GeofenceFormPage> {
           isActive: _isActive,
         ),
       ),
+    );
+  }
+
+  Future<bool> _canSaveWithinPlanLimit() async {
+    if (!EnvironmentConfig.isDev) return true;
+
+    final result = await sl<GetGeofences>()(const NoParams());
+    if (!mounted) return false;
+
+    return result.fold(
+      (failure) {
+        context.showErrorSnackBar(failure.message);
+        return false;
+      },
+      (geofences) {
+        final existingGeofences = geofences
+            .where((geofence) => geofence.id != widget.geofenceId)
+            .toList();
+        final vehiclesById = {
+          for (final vehicle in _linkedVehicles) vehicle.id: vehicle,
+        };
+
+        for (final vehicleId in _vehicleIds) {
+          final vehicle = vehiclesById[vehicleId];
+          if (vehicle == null) continue;
+          final assignments = existingGeofences
+              .where((geofence) => geofence.vehicleIds.contains(vehicleId))
+              .length;
+          final limit = vehicle.geofenceLimit ?? 2;
+          if (assignments + 1 > limit) {
+            context.showErrorSnackBar(
+              context.l10n.geofenceLimitReached(vehicle.name, limit),
+            );
+            return false;
+          }
+        }
+        return true;
+      },
     );
   }
 

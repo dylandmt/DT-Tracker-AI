@@ -6,12 +6,14 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/route_constants.dart';
+import '../../../../config/environment/environment.dart';
 import '../../../../core/security/tracker_security_dialogs.dart';
 import '../../../../core/utils/image_cache.dart';
 import '../../../../core/utils/extensions.dart';
 import '../../../../core/utils/vehicle_color_localization.dart';
 import '../../../../injection_container.dart';
 import '../../domain/entities/tracker_info.dart';
+import '../../domain/entities/vehicle.dart';
 import '../../domain/usecases/get_tracker_info.dart';
 import '../bloc/tracker_link_bloc.dart';
 import '../bloc/vehicle_form_bloc.dart';
@@ -200,6 +202,20 @@ class _VehicleDetailPageState extends State<VehicleDetailPage> {
                                   ),
                                 ),
                               ),
+                              if (EnvironmentConfig.isDev &&
+                                  vehicle.plan != null) ...[
+                                const SizedBox(height: 8),
+                                Chip(
+                                  label: Text(
+                                    '${context.l10n.vehiclePlan}: ${switch (vehicle.plan) {
+                                      VehiclePlan.essential => context.l10n.planEssential,
+                                      VehiclePlan.protect => context.l10n.planProtect,
+                                      VehiclePlan.total => context.l10n.planTotal,
+                                      null => '',
+                                    }}',
+                                  ),
+                                ),
+                              ],
 
                               const SizedBox(height: 24),
 
@@ -229,7 +245,7 @@ class _VehicleDetailPageState extends State<VehicleDetailPage> {
                                 context,
                                 Icons.calendar_today_outlined,
                                 context.l10n.added,
-                                vehicle.createdAt.formattedDate,
+                                vehicle.createdAt.localizedDate(context),
                               ),
 
                               const SizedBox(height: 24),

@@ -372,7 +372,7 @@ Future<void> initializeDependencies() async {
   //============================================================================
 
   sl.registerLazySingleton<GeofenceRemoteDataSource>(
-    () => GeofenceRemoteDataSourceImpl(firestore: sl()),
+    () => GeofenceRemoteDataSourceImpl(firestore: sl(), firebaseAuth: sl()),
   );
   sl.registerLazySingleton<GeofenceRepository>(
     () => GeofenceRepositoryImpl(

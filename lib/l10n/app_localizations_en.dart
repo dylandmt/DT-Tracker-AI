@@ -150,6 +150,52 @@ class AppLocalizationsEn extends AppLocalizations {
   String get justNow => 'Just now';
 
   @override
+  String get vehicleImmobilized => 'Vehicle immobilized';
+
+  @override
+  String get vehicleActive => 'Vehicle active';
+
+  @override
+  String get activateVehicle => 'Activate vehicle';
+
+  @override
+  String get immobilizeVehicle => 'Immobilize vehicle';
+
+  @override
+  String get confirmingVehicleState => 'Confirming vehicle state change...';
+
+  @override
+  String get vehicleStateConfirmed => 'Vehicle state confirmed';
+
+  @override
+  String get enterPinToImmobilizeVehicle =>
+      'Enter your PIN to immobilize the vehicle.';
+
+  @override
+  String get enterPinToActivateVehicle =>
+      'Enter your PIN to activate the vehicle.';
+
+  @override
+  String get unableToChangeVehicleState => 'Unable to change vehicle state';
+
+  @override
+  String get vehiclePlan => 'Plan';
+
+  @override
+  String get planEssential => 'Essential';
+
+  @override
+  String get planProtect => 'Protect';
+
+  @override
+  String get planTotal => 'Total';
+
+  @override
+  String geofenceLimitReached(String vehicleName, int limit) {
+    return '$vehicleName has reached its limit of $limit geofences.';
+  }
+
+  @override
   String timeAgoMinutes(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,

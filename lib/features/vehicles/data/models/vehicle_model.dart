@@ -17,6 +17,8 @@ class VehicleModel extends VehicleEntity {
     super.trackerLinkedAt,
     required super.createdAt,
     required super.updatedAt,
+    super.plan,
+    super.geofenceLimit,
   });
 
   /// Create a VehicleModel from a Firestore document snapshot
@@ -50,6 +52,13 @@ class VehicleModel extends VehicleEntity {
       updatedAt: json['updatedAt'] != null
           ? (json['updatedAt'] as Timestamp).toDate()
           : DateTime.now(),
+      plan: VehiclePlan.fromStorage(
+        (json['entitlement'] as Map?)?['tier'] as String?,
+      ),
+      geofenceLimit:
+          (json['entitlement'] as Map?)?['grandfatheredGeofenceLimit']
+              as int? ??
+          (json['entitlement'] as Map?)?['geofenceLimit'] as int?,
     );
   }
 
@@ -68,6 +77,8 @@ class VehicleModel extends VehicleEntity {
       trackerLinkedAt: entity.trackerLinkedAt,
       createdAt: entity.createdAt,
       updatedAt: entity.updatedAt,
+      plan: entity.plan,
+      geofenceLimit: entity.geofenceLimit,
     );
   }
 
@@ -145,6 +156,8 @@ class VehicleModel extends VehicleEntity {
     DateTime? trackerLinkedAt,
     DateTime? createdAt,
     DateTime? updatedAt,
+    VehiclePlan? plan,
+    int? geofenceLimit,
   }) {
     return VehicleModel(
       id: id ?? this.id,
@@ -159,6 +172,8 @@ class VehicleModel extends VehicleEntity {
       trackerLinkedAt: trackerLinkedAt ?? this.trackerLinkedAt,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      plan: plan ?? this.plan,
+      geofenceLimit: geofenceLimit ?? this.geofenceLimit,
     );
   }
 }

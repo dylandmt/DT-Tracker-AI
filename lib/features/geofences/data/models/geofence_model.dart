@@ -37,6 +37,23 @@ class GeofenceModel extends GeofenceEntity {
     );
   }
 
+  factory GeofenceModel.fromApiJson(Map<String, dynamic> json) {
+    final center = json['center'] as Map<String, dynamic>;
+    return GeofenceModel(
+      id: json['id'] as String,
+      name: json['name'] as String,
+      latitude: (center['latitude'] as num).toDouble(),
+      longitude: (center['longitude'] as num).toDouble(),
+      radiusMeters: (json['radiusMeters'] as num).toDouble(),
+      vehicleIds: List<String>.from(json['vehicleIds'] as List),
+      triggerOnEnter: json['triggerOnEnter'] as bool,
+      triggerOnExit: json['triggerOnExit'] as bool,
+      isActive: json['isActive'] as bool,
+      createdAt: DateTime.parse(json['createdAt'] as String),
+      updatedAt: DateTime.parse(json['updatedAt'] as String),
+    );
+  }
+
   Map<String, dynamic> toCreateJson() => {
     'name': name,
     'center': {'latitude': latitude, 'longitude': longitude},

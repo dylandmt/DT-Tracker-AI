@@ -374,6 +374,90 @@ abstract class AppLocalizations {
   /// **'Just now'**
   String get justNow;
 
+  /// No description provided for @vehicleImmobilized.
+  ///
+  /// In en, this message translates to:
+  /// **'Vehicle immobilized'**
+  String get vehicleImmobilized;
+
+  /// No description provided for @vehicleActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Vehicle active'**
+  String get vehicleActive;
+
+  /// No description provided for @activateVehicle.
+  ///
+  /// In en, this message translates to:
+  /// **'Activate vehicle'**
+  String get activateVehicle;
+
+  /// No description provided for @immobilizeVehicle.
+  ///
+  /// In en, this message translates to:
+  /// **'Immobilize vehicle'**
+  String get immobilizeVehicle;
+
+  /// No description provided for @confirmingVehicleState.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirming vehicle state change...'**
+  String get confirmingVehicleState;
+
+  /// No description provided for @vehicleStateConfirmed.
+  ///
+  /// In en, this message translates to:
+  /// **'Vehicle state confirmed'**
+  String get vehicleStateConfirmed;
+
+  /// No description provided for @enterPinToImmobilizeVehicle.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your PIN to immobilize the vehicle.'**
+  String get enterPinToImmobilizeVehicle;
+
+  /// No description provided for @enterPinToActivateVehicle.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your PIN to activate the vehicle.'**
+  String get enterPinToActivateVehicle;
+
+  /// No description provided for @unableToChangeVehicleState.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to change vehicle state'**
+  String get unableToChangeVehicleState;
+
+  /// No description provided for @vehiclePlan.
+  ///
+  /// In en, this message translates to:
+  /// **'Plan'**
+  String get vehiclePlan;
+
+  /// No description provided for @planEssential.
+  ///
+  /// In en, this message translates to:
+  /// **'Essential'**
+  String get planEssential;
+
+  /// No description provided for @planProtect.
+  ///
+  /// In en, this message translates to:
+  /// **'Protect'**
+  String get planProtect;
+
+  /// No description provided for @planTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Total'**
+  String get planTotal;
+
+  /// No description provided for @geofenceLimitReached.
+  ///
+  /// In en, this message translates to:
+  /// **'{vehicleName} has reached its limit of {limit} geofences.'**
+  String geofenceLimitReached(String vehicleName, int limit);
+
   /// No description provided for @timeAgoMinutes.
   ///
   /// In en, this message translates to:

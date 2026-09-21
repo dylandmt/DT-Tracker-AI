@@ -19,6 +19,8 @@ class SplashPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return BlocListener<AuthBloc, AuthState>(
       listener: (context, state) async {
         if (state.isAuthenticated) {
@@ -49,18 +51,13 @@ class SplashPage extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Container(
-                width: 120,
-                height: 120,
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primaryContainer,
-                  borderRadius: BorderRadius.circular(30),
-                ),
-                child: Icon(
-                  Icons.location_on,
-                  size: 72,
-                  color: Theme.of(context).colorScheme.onPrimaryContainer,
-                ),
+              Image.asset(
+                isDark
+                    ? 'assets/images/dt_tracker_logo_dark.png'
+                    : 'assets/images/dt_tracker_logo_light.png',
+                width: 144,
+                height: 144,
+                fit: BoxFit.contain,
               ),
               const SizedBox(height: 24),
               Text(

@@ -324,7 +324,9 @@ class _VehicleDetailPageState extends State<VehicleDetailPage> {
                                 ),
                               ),
 
-                              if (vehicle.hasTracker) ...[
+                              if (vehicle.hasTracker &&
+                                  (vehicle.plan == VehiclePlan.protect ||
+                                      vehicle.plan == VehiclePlan.total)) ...[
                                 const SizedBox(height: 16),
                                 RelayControlCard(vehicleId: vehicle.id),
                               ],

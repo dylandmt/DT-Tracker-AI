@@ -12,6 +12,7 @@ import '../../features/auth/presentation/pages/splash_page.dart';
 import '../../features/onboarding/presentation/pages/onboarding_page.dart';
 import '../../features/setup/presentation/pages/setup_permissions_page.dart';
 import '../../features/home/presentation/pages/home_page.dart';
+import '../../features/home/presentation/pages/home_dashboard_page.dart';
 import '../../features/map/presentation/bloc/map_bloc.dart';
 import '../../features/map/presentation/pages/map_page.dart';
 import '../../features/geofences/presentation/bloc/geofence_bloc.dart';
@@ -101,11 +102,11 @@ class AppRouter {
         builder: (context, state) => const SecurityPinPage(isSetup: true),
       ),
 
-      // Redirect /home to /home/vehicles
+      // Redirect /home to dashboard
       GoRoute(
         path: RouteConstants.home,
         name: RouteConstants.homeName,
-        redirect: (_, __) => RouteConstants.homeVehicles,
+        redirect: (_, __) => RouteConstants.homeDashboard,
       ),
 
       // Full-screen routes outside the home navigation shell.
@@ -160,6 +161,12 @@ class AppRouter {
           );
         },
         routes: [
+          GoRoute(
+            path: RouteConstants.homeDashboard,
+            name: RouteConstants.homeDashboardName,
+            pageBuilder: (_, __) =>
+                const NoTransitionPage(child: HomeDashboardPage()),
+          ),
           // Vehicles tab
           GoRoute(
             path: RouteConstants.homeVehicles,

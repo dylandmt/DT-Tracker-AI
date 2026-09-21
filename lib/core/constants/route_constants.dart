@@ -13,6 +13,7 @@ class RouteConstants {
 
   // Main Routes (with bottom nav)
   static const String home = '/home';
+  static const String homeDashboard = '/home/dashboard';
   static const String homeVehicles = '/home/vehicles';
   static const String homeMap = '/home/map';
   static const String homeFriends = '/home/friends';
@@ -55,6 +56,7 @@ class RouteConstants {
   static const String setupSecurityPinName = 'setupSecurityPin';
   static const String onboardingName = 'onboarding';
   static const String homeName = 'home';
+  static const String homeDashboardName = 'homeDashboard';
   static const String homeVehiclesName = 'homeVehicles';
   static const String homeMapName = 'homeMap';
   static const String homeFriendsName = 'homeFriends';

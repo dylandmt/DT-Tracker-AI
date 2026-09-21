@@ -32,6 +32,14 @@ class GeofenceRemoteDataSourceImpl implements GeofenceRemoteDataSource {
 
   @override
   Future<List<GeofenceModel>> getGeofences(String userId) async {
+    if (EnvironmentConfig.current != Environment.dev) {
+      final response = await _request('GET', '/geofences');
+      return (response['geofences'] as List)
+          .map(
+            (item) => GeofenceModel.fromApiJson(item as Map<String, dynamic>),
+          )
+          .toList();
+    }
     if (EnvironmentConfig.isDev) {
       final response = await _request('GET', '/geofences');
       return (response['geofences'] as List)
@@ -52,6 +60,14 @@ class GeofenceRemoteDataSourceImpl implements GeofenceRemoteDataSource {
 
   @override
   Future<GeofenceModel> getGeofenceById(String userId, String id) async {
+    if (EnvironmentConfig.current != Environment.dev) {
+      final geofences = await getGeofences(userId);
+      return geofences.firstWhere(
+        (geofence) => geofence.id == id,
+        orElse: () =>
+            throw const ServerException(message: 'Geofence not found'),
+      );
+    }
     if (EnvironmentConfig.isDev) {
       final geofences = await getGeofences(userId);
       return geofences.firstWhere(
@@ -75,6 +91,9 @@ class GeofenceRemoteDataSourceImpl implements GeofenceRemoteDataSource {
 
   @override
   Stream<List<GeofenceModel>> watchGeofences(String userId) {
+    if (EnvironmentConfig.current != Environment.dev) {
+      return _watchDevelopmentGeofences(userId);
+    }
     if (EnvironmentConfig.isDev) {
       return _watchDevelopmentGeofences(userId);
     }
@@ -98,6 +117,16 @@ class GeofenceRemoteDataSourceImpl implements GeofenceRemoteDataSource {
     String userId,
     GeofenceModel geofence,
   ) async {
+    if (EnvironmentConfig.current != Environment.dev) {
+      final response = await _request(
+        'POST',
+        '/geofences',
+        _apiPayload(geofence),
+      );
+      return GeofenceModel.fromApiJson(
+        response['geofence'] as Map<String, dynamic>,
+      );
+    }
     if (EnvironmentConfig.isDev) {
       final response = await _request(
         'POST',
@@ -122,6 +151,16 @@ class GeofenceRemoteDataSourceImpl implements GeofenceRemoteDataSource {
     String userId,
     GeofenceModel geofence,
   ) async {
+    if (EnvironmentConfig.current != Environment.dev) {
+      final response = await _request(
+        'PUT',
+        '/geofences/${geofence.id}',
+        _apiPayload(geofence),
+      );
+      return GeofenceModel.fromApiJson(
+        response['geofence'] as Map<String, dynamic>,
+      );
+    }
     if (EnvironmentConfig.isDev) {
       final response = await _request(
         'PUT',
@@ -143,6 +182,10 @@ class GeofenceRemoteDataSourceImpl implements GeofenceRemoteDataSource {
 
   @override
   Future<void> deleteGeofence(String userId, String id) async {
+    if (EnvironmentConfig.current != Environment.dev) {
+      await _request('DELETE', '/geofences/$id');
+      return;
+    }
     if (EnvironmentConfig.isDev) {
       await _request('DELETE', '/geofences/$id');
       return;

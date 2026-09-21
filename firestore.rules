@@ -23,21 +23,24 @@ service cloud.firestore {
       allow create: if isOwner(uid)
         && !request.resource.data.keys().hasAny([
           'trackerId',
-          'trackerLinkedAt'
+          'trackerLinkedAt',
+          'entitlement'
         ]);
       allow update: if isOwner(uid)
         && !request.resource.data.diff(resource.data).affectedKeys().hasAny([
           'trackerId',
-          'trackerLinkedAt'
+          'trackerLinkedAt',
+          'entitlement'
         ]);
       allow delete: if isOwner(uid)
-        && !resource.data.keys().hasAny(['trackerId', 'trackerLinkedAt']);
+        && !resource.data.keys().hasAny([
+          'trackerId', 'trackerLinkedAt', 'entitlement'
+        ]);
     }
 
     match /users/{uid}/geofences/{geofenceId} {
       allow read: if isOwner(uid);
-      allow create, update: if isOwner(uid) && isValidGeofence();
-      allow delete: if isOwner(uid);
+      allow create, update, delete: if false;
     }
 
     match /users/{uid}/geofence_states/{stateId} {

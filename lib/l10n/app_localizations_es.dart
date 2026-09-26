@@ -104,6 +104,23 @@ class AppLocalizationsEs extends AppLocalizations {
   String get cancel => 'Cancelar';
 
   @override
+  String get deleteAccount => 'Eliminar cuenta';
+
+  @override
+  String get deleteAccountDescription =>
+      'Elimina permanentemente tu cuenta y los datos asociados';
+
+  @override
+  String get deleteAccountConfirmationTitle => '¿Eliminar cuenta?';
+
+  @override
+  String get deleteAccountConfirmation =>
+      'Esta acción es permanente y no se puede deshacer.';
+
+  @override
+  String get deletingAccount => 'Eliminando cuenta...';
+
+  @override
   String get user => 'Usuario';
 
   @override

@@ -28,6 +28,9 @@ abstract class AuthRepository {
   /// Sign out the current user
   Future<Either<Failure, void>> signOut();
 
+  /// Permanently delete the authenticated account through the backend.
+  Future<Either<Failure, void>> deleteAccount();
+
   /// Get the currently authenticated user
   Future<Either<Failure, UserEntity?>> getCurrentUser();
 

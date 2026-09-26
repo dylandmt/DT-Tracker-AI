@@ -64,6 +64,9 @@ class SignUpRequested extends AuthEvent {
 /// Event to sign out
 class SignOutRequested extends AuthEvent {}
 
+/// Event to permanently delete the authenticated account.
+class AccountDeletionRequested extends AuthEvent {}
+
 /// Event to send password reset email
 class PasswordResetRequested extends AuthEvent {
   final String email;

@@ -24,12 +24,14 @@ import 'core/security/tracker_security_service.dart';
 import 'core/theme/theme_controller.dart';
 import 'core/utils/image_compressor.dart';
 import 'features/auth/data/datasources/auth_remote_data_source.dart';
+import 'features/auth/data/datasources/account_backend_data_source.dart';
 import 'features/auth/data/datasources/profile_image_data_source.dart';
 import 'features/auth/data/datasources/user_remote_data_source.dart';
 import 'features/auth/data/repositories/auth_repository_impl.dart';
 import 'features/auth/domain/repositories/auth_repository.dart';
 import 'features/auth/domain/usecases/auth_state_changes.dart';
 import 'features/auth/domain/usecases/delete_profile_image.dart';
+import 'features/auth/domain/usecases/delete_account.dart';
 import 'features/auth/domain/usecases/get_current_user.dart';
 import 'features/auth/domain/usecases/send_password_reset.dart';
 import 'features/auth/domain/usecases/sign_in_with_email.dart';
@@ -165,6 +167,10 @@ Future<void> initializeDependencies() async {
     () => AuthRemoteDataSourceImpl(firebaseAuth: sl(), googleSignIn: sl()),
   );
 
+  sl.registerLazySingleton<AccountBackendDataSource>(
+    () => AccountBackendDataSourceImpl(firebaseAuth: sl()),
+  );
+
   sl.registerLazySingleton<UserRemoteDataSource>(
     () => UserRemoteDataSourceImpl(firestore: sl()),
   );
@@ -180,6 +186,9 @@ Future<void> initializeDependencies() async {
       userRemoteDataSource: sl(),
       profileImageDataSource: sl(),
       networkInfo: sl(),
+      accountBackendDataSource: sl(),
+      preferences: sl(),
+      onboardingController: sl(),
     ),
   );
 
@@ -188,6 +197,7 @@ Future<void> initializeDependencies() async {
   sl.registerLazySingleton(() => SignInWithGoogle(sl()));
   sl.registerLazySingleton(() => SignUpWithEmail(sl()));
   sl.registerLazySingleton(() => SignOut(sl()));
+  sl.registerLazySingleton(() => DeleteAccount(sl()));
   sl.registerLazySingleton(() => GetCurrentUser(sl()));
   sl.registerLazySingleton(() => SendPasswordReset(sl()));
   sl.registerLazySingleton(() => AuthStateChanges(sl()));
@@ -203,6 +213,7 @@ Future<void> initializeDependencies() async {
       signInWithGoogle: sl(),
       signUpWithEmail: sl(),
       signOut: sl(),
+      deleteAccount: sl(),
       getCurrentUser: sl(),
       sendPasswordReset: sl(),
       authStateChanges: sl(),

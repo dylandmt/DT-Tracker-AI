@@ -16,11 +16,13 @@ class AuthState extends Equatable {
   final AuthStatus status;
   final UserEntity? user;
   final String? errorMessage;
+  final bool accountDeletionInProgress;
 
   const AuthState({
     this.status = AuthStatus.initial,
     this.user,
     this.errorMessage,
+    this.accountDeletionInProgress = false,
   });
 
   /// Initial state
@@ -67,11 +69,14 @@ class AuthState extends Equatable {
     AuthStatus? status,
     UserEntity? user,
     String? errorMessage,
+    bool? accountDeletionInProgress,
   }) {
     return AuthState(
       status: status ?? this.status,
       user: user ?? this.user,
       errorMessage: errorMessage,
+      accountDeletionInProgress:
+          accountDeletionInProgress ?? this.accountDeletionInProgress,
     );
   }
 
@@ -91,5 +96,10 @@ class AuthState extends Equatable {
   bool get isProfileUpdated => status == AuthStatus.profileUpdated;
 
   @override
-  List<Object?> get props => [status, user, errorMessage];
+  List<Object?> get props => [
+    status,
+    user,
+    errorMessage,
+    accountDeletionInProgress,
+  ];
 }

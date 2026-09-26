@@ -3,9 +3,12 @@ import 'package:dartz/dartz.dart';
 import '../../../../core/errors/exceptions.dart';
 import '../../../../core/errors/failures.dart';
 import '../../../../core/network/network_info.dart';
+import '../../../../core/onboarding/onboarding_controller.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../domain/entities/user.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../datasources/auth_remote_data_source.dart';
+import '../datasources/account_backend_data_source.dart';
 import '../datasources/profile_image_data_source.dart';
 import '../datasources/user_remote_data_source.dart';
 import '../models/user_model.dart';
@@ -16,12 +19,18 @@ class AuthRepositoryImpl implements AuthRepository {
   final UserRemoteDataSource userRemoteDataSource;
   final ProfileImageDataSource profileImageDataSource;
   final NetworkInfo networkInfo;
+  final AccountBackendDataSource accountBackendDataSource;
+  final SharedPreferences preferences;
+  final OnboardingController onboardingController;
 
   AuthRepositoryImpl({
     required this.authRemoteDataSource,
     required this.userRemoteDataSource,
     required this.profileImageDataSource,
     required this.networkInfo,
+    required this.accountBackendDataSource,
+    required this.preferences,
+    required this.onboardingController,
   });
 
   @override
@@ -159,6 +168,42 @@ class AuthRepositoryImpl implements AuthRepository {
     } catch (e) {
       return Left(UnknownFailure(message: e.toString()));
     }
+  }
+
+  @override
+  Future<Either<Failure, void>> deleteAccount() async {
+    if (!await networkInfo.isConnected) {
+      return const Left(NetworkFailure());
+    }
+
+    final user = authRemoteDataSource.getCurrentUser();
+    if (user == null) {
+      return const Left(AuthFailure(message: 'No user is signed in'));
+    }
+
+    try {
+      await accountBackendDataSource.deleteAccount();
+    } on ServerException catch (e) {
+      return Left(ServerFailure(message: e.message));
+    } on AuthException catch (e) {
+      return Left(AuthFailure(message: e.message));
+    } catch (e) {
+      return Left(UnknownFailure(message: e.toString()));
+    }
+
+    // Backend deletion is irreversible once it succeeds. Local cleanup must
+    // not make the app report a failed deletion or leave the user in-session.
+    try {
+      await onboardingController.reset(user.uid);
+    } catch (_) {}
+    try {
+      await preferences.remove('push_device_id');
+    } catch (_) {}
+    try {
+      await authRemoteDataSource.signOut();
+    } catch (_) {}
+
+    return const Right(null);
   }
 
   @override

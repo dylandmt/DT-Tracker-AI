@@ -7,6 +7,7 @@ import '../../../../core/usecases/usecase.dart';
 import '../../domain/entities/user.dart';
 import '../../domain/usecases/auth_state_changes.dart';
 import '../../domain/usecases/delete_profile_image.dart';
+import '../../domain/usecases/delete_account.dart';
 import '../../domain/usecases/get_current_user.dart';
 import '../../domain/usecases/send_password_reset.dart';
 import '../../domain/usecases/sign_in_with_email.dart';
@@ -26,6 +27,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final SignInWithEmail signInWithEmail;
   final SignUpWithEmail signUpWithEmail;
   final SignOut signOut;
+  final DeleteAccount deleteAccount;
   final GetCurrentUser getCurrentUser;
   final SendPasswordReset sendPasswordReset;
   final AuthStateChanges authStateChanges;
@@ -41,6 +43,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     required this.signInWithEmail,
     required this.signUpWithEmail,
     required this.signOut,
+    required this.deleteAccount,
     required this.getCurrentUser,
     required this.sendPasswordReset,
     required this.authStateChanges,
@@ -54,6 +57,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<SignInRequested>(_onSignInRequested);
     on<SignUpRequested>(_onSignUpRequested);
     on<SignOutRequested>(_onSignOutRequested);
+    on<AccountDeletionRequested>(_onAccountDeletionRequested);
     on<PasswordResetRequested>(_onPasswordResetRequested);
     on<ProfileUpdateRequested>(_onProfileUpdateRequested);
     on<GeofenceAlertPreferenceChanged>(_onGeofenceAlertPreferenceChanged);
@@ -212,6 +216,33 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       (failure) {
         emit(AuthState.error(failure.message));
       },
+      (_) {
+        _stopListeningToAuthChanges();
+        emit(AuthState.unauthenticated());
+      },
+    );
+  }
+
+  Future<void> _onAccountDeletionRequested(
+    AccountDeletionRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    final user = state.user;
+    if (user == null) {
+      emit(AuthState.error('No user is signed in'));
+      return;
+    }
+
+    emit(
+      state.copyWith(
+        status: AuthStatus.loading,
+        errorMessage: null,
+        accountDeletionInProgress: true,
+      ),
+    );
+    final result = await deleteAccount(const NoParams());
+    result.fold(
+      (failure) => emit(AuthState.error(failure.message, user: user)),
       (_) {
         _stopListeningToAuthChanges();
         emit(AuthState.unauthenticated());

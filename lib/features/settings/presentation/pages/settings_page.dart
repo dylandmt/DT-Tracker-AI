@@ -37,211 +37,254 @@ class SettingsPage extends StatelessWidget {
         builder: (context, state) {
           final user = state.user;
 
-          return ListView(
+          return Stack(
             children: [
-              // User info header
-              Container(
-                padding: const EdgeInsets.all(24),
-                color: colorScheme.primaryContainer.withValues(alpha: 0.3),
-                child: Row(
-                  children: [
-                    CircleAvatar(
-                      radius: 32,
-                      backgroundColor: colorScheme.primary,
-                      child: user != null && user.photoUrl != null
-                          ? GestureDetector(
-                              onTap: () => showProfilePhotoPreview(
-                                context,
-                                imageProvider: CachedNetworkImageProvider(
-                                  user.photoUrl!,
-                                ),
-                                heroTag: 'profile-photo-${user.id}',
-                              ),
-                              child: Hero(
-                                tag: 'profile-photo-${user.id}',
-                                child: ClipOval(
-                                  child: CachedNetworkImage(
-                                    imageUrl: user.photoUrl!,
-                                    width: 64,
-                                    height: 64,
-                                    fit: BoxFit.cover,
-                                    errorWidget: (_, __, ___) =>
-                                        _buildAvatarText(
-                                          user.displayName ?? user.email,
-                                          colorScheme,
-                                        ),
+              ListView(
+                children: [
+                  // User info header
+                  Container(
+                    padding: const EdgeInsets.all(24),
+                    color: colorScheme.primaryContainer.withValues(alpha: 0.3),
+                    child: Row(
+                      children: [
+                        CircleAvatar(
+                          radius: 32,
+                          backgroundColor: colorScheme.primary,
+                          child: user != null && user.photoUrl != null
+                              ? GestureDetector(
+                                  onTap: () => showProfilePhotoPreview(
+                                    context,
+                                    imageProvider: CachedNetworkImageProvider(
+                                      user.photoUrl!,
+                                    ),
+                                    heroTag: 'profile-photo-${user.id}',
                                   ),
+                                  child: Hero(
+                                    tag: 'profile-photo-${user.id}',
+                                    child: ClipOval(
+                                      child: CachedNetworkImage(
+                                        imageUrl: user.photoUrl!,
+                                        width: 64,
+                                        height: 64,
+                                        fit: BoxFit.cover,
+                                        errorWidget: (_, __, ___) =>
+                                            _buildAvatarText(
+                                              user.displayName ?? user.email,
+                                              colorScheme,
+                                            ),
+                                      ),
+                                    ),
+                                  ),
+                                )
+                              : _buildAvatarText(
+                                  user?.displayName ?? user?.email ?? '?',
+                                  colorScheme,
+                                ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                user?.displayName ?? l10n.user,
+                                style: textTheme.titleLarge?.copyWith(
+                                  fontWeight: FontWeight.bold,
                                 ),
                               ),
-                            )
-                          : _buildAvatarText(
-                              user?.displayName ?? user?.email ?? '?',
-                              colorScheme,
-                            ),
+                              const SizedBox(height: 4),
+                              Text(
+                                user?.email ?? '',
+                                style: textTheme.bodyMedium?.copyWith(
+                                  color: colorScheme.onSurfaceVariant,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            user?.displayName ?? l10n.user,
-                            style: textTheme.titleLarge?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            user?.email ?? '',
-                            style: textTheme.bodyMedium?.copyWith(
-                              color: colorScheme.onSurfaceVariant,
-                            ),
-                          ),
-                        ],
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  // Settings sections
+                  _buildSectionHeader(context, l10n.account),
+                  _buildListTile(
+                    context,
+                    icon: Icons.person_outline,
+                    title: l10n.profile,
+                    subtitle: l10n.editProfileInformation,
+                    onTap: () {
+                      context.push(RouteConstants.profile);
+                    },
+                  ),
+                  _buildListTile(
+                    context,
+                    icon: Icons.delete_outline,
+                    title: l10n.deleteAccount,
+                    subtitle: l10n.deleteAccountDescription,
+                    onTap: state.isLoading
+                        ? null
+                        : () => _showDeleteAccountDialog(context),
+                  ),
+
+                  // _buildListTile(
+                  //   context,
+                  //   icon: Icons.notifications_outlined,
+                  //   title: l10n.trackerEvents,
+                  //   subtitle: l10n.viewTrackerActivity,
+                  //   onTap: () {
+                  //     context.push(RouteConstants.alerts);
+                  //   },
+                  // ),
+                  const SizedBox(height: 16),
+
+                  _buildSectionHeader(context, l10n.security),
+                  _buildListTile(
+                    context,
+                    icon: Icons.lock_outline,
+                    title: l10n.securityPin,
+                    subtitle: l10n.securityPinSettingsDescription,
+                    onTap: () => context.push(RouteConstants.securityPin),
+                  ),
+                  _buildListTile(
+                    context,
+                    icon: Icons.notifications_outlined,
+                    title: l10n.manageAlerts,
+                    subtitle: l10n.manageAlertsDescription,
+                    onTap: () => context.push(RouteConstants.alertsSettings),
+                  ),
+                  _buildListTile(
+                    context,
+                    icon: Icons.fence_outlined,
+                    title: l10n.geofences,
+                    subtitle: l10n.manageGeofenceZones,
+                    onTap: () {
+                      context.push(RouteConstants.geofences);
+                    },
+                  ),
+                  // Email alerts will be enabled in a future release.
+                  // SwitchListTile(
+                  //   secondary: const Icon(Icons.email_outlined),
+                  //   title: Text(l10n.emailAlerts),
+                  //   subtitle: Text(l10n.emailAlertsDescription),
+                  //   value: user?.settings.emailNotificationsEnabled ?? false,
+                  //   onChanged: state.isLoading || user == null
+                  //       ? null
+                  //       : (enabled) => context.read<AuthBloc>().add(
+                  //           EmailNotificationPreferenceChanged(enabled),
+                  //         ),
+                  // ),
+                  const SizedBox(height: 16),
+
+                  _buildSectionHeader(context, l10n.app),
+                  _buildListTile(
+                    context,
+                    icon: Icons.language_outlined,
+                    title: l10n.language,
+                    subtitle: _languageName(
+                      context,
+                      sl<LocaleController>().locale,
+                    ),
+                    onTap: () => _showLanguagePicker(context),
+                  ),
+                  _buildListTile(
+                    context,
+                    icon: Icons.brightness_6_outlined,
+                    title: l10n.theme,
+                    subtitle: _themeName(
+                      context,
+                      sl<ThemeController>().themeMode,
+                    ),
+                    onTap: () => _showThemePicker(context),
+                  ),
+                  _buildListTile(
+                    context,
+                    icon: Icons.tips_and_updates_outlined,
+                    title: l10n.restartGuide,
+                    subtitle: l10n.restartGuideSubtitle,
+                    onTap: () async {
+                      final user = context.read<AuthBloc>().state.user;
+                      if (user == null) return;
+                      await sl<OnboardingController>().reset(user.id);
+                      if (context.mounted) {
+                        context.go(
+                          '${RouteConstants.onboarding}?userId=${user.id}',
+                        );
+                      }
+                    },
+                  ),
+                  _buildListTile(
+                    context,
+                    icon: Icons.info_outline,
+                    title: l10n.about,
+                    subtitle: 'Version 1.0.0',
+                    onTap: () {
+                      _showAboutDialog(context);
+                    },
+                  ),
+
+                  // _buildListTile(
+                  //   context,
+                  //   icon: Icons.help_outline,
+                  //   title: l10n.helpAndSupport,
+                  //   subtitle: l10n.getHelpWithApp,
+                  //   onTap: () {
+                  //     context.showSnackBar(l10n.helpComingSoon);
+                  //   },
+                  // ),
+                  const SizedBox(height: 32),
+
+                  // Sign out button
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: OutlinedButton.icon(
+                      onPressed: state.isLoading
+                          ? null
+                          : () => _showSignOutDialog(context),
+                      icon: state.isLoading
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Icon(Icons.logout),
+                      label: Text(l10n.signOut),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: colorScheme.error,
+                        side: BorderSide(color: colorScheme.error),
                       ),
                     ),
-                  ],
-                ),
-              ),
+                  ),
 
-              const SizedBox(height: 16),
-
-              // Settings sections
-              _buildSectionHeader(context, l10n.account),
-              _buildListTile(
-                context,
-                icon: Icons.person_outline,
-                title: l10n.profile,
-                subtitle: l10n.editProfileInformation,
-                onTap: () {
-                  context.push(RouteConstants.profile);
-                },
+                  const SizedBox(height: 32),
+                ],
               ),
-
-              // _buildListTile(
-              //   context,
-              //   icon: Icons.notifications_outlined,
-              //   title: l10n.trackerEvents,
-              //   subtitle: l10n.viewTrackerActivity,
-              //   onTap: () {
-              //     context.push(RouteConstants.alerts);
-              //   },
-              // ),
-              const SizedBox(height: 16),
-
-              _buildSectionHeader(context, l10n.security),
-              _buildListTile(
-                context,
-                icon: Icons.lock_outline,
-                title: l10n.securityPin,
-                subtitle: l10n.securityPinSettingsDescription,
-                onTap: () => context.push(RouteConstants.securityPin),
-              ),
-              _buildListTile(
-                context,
-                icon: Icons.notifications_outlined,
-                title: l10n.manageAlerts,
-                subtitle: l10n.manageAlertsDescription,
-                onTap: () => context.push(RouteConstants.alertsSettings),
-              ),
-              _buildListTile(
-                context,
-                icon: Icons.fence_outlined,
-                title: l10n.geofences,
-                subtitle: l10n.manageGeofenceZones,
-                onTap: () {
-                  context.push(RouteConstants.geofences);
-                },
-              ),
-              // Email alerts will be enabled in a future release.
-              // SwitchListTile(
-              //   secondary: const Icon(Icons.email_outlined),
-              //   title: Text(l10n.emailAlerts),
-              //   subtitle: Text(l10n.emailAlertsDescription),
-              //   value: user?.settings.emailNotificationsEnabled ?? false,
-              //   onChanged: state.isLoading || user == null
-              //       ? null
-              //       : (enabled) => context.read<AuthBloc>().add(
-              //           EmailNotificationPreferenceChanged(enabled),
-              //         ),
-              // ),
-              const SizedBox(height: 16),
-
-              _buildSectionHeader(context, l10n.app),
-              _buildListTile(
-                context,
-                icon: Icons.language_outlined,
-                title: l10n.language,
-                subtitle: _languageName(context, sl<LocaleController>().locale),
-                onTap: () => _showLanguagePicker(context),
-              ),
-              _buildListTile(
-                context,
-                icon: Icons.brightness_6_outlined,
-                title: l10n.theme,
-                subtitle: _themeName(context, sl<ThemeController>().themeMode),
-                onTap: () => _showThemePicker(context),
-              ),
-              _buildListTile(
-                context,
-                icon: Icons.tips_and_updates_outlined,
-                title: l10n.restartGuide,
-                subtitle: l10n.restartGuideSubtitle,
-                onTap: () async {
-                  final user = context.read<AuthBloc>().state.user;
-                  if (user == null) return;
-                  await sl<OnboardingController>().reset(user.id);
-                  if (context.mounted) {
-                    context.go(
-                      '${RouteConstants.onboarding}?userId=${user.id}',
-                    );
-                  }
-                },
-              ),
-              _buildListTile(
-                context,
-                icon: Icons.info_outline,
-                title: l10n.about,
-                subtitle: 'Version 1.0.0',
-                onTap: () {
-                  _showAboutDialog(context);
-                },
-              ),
-
-              // _buildListTile(
-              //   context,
-              //   icon: Icons.help_outline,
-              //   title: l10n.helpAndSupport,
-              //   subtitle: l10n.getHelpWithApp,
-              //   onTap: () {
-              //     context.showSnackBar(l10n.helpComingSoon);
-              //   },
-              // ),
-              const SizedBox(height: 32),
-
-              // Sign out button
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: OutlinedButton.icon(
-                  onPressed: state.isLoading
-                      ? null
-                      : () => _showSignOutDialog(context),
-                  icon: state.isLoading
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Icon(Icons.logout),
-                  label: Text(l10n.signOut),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: colorScheme.error,
-                    side: BorderSide(color: colorScheme.error),
+              if (state.accountDeletionInProgress)
+                Positioned.fill(
+                  child: Stack(
+                    children: [
+                      const ModalBarrier(
+                        dismissible: false,
+                        color: Color(0x66000000),
+                      ),
+                      Center(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const CircularProgressIndicator(),
+                            const SizedBox(height: 16),
+                            Text(
+                              l10n.deletingAccount,
+                              style: TextStyle(color: colorScheme.onPrimary),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-              ),
-
-              const SizedBox(height: 32),
             ],
           );
         },
@@ -311,6 +354,33 @@ class SettingsPage extends StatelessWidget {
               context.read<AuthBloc>().add(SignOutRequested());
             },
             child: Text(l10n.signOut),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showDeleteAccountDialog(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(l10n.deleteAccountConfirmationTitle),
+        content: Text(l10n.deleteAccountConfirmation),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: Text(l10n.cancel),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.error,
+            ),
+            onPressed: () {
+              Navigator.pop(dialogContext);
+              context.read<AuthBloc>().add(AccountDeletionRequested());
+            },
+            child: Text(l10n.deleteAccount),
           ),
         ],
       ),

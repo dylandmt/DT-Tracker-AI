@@ -7,6 +7,7 @@ import 'package:dt_tracker_ai/core/errors/failures.dart';
 import 'package:dt_tracker_ai/features/auth/domain/entities/user.dart';
 import 'package:dt_tracker_ai/features/auth/domain/usecases/auth_state_changes.dart';
 import 'package:dt_tracker_ai/features/auth/domain/usecases/delete_profile_image.dart';
+import 'package:dt_tracker_ai/features/auth/domain/usecases/delete_account.dart';
 import 'package:dt_tracker_ai/features/auth/domain/usecases/get_current_user.dart';
 import 'package:dt_tracker_ai/features/auth/domain/usecases/send_password_reset.dart';
 import 'package:dt_tracker_ai/features/auth/domain/usecases/sign_in_with_email.dart';
@@ -25,6 +26,8 @@ class MockSignInWithGoogle extends Mock implements SignInWithGoogle {}
 class MockSignUpWithEmail extends Mock implements SignUpWithEmail {}
 
 class MockSignOut extends Mock implements SignOut {}
+
+class MockDeleteAccount extends Mock implements DeleteAccount {}
 
 class MockGetCurrentUser extends Mock implements GetCurrentUser {}
 
@@ -80,6 +83,7 @@ void main() {
     signInWithGoogle: MockSignInWithGoogle(),
     signUpWithEmail: MockSignUpWithEmail(),
     signOut: MockSignOut(),
+    deleteAccount: MockDeleteAccount(),
     getCurrentUser: MockGetCurrentUser(),
     sendPasswordReset: MockSendPasswordReset(),
     authStateChanges: MockAuthStateChanges(),

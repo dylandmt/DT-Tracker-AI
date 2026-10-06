@@ -184,7 +184,20 @@ class AuthRepositoryImpl implements AuthRepository {
     try {
       await accountBackendDataSource.deleteAccount();
     } on ServerException catch (e) {
-      return Left(ServerFailure(message: e.message));
+      switch (e.statusCode) {
+        case 401:
+          return Left(AuthFailure(message: e.message, code: 'unauthorized'));
+        case 403:
+          return Left(ForbiddenFailure(message: e.message));
+        case 409:
+          return Left(ConflictFailure(message: e.message));
+        default:
+          return Left(
+            ServerFailure(message: e.message, statusCode: e.statusCode),
+          );
+      }
+    } on NetworkException catch (e) {
+      return Left(NetworkFailure(message: e.message));
     } on AuthException catch (e) {
       return Left(AuthFailure(message: e.message));
     } catch (e) {

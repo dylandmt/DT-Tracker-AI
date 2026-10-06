@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:async';
 import 'dart:io';
 
 import 'package:firebase_auth/firebase_auth.dart';
@@ -14,11 +15,14 @@ class AccountBackendDataSourceImpl implements AccountBackendDataSource {
   AccountBackendDataSourceImpl({
     required FirebaseAuth firebaseAuth,
     String? baseUrl,
+    Duration timeout = const Duration(seconds: 15),
   }) : _auth = firebaseAuth,
-       _baseUrl = baseUrl ?? EnvironmentConfig.apiBaseUrl;
+       _baseUrl = baseUrl ?? EnvironmentConfig.apiBaseUrl,
+       _timeout = timeout;
 
   final FirebaseAuth _auth;
   final String _baseUrl;
+  final Duration _timeout;
 
   @override
   Future<void> deleteAccount() async {
@@ -36,14 +40,19 @@ class AccountBackendDataSourceImpl implements AccountBackendDataSource {
 
     final client = HttpClient();
     try {
-      final request = await client.deleteUrl(Uri.parse('$_baseUrl/users/me'));
+      final request = await client
+          .deleteUrl(Uri.parse('$_baseUrl/users/me'))
+          .timeout(_timeout);
       request.headers.set(HttpHeaders.contentTypeHeader, 'application/json');
       request.headers.set(HttpHeaders.authorizationHeader, 'Bearer $token');
       request.add(utf8.encode(jsonEncode({'confirmation': 'DELETE'})));
 
-      final response = await request.close();
-      final body = await response.transform(utf8.decoder).join();
-      if (response.statusCode >= 200 && response.statusCode < 300) return;
+      final response = await request.close().timeout(_timeout);
+      final body = await response
+          .transform(utf8.decoder)
+          .join()
+          .timeout(_timeout);
+      if (response.statusCode == HttpStatus.noContent) return;
 
       String message = 'HTTP ${response.statusCode}';
       try {
@@ -60,6 +69,14 @@ class AccountBackendDataSourceImpl implements AccountBackendDataSource {
       rethrow;
     } on AuthException {
       rethrow;
+    } on TimeoutException {
+      throw const NetworkException(
+        message: 'Account deletion request timed out',
+      );
+    } on SocketException catch (error) {
+      throw NetworkException(message: 'Account deletion network error: $error');
+    } on HttpException catch (error) {
+      throw NetworkException(message: 'Account deletion network error: $error');
     } catch (error) {
       throw ServerException(message: 'Account deletion request failed: $error');
     } finally {

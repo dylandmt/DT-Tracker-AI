@@ -118,7 +118,29 @@ void main() {
     },
   );
 
-  test('wraps network errors in ServerException', () async {
+  test('rejects a successful status other than 204', () async {
+    when(() => auth.currentUser).thenReturn(user);
+    when(() => user.getIdToken(true)).thenAnswer((_) async => 'firebase-token');
+    final dataSource = await createDataSource();
+
+    server!.listen((request) async {
+      request.response.statusCode = HttpStatus.ok;
+      await request.response.close();
+    });
+
+    await expectLater(
+      dataSource.deleteAccount(),
+      throwsA(
+        isA<ServerException>().having(
+          (error) => error.statusCode,
+          'statusCode',
+          HttpStatus.ok,
+        ),
+      ),
+    );
+  });
+
+  test('wraps network errors in NetworkException', () async {
     when(() => auth.currentUser).thenReturn(user);
     when(() => user.getIdToken(true)).thenAnswer((_) async => 'firebase-token');
     final dataSource = AccountBackendDataSourceImpl(
@@ -128,7 +150,28 @@ void main() {
 
     await expectLater(
       dataSource.deleteAccount(),
-      throwsA(isA<ServerException>()),
+      throwsA(isA<NetworkException>()),
+    );
+  });
+
+  test('wraps request timeouts in NetworkException', () async {
+    when(() => auth.currentUser).thenReturn(user);
+    when(() => user.getIdToken(true)).thenAnswer((_) async => 'firebase-token');
+    await createDataSource();
+    server!.listen((request) async {
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+      await request.response.close();
+    });
+
+    final timedDataSource = AccountBackendDataSourceImpl(
+      firebaseAuth: auth,
+      baseUrl: 'http://${server!.address.address}:${server!.port}',
+      timeout: const Duration(milliseconds: 10),
+    );
+
+    await expectLater(
+      timedDataSource.deleteAccount(),
+      throwsA(isA<NetworkException>()),
     );
   });
 }

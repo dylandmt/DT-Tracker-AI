@@ -81,6 +81,38 @@ void main() {
     verifyNever(() => authRemote.signOut());
   });
 
+  test('maps backend deletion statuses to specific failures', () async {
+    final cases = <int, Failure>{
+      401: const AuthFailure(message: 'unauthorized', code: 'unauthorized'),
+      403: const ForbiddenFailure(message: 'forbidden'),
+      409: const ConflictFailure(message: 'in progress'),
+      500: const ServerFailure(message: 'server error', statusCode: 500),
+    };
+
+    for (final entry in cases.entries) {
+      when(() => backend.deleteAccount()).thenThrow(
+        ServerException(message: entry.value.message, statusCode: entry.key),
+      );
+      expect(
+        await repository.deleteAccount(),
+        Left<Failure, void>(entry.value),
+      );
+      verifyNever(() => authRemote.signOut());
+    }
+  });
+
+  test('maps connection failures to NetworkFailure', () async {
+    when(
+      () => backend.deleteAccount(),
+    ).thenThrow(const NetworkException(message: 'request timed out'));
+
+    expect(
+      await repository.deleteAccount(),
+      const Left<Failure, void>(NetworkFailure(message: 'request timed out')),
+    );
+    verifyNever(() => authRemote.signOut());
+  });
+
   test('backend success cleans local state and signs out', () async {
     final result = await repository.deleteAccount();
 

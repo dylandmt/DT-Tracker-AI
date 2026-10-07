@@ -3,6 +3,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+
 import 'config/environment/firebase_config.dart';
 import 'config/environment/environment.dart';
 import 'app.dart';
@@ -14,18 +15,27 @@ import 'injection_container.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
-  FirebaseAuth.instance.tenantId = EnvironmentConfig.firebaseAuthTenantId;
+
+  final configuredTenantId = EnvironmentConfig.firebaseAuthTenantId;
+
+  FirebaseAuth.instance.tenantId = configuredTenantId;
+
   final currentUser = FirebaseAuth.instance.currentUser;
-  if (EnvironmentConfig.isDev &&
+
+  if (configuredTenantId != null &&
       currentUser != null &&
-      currentUser.tenantId != EnvironmentConfig.firebaseAuthTenantId) {
+      currentUser.tenantId != configuredTenantId) {
     await FirebaseAuth.instance.signOut();
   }
+
   FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
+
   if (kDebugMode) {
     FirebaseConfig.logConfiguration();
   }
+
   await initializeDependencies();
+
   runApp(
     DTTrackerApp(
       localeController: sl<LocaleController>(),

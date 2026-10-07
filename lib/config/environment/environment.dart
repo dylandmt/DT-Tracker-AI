@@ -56,6 +56,7 @@ class EnvironmentConfig {
       case Environment.dev:
         return 'dt-tracker-dev-4q4r4';
       case Environment.staging:
+        return 'dt-tracker-staging-dik3f';
       case Environment.prod:
         return null;
     }

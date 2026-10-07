@@ -51,6 +51,11 @@ class FirebaseConfig {
     print('Firestore DB:     ${EnvironmentConfig.firestoreDatabase}');
     print('RTDB URL:         ${EnvironmentConfig.realtimeDatabaseUrl}');
     print('Storage Bucket:   ${EnvironmentConfig.storageUrl}');
+    // ignore: avoid_print
+    print(
+      'Auth Tenant:      '
+      '${EnvironmentConfig.firebaseAuthTenantId ?? 'project-level'}',
+    );
     print('═══════════════════════════════════════════════════════');
   }
 }

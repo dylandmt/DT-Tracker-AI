@@ -46,6 +46,21 @@ class EnvironmentConfig {
   /// Check if running in production
   static bool get isProd => current == Environment.prod;
 
+  /// Firebase Authentication tenant ID.
+  ///
+  /// DEV is isolated through Identity Platform multi-tenancy.
+  /// STAGING and PROD continue using project-level Authentication
+  /// until their tenant migrations are completed.
+  static String? get firebaseAuthTenantId {
+    switch (current) {
+      case Environment.dev:
+        return 'dt-tracker-dev-4q4r4';
+      case Environment.staging:
+      case Environment.prod:
+        return null;
+    }
+  }
+
   /// Environment display name (for UI banner/logging)
   static String get name {
     switch (current) {

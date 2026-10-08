@@ -7,8 +7,12 @@ void main() {
       case Environment.dev:
         expect(EnvironmentConfig.firebaseAuthTenantId, 'dt-tracker-dev-4q4r4');
       case Environment.staging:
+        expect(
+          EnvironmentConfig.firebaseAuthTenantId,
+          'dt-tracker-staging-dik3f',
+        );
       case Environment.prod:
-        expect(EnvironmentConfig.firebaseAuthTenantId, isNull);
+        expect(EnvironmentConfig.firebaseAuthTenantId, 'dt-tracker-prod-zo5r7');
     }
   });
 }

@@ -48,9 +48,7 @@ class EnvironmentConfig {
 
   /// Firebase Authentication tenant ID.
   ///
-  /// DEV is isolated through Identity Platform multi-tenancy.
-  /// STAGING and PROD continue using project-level Authentication
-  /// until their tenant migrations are completed.
+  /// DEV, STAGING and PROD are isolated through Identity Platform multi-tenancy.
   static String? get firebaseAuthTenantId {
     switch (current) {
       case Environment.dev:
@@ -58,7 +56,7 @@ class EnvironmentConfig {
       case Environment.staging:
         return 'dt-tracker-staging-dik3f';
       case Environment.prod:
-        return null;
+        return 'dt-tracker-prod-zo5r7';
     }
   }
 

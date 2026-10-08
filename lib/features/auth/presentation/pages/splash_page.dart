@@ -8,6 +8,7 @@ import '../../../../core/permissions/permission_handler.dart';
 import '../../../../core/permissions/permission_status.dart';
 import '../../../../core/notifications/notification_service.dart';
 import '../../../../core/onboarding/onboarding_controller.dart';
+import '../../../../core/security/tracker_security_service.dart';
 import '../../../../core/utils/extensions.dart';
 import '../../utils/permission_gate.dart';
 import '../../../../injection_container.dart';
@@ -41,6 +42,17 @@ class SplashPage extends StatelessWidget {
             hasNotifications: hasNotifications,
           );
           if (!context.mounted) return;
+
+          if (target == RouteConstants.home) {
+            final hasPin = await sl<TrackerSecurityService>().hasPin();
+            if (!context.mounted) return;
+
+            if (!hasPin) {
+              context.go(RouteConstants.setupSecurityPin);
+              return;
+            }
+          }
+
           context.go(target);
         } else if (state.isUnauthenticated) {
           context.go(RouteConstants.login);

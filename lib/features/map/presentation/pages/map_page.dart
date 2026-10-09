@@ -526,8 +526,8 @@ class _MapPageState extends State<MapPage> with WidgetsBindingObserver {
               BitmapDescriptor.hueViolet,
             ),
             infoWindow: InfoWindow(
-              title: location.vehicleName,
-              snippet: context.l10n.temporarySharedLocation,
+              title: location.ownerName,
+              snippet: location.vehicleName,
             ),
           ),
         )
@@ -1034,6 +1034,7 @@ class _StatusIndicator extends StatelessWidget {
 class _SharedVehicleLocation {
   const _SharedVehicleLocation({
     required this.ownerUid,
+    required this.ownerName,
     required this.vehicleId,
     required this.latitude,
     required this.longitude,
@@ -1041,6 +1042,7 @@ class _SharedVehicleLocation {
   });
 
   final String ownerUid;
+  final String ownerName;
   final String vehicleId;
   final double latitude;
   final double longitude;
@@ -1063,18 +1065,32 @@ class _SharedVehicleLocation {
     final ownerMap = owner is Map ? owner : const <dynamic, dynamic>{};
     final ownerUid =
         ownerMap['uid']?.toString() ?? share['ownerUid']?.toString() ?? '';
-    final ownerName =
-        ownerMap['username']?.toString() ??
-        (share['owner'] is Map
-            ? (share['owner'] as Map)['username']?.toString()
-            : null);
+    final nameParts =
+        [
+              ownerMap['firstName'],
+              ownerMap['lastName'],
+              ownerMap['secondLastName'],
+            ]
+            .map((value) => value?.toString().trim() ?? '')
+            .where((value) => value.isNotEmpty)
+            .toList();
+    final ownerName = nameParts.isNotEmpty
+        ? nameParts.join(' ')
+        : ownerMap['email']?.toString() ??
+              ownerMap['username']?.toString() ??
+              'Usuario';
 
     return _SharedVehicleLocation(
       ownerUid: ownerUid,
+      ownerName: ownerName,
       vehicleId: json['vehicleId']?.toString() ?? '',
       latitude: lat,
       longitude: lng,
-      vehicleName: ownerName?.isNotEmpty == true ? ownerName! : ownerUid,
+      vehicleName:
+          json['vehicleName']?.toString() ??
+          [json['vehicleBrand'], json['vehicleModel'], json['vehicleYear']]
+              .where((value) => value != null && value.toString().isNotEmpty)
+              .join(' '),
     );
   }
 

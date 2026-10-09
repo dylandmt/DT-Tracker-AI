@@ -90,85 +90,103 @@ class _ShareLocationPageState extends State<ShareLocationPage> {
       appBar: AppBar(title: Text(l10n.shareLocation)),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
-          : Stepper(
-              currentStep: _step,
-              onStepContinue: _saving ? null : _continue,
-              onStepCancel: _step == 0
-                  ? () => Navigator.pop(context)
-                  : () => setState(() => _step -= 1),
-              controlsBuilder: (context, details) => Row(
-                children: [
-                  FilledButton(
-                    onPressed: details.onStepContinue,
-                    child: Text(_step == 2 ? l10n.shareLocation : l10n.next),
+          : SafeArea(
+              child: Stepper(
+                physics: const AlwaysScrollableScrollPhysics(),
+                margin: const EdgeInsets.fromLTRB(8, 12, 8, 24),
+                currentStep: _step,
+                onStepContinue: _saving ? null : _continue,
+                onStepCancel: _step == 0
+                    ? () => Navigator.pop(context)
+                    : () => setState(() => _step -= 1),
+                controlsBuilder: (context, details) => Row(
+                  children: [
+                    FilledButton(
+                      onPressed: details.onStepContinue,
+                      child: Text(_step == 2 ? l10n.shareLocation : l10n.next),
+                    ),
+                    const SizedBox(width: 12),
+                    TextButton(
+                      onPressed: details.onStepCancel,
+                      child: Text(l10n.cancel),
+                    ),
+                  ],
+                ),
+                steps: [
+                  Step(
+                    title: Text(l10n.shareSelectFriendTitle),
+                    isActive: _step >= 0,
+                    content: _friends.isEmpty
+                        ? Text(l10n.shareNoFriends)
+                        : RadioGroup<Map<String, dynamic>>(
+                            groupValue: _friend,
+                            onChanged: (value) =>
+                                setState(() => _friend = value),
+                            child: Column(
+                              children: _friends
+                                  .map(_friendSelectionCard)
+                                  .toList(),
+                            ),
+                          ),
                   ),
-                  const SizedBox(width: 12),
-                  TextButton(
-                    onPressed: details.onStepCancel,
-                    child: Text(l10n.cancel),
+                  Step(
+                    title: Text(l10n.shareSelectVehiclesTitle),
+                    isActive: _step >= 1,
+                    content: _vehicles.isEmpty
+                        ? Text(l10n.shareNoLinkedVehicles)
+                        : Column(
+                            children: _vehicles.map((vehicle) {
+                              final vehicleId = vehicle['id'].toString();
+                              return CheckboxListTile(
+                                value: _vehicleIds.contains(vehicleId),
+                                title: Text(
+                                  vehicle['name']?.toString() ?? vehicleId,
+                                ),
+                                subtitle: Text(
+                                  vehicle['plateNumber']?.toString() ?? '',
+                                ),
+                                onChanged: (selected) => setState(() {
+                                  selected == true
+                                      ? _vehicleIds.add(vehicleId)
+                                      : _vehicleIds.remove(vehicleId);
+                                }),
+                              );
+                            }).toList(),
+                          ),
+                  ),
+                  Step(
+                    title: Text(l10n.shareSelectDurationTitle),
+                    isActive: _step >= 2,
+                    content: DropdownButtonFormField<String>(
+                      initialValue: _duration,
+                      decoration: InputDecoration(
+                        labelText: l10n.duration,
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 18,
+                        ),
+                      ),
+                      items:
+                          const [
+                                '15m',
+                                '30m',
+                                '1h',
+                                '4h',
+                                '8h',
+                                'until_revoked',
+                              ]
+                              .map(
+                                (value) => DropdownMenuItem(
+                                  value: value,
+                                  child: Text(_durationLabel(value)),
+                                ),
+                              )
+                              .toList(),
+                      onChanged: (value) => setState(() => _duration = value!),
+                    ),
                   ),
                 ],
               ),
-              steps: [
-                Step(
-                  title: Text(l10n.shareSelectFriendTitle),
-                  isActive: _step >= 0,
-                  content: _friends.isEmpty
-                      ? Text(l10n.shareNoFriends)
-                      : RadioGroup<Map<String, dynamic>>(
-                          groupValue: _friend,
-                          onChanged: (value) => setState(() => _friend = value),
-                          child: Column(
-                            children: _friends
-                                .map(_friendSelectionCard)
-                                .toList(),
-                          ),
-                        ),
-                ),
-                Step(
-                  title: Text(l10n.shareSelectVehiclesTitle),
-                  isActive: _step >= 1,
-                  content: _vehicles.isEmpty
-                      ? Text(l10n.shareNoLinkedVehicles)
-                      : Column(
-                          children: _vehicles.map((vehicle) {
-                            final vehicleId = vehicle['id'].toString();
-                            return CheckboxListTile(
-                              value: _vehicleIds.contains(vehicleId),
-                              title: Text(
-                                vehicle['name']?.toString() ?? vehicleId,
-                              ),
-                              subtitle: Text(
-                                vehicle['plateNumber']?.toString() ?? '',
-                              ),
-                              onChanged: (selected) => setState(() {
-                                selected == true
-                                    ? _vehicleIds.add(vehicleId)
-                                    : _vehicleIds.remove(vehicleId);
-                              }),
-                            );
-                          }).toList(),
-                        ),
-                ),
-                Step(
-                  title: Text(l10n.shareSelectDurationTitle),
-                  isActive: _step >= 2,
-                  content: DropdownButtonFormField<String>(
-                    initialValue: _duration,
-                    decoration: InputDecoration(labelText: l10n.duration),
-                    items:
-                        const ['15m', '30m', '1h', '4h', '8h', 'until_revoked']
-                            .map(
-                              (value) => DropdownMenuItem(
-                                value: value,
-                                child: Text(_durationLabel(value)),
-                              ),
-                            )
-                            .toList(),
-                    onChanged: (value) => setState(() => _duration = value!),
-                  ),
-                ),
-              ],
             ),
     );
   }

@@ -187,7 +187,8 @@ class _RelayControlCardState extends State<RelayControlCard> {
         ? _pendingDesiredState ?? desiredState
         : reportedState ?? desiredState;
     final isImmobilized = effectiveState == 'OFF';
-    final stateColor = isImmobilized ? Colors.red : Colors.green;
+    final stateColor = isImmobilized ? Colors.green : Colors.red;
+    final stateColorPowerIndicator = isImmobilized ? Colors.red : Colors.green;
     final actionLabel = isImmobilized
         ? context.l10n.activateVehicle
         : context.l10n.immobilizeVehicle;
@@ -201,7 +202,7 @@ class _RelayControlCardState extends State<RelayControlCard> {
           children: [
             Row(
               children: [
-                Icon(Icons.power_settings_new, color: stateColor),
+                Icon(Icons.power_settings_new, color: stateColorPowerIndicator),
                 const SizedBox(width: 8),
                 Text(
                   isImmobilized

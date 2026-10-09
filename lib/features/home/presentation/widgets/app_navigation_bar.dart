@@ -26,7 +26,7 @@ class AppNavigationBar extends StatelessWidget {
         NavigationDestination(
           icon: Icon(Icons.home_outlined),
           selectedIcon: Icon(Icons.home),
-          label: 'Inicio',
+          label: context.l10n.home,
         ),
         NavigationDestination(
           icon: Icon(Icons.map_outlined),

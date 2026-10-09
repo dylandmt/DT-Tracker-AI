@@ -77,7 +77,11 @@ class _HomeDashboardPageState extends State<HomeDashboardPage> {
             children: [
               BlocBuilder<AuthBloc, AuthState>(
                 builder: (_, state) => Text(
-                  'Hola, ${state.user?.firstName ?? state.user?.displayName ?? 'usuario'}',
+                  context.l10n.homeGreeting(
+                    state.user?.firstName ??
+                        state.user?.displayName ??
+                        context.l10n.guestUser,
+                  ),
                   style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
@@ -85,7 +89,7 @@ class _HomeDashboardPageState extends State<HomeDashboardPage> {
               ),
               const SizedBox(height: 4),
               Text(
-                'Tu mundo, mas seguro',
+                context.l10n.homeTagline,
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
@@ -106,7 +110,7 @@ class _HomeDashboardPageState extends State<HomeDashboardPage> {
                 _metrics(context),
                 const SizedBox(height: 24),
                 Text(
-                  'Acciones rapidas',
+                  context.l10n.quickActions,
                   style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
@@ -119,46 +123,46 @@ class _HomeDashboardPageState extends State<HomeDashboardPage> {
                     _action(
                       context,
                       Icons.gps_fixed,
-                      'En tiempo real',
+                      context.l10n.realTime,
                       () => context.go(RouteConstants.homeMap),
                     ),
                     _action(
                       context,
                       Icons.fence,
-                      'Geocercas',
+                      context.l10n.geofences,
                       () => context.push(RouteConstants.geofences),
                     ),
                     _action(
                       context,
                       Icons.notifications_active,
-                      'Alertas',
+                      context.l10n.alerts,
                       () => context.push(RouteConstants.alerts),
                     ),
                     _action(
                       context,
                       Icons.insights_outlined,
-                      'Estadisticas',
+                      context.l10n.statistics,
                       () => context.push(RouteConstants.statistics),
                     ),
                     if (_canShare)
                       _action(
                         context,
                         Icons.people,
-                        'Amigos',
+                        context.l10n.friends,
                         () => context.go(RouteConstants.homeFriends),
                       ),
                   ],
                 ),
                 const SizedBox(height: 28),
                 Text(
-                  'Planes DT Tracker',
+                  context.l10n.trackerPlans,
                   style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Elige la proteccion que necesita cada automovil.',
+                  context.l10n.planSelectionIntro,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
@@ -167,20 +171,20 @@ class _HomeDashboardPageState extends State<HomeDashboardPage> {
                 _plan(
                   context,
                   VehiclePlan.essential,
-                  'Essential',
-                  'Ubicacion en tiempo real, 7 dias de historial y 2 geocercas.',
+                  context.l10n.planEssential,
+                  context.l10n.planEssentialDescription,
                 ),
                 _plan(
                   context,
                   VehiclePlan.protect,
-                  'Protect',
-                  'Todo Essential, 30 dias, compartir ubicacion e inmovilizacion remota.',
+                  context.l10n.planProtect,
+                  context.l10n.planProtectDescription,
                 ),
                 _plan(
                   context,
                   VehiclePlan.total,
-                  'Total',
-                  'Todo Protect, 12 meses, geocercas ilimitadas y proteccion avanzada.',
+                  context.l10n.planTotal,
+                  context.l10n.planTotalDescription,
                 ),
               ],
             ],
@@ -197,11 +201,11 @@ class _HomeDashboardPageState extends State<HomeDashboardPage> {
         children: [
           const Icon(Icons.directions_car_outlined, size: 56),
           const SizedBox(height: 12),
-          const Text('Agrega un automovil para comenzar.'),
+          Text(context.l10n.addFirstVehicle),
           const SizedBox(height: 12),
           FilledButton(
             onPressed: () => context.push(RouteConstants.vehicleAdd),
-            child: const Text('Agregar automovil'),
+            child: Text(context.l10n.addVehicle),
           ),
         ],
       ),
@@ -282,7 +286,9 @@ class _HomeDashboardPageState extends State<HomeDashboardPage> {
                   size: 14,
                 ),
                 label: Text(
-                  location?.isOnline == true ? 'En linea' : 'Sin conexion',
+                  location?.isOnline == true
+                      ? context.l10n.online
+                      : context.l10n.offline,
                 ),
               ),
             ),
@@ -297,20 +303,20 @@ class _HomeDashboardPageState extends State<HomeDashboardPage> {
       _metric(
         context,
         Icons.schedule,
-        _location?.lastUpdate.localizedTimeAgo(context) ?? 'Sin datos',
-        'Actualizado',
+        _location?.lastUpdate.localizedTimeAgo(context) ?? context.l10n.noData,
+        context.l10n.updated,
       ),
       _metric(
         context,
         Icons.speed,
         _location == null ? '-' : _location!.formattedSpeed,
-        'Velocidad',
+        context.l10n.speed,
       ),
       _metric(
         context,
         Icons.battery_full,
         _location == null ? '-' : '${_location!.battery}%',
-        'Bateria',
+        context.l10n.battery,
       ),
     ],
   );
@@ -382,20 +388,20 @@ class _HomeDashboardPageState extends State<HomeDashboardPage> {
         ? Icons.shield
         : Icons.workspace_premium;
     final details = switch (plan) {
-      VehiclePlan.essential => const [
-        'Ubicacion GPS en tiempo real',
-        'Estado del vehiculo y del tracker',
-        '7 dias de historial y 2 geocercas',
+      VehiclePlan.essential => [
+        context.l10n.planEssentialFeatureLocation,
+        context.l10n.planEssentialFeatureStatus,
+        context.l10n.planEssentialFeatureHistory,
       ],
-      VehiclePlan.protect => const [
-        'Todo lo incluido en Essential',
-        '30 dias de historial y 10 geocercas',
-        'Compartir ubicacion e inmovilizacion remota',
+      VehiclePlan.protect => [
+        context.l10n.planProtectFeatureIncluded,
+        context.l10n.planProtectFeatureHistory,
+        context.l10n.planProtectFeatureSharing,
       ],
-      VehiclePlan.total => const [
-        'Todo lo incluido en Protect',
-        '12 meses de historial y geocercas ilimitadas',
-        'Modo robo, seguimiento intensivo y usuarios autorizados',
+      VehiclePlan.total => [
+        context.l10n.planTotalFeatureIncluded,
+        context.l10n.planTotalFeatureHistory,
+        context.l10n.planTotalFeatureProtection,
       ],
     };
 

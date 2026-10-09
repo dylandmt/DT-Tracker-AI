@@ -526,7 +526,9 @@ class _MapPageState extends State<MapPage> with WidgetsBindingObserver {
               BitmapDescriptor.hueViolet,
             ),
             infoWindow: InfoWindow(
-              title: location.ownerName,
+              title: location.ownerName.isEmpty
+                  ? context.l10n.user
+                  : location.ownerName,
               snippet: location.vehicleName,
             ),
           ),
@@ -1078,7 +1080,7 @@ class _SharedVehicleLocation {
         ? nameParts.join(' ')
         : ownerMap['email']?.toString() ??
               ownerMap['username']?.toString() ??
-              'Usuario';
+              '';
 
     return _SharedVehicleLocation(
       ownerUid: ownerUid,

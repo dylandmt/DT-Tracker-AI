@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
 import '../../domain/entities/vehicle.dart';
+import '../../../../core/utils/extensions.dart';
 
 /// Card widget for displaying a vehicle in a grid
 class VehicleCard extends StatelessWidget {
@@ -41,7 +42,7 @@ class VehicleCard extends StatelessWidget {
                   Positioned(
                     top: 8,
                     right: 8,
-                    child: _buildTrackerIndicator(colorScheme),
+                    child: _buildTrackerIndicator(context, colorScheme),
                   ),
                 ],
               ),
@@ -126,7 +127,7 @@ class VehicleCard extends StatelessWidget {
     );
   }
 
-  Widget _buildTrackerIndicator(ColorScheme colorScheme) {
+  Widget _buildTrackerIndicator(BuildContext context, ColorScheme colorScheme) {
     if (!vehicle.hasTracker) {
       return Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -140,7 +141,7 @@ class VehicleCard extends StatelessWidget {
             Icon(Icons.link_off, size: 12, color: colorScheme.onErrorContainer),
             const SizedBox(width: 4),
             Text(
-              'No GPS',
+              context.l10n.noGps,
               style: TextStyle(
                 fontSize: 10,
                 fontWeight: FontWeight.w500,
@@ -168,7 +169,7 @@ class VehicleCard extends StatelessWidget {
           ),
           const SizedBox(width: 4),
           Text(
-            'GPS',
+            context.l10n.gps,
             style: TextStyle(
               fontSize: 10,
               fontWeight: FontWeight.w500,

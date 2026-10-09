@@ -1451,4 +1451,101 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get temporarySharedLocation => 'Temporarily shared location';
+
+  @override
+  String get home => 'Home';
+
+  @override
+  String get guestUser => 'there';
+
+  @override
+  String homeGreeting(String name) {
+    return 'Hello, $name';
+  }
+
+  @override
+  String get homeTagline => 'Your world, more secure';
+
+  @override
+  String get quickActions => 'Quick actions';
+
+  @override
+  String get realTime => 'Real time';
+
+  @override
+  String get alerts => 'Alerts';
+
+  @override
+  String get trackerPlans => 'DT Tracker plans';
+
+  @override
+  String get planSelectionIntro => 'Choose the protection each vehicle needs.';
+
+  @override
+  String get planEssentialDescription =>
+      'Real-time location, 7 days of history, and 2 geofences.';
+
+  @override
+  String get planProtectDescription =>
+      'Everything in Essential, 30 days, location sharing, and remote immobilization.';
+
+  @override
+  String get planTotalDescription =>
+      'Everything in Protect, 12 months, unlimited geofences, and advanced protection.';
+
+  @override
+  String get planEssentialFeatureLocation => 'Real-time GPS location';
+
+  @override
+  String get planEssentialFeatureStatus => 'Vehicle and tracker status';
+
+  @override
+  String get planEssentialFeatureHistory => '7 days of history and 2 geofences';
+
+  @override
+  String get planProtectFeatureIncluded => 'Everything included in Essential';
+
+  @override
+  String get planProtectFeatureHistory => '30 days of history and 10 geofences';
+
+  @override
+  String get planProtectFeatureSharing =>
+      'Location sharing and remote immobilization';
+
+  @override
+  String get planTotalFeatureIncluded => 'Everything included in Protect';
+
+  @override
+  String get planTotalFeatureHistory =>
+      '12 months of history and unlimited geofences';
+
+  @override
+  String get planTotalFeatureProtection =>
+      'Theft mode, intensive tracking, and authorized users';
+
+  @override
+  String get noData => 'No data';
+
+  @override
+  String get invalidYear => 'Enter a valid year';
+
+  @override
+  String get noGps => 'No GPS';
+
+  @override
+  String get gps => 'GPS';
+
+  @override
+  String get or => 'OR';
+
+  @override
+  String get continueWithGoogle => 'Continue with Google';
+
+  @override
+  String get closePreview => 'Close preview';
+
+  @override
+  String playbackProgress(int position, int total) {
+    return '$position / $total';
+  }
 }

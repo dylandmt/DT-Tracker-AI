@@ -150,9 +150,9 @@ class VehicleFormFields extends StatelessWidget {
       validator: (value) {
         if (value == null || value.isEmpty) return null;
         final year = int.tryParse(value);
-        if (year == null) return 'Invalid year';
+        if (year == null) return context.l10n.invalidYear;
         if (year < 1900 || year > DateTime.now().year + 1) {
-          return 'Invalid year';
+          return context.l10n.invalidYear;
         }
         return null;
       },

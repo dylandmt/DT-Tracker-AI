@@ -380,7 +380,11 @@ class _GeofenceFormPageState extends State<GeofenceFormPage> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(context.l10n.radiusMeters),
-                  Text('${_radiusMeters.toStringAsFixed(0)} m'),
+                  Text(
+                    context.l10n.distanceMeters(
+                      _radiusMeters.toStringAsFixed(0),
+                    ),
+                  ),
                 ],
               ),
               Slider(
@@ -388,7 +392,9 @@ class _GeofenceFormPageState extends State<GeofenceFormPage> {
                 max: AppConstants.maxGeofenceRadiusMeters,
                 divisions: 99,
                 value: _radiusMeters,
-                label: '${_radiusMeters.toStringAsFixed(0)} m',
+                label: context.l10n.distanceMeters(
+                  _radiusMeters.toStringAsFixed(0),
+                ),
                 onChanged: (radius) => setState(() => _radiusMeters = radius),
               ),
               Text(context.l10n.tapMapToSetCenter),

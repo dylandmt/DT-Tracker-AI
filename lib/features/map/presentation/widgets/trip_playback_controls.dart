@@ -73,7 +73,9 @@ class TripPlaybackControls extends StatelessWidget {
                   ],
                   child: Padding(
                     padding: const EdgeInsets.all(8),
-                    child: Text('${speed.toStringAsFixed(0)}x'),
+                    child: Text(
+                      context.l10n.speedMultiplier(speed.toStringAsFixed(0)),
+                    ),
                   ),
                 ),
                 IconButton(
@@ -104,7 +106,7 @@ class TripPlaybackControls extends StatelessWidget {
                   icon: const Icon(Icons.restart_alt),
                 ),
                 const SizedBox(width: 8),
-                Text('$position / ${pointCount - 1}'),
+                Text(context.l10n.playbackProgress(position, pointCount - 1)),
                 const Spacer(),
                 Icon(Icons.speed, size: 18, color: colorScheme.primary),
                 const SizedBox(width: 4),

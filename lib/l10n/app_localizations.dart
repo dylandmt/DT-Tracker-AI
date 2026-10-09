@@ -2683,6 +2683,180 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Temporarily shared location'**
   String get temporarySharedLocation;
+
+  /// No description provided for @home.
+  ///
+  /// In en, this message translates to:
+  /// **'Home'**
+  String get home;
+
+  /// No description provided for @guestUser.
+  ///
+  /// In en, this message translates to:
+  /// **'there'**
+  String get guestUser;
+
+  /// No description provided for @homeGreeting.
+  ///
+  /// In en, this message translates to:
+  /// **'Hello, {name}'**
+  String homeGreeting(String name);
+
+  /// No description provided for @homeTagline.
+  ///
+  /// In en, this message translates to:
+  /// **'Your world, more secure'**
+  String get homeTagline;
+
+  /// No description provided for @quickActions.
+  ///
+  /// In en, this message translates to:
+  /// **'Quick actions'**
+  String get quickActions;
+
+  /// No description provided for @realTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Real time'**
+  String get realTime;
+
+  /// No description provided for @alerts.
+  ///
+  /// In en, this message translates to:
+  /// **'Alerts'**
+  String get alerts;
+
+  /// No description provided for @trackerPlans.
+  ///
+  /// In en, this message translates to:
+  /// **'DT Tracker plans'**
+  String get trackerPlans;
+
+  /// No description provided for @planSelectionIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose the protection each vehicle needs.'**
+  String get planSelectionIntro;
+
+  /// No description provided for @planEssentialDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Real-time location, 7 days of history, and 2 geofences.'**
+  String get planEssentialDescription;
+
+  /// No description provided for @planProtectDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Everything in Essential, 30 days, location sharing, and remote immobilization.'**
+  String get planProtectDescription;
+
+  /// No description provided for @planTotalDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Everything in Protect, 12 months, unlimited geofences, and advanced protection.'**
+  String get planTotalDescription;
+
+  /// No description provided for @planEssentialFeatureLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Real-time GPS location'**
+  String get planEssentialFeatureLocation;
+
+  /// No description provided for @planEssentialFeatureStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Vehicle and tracker status'**
+  String get planEssentialFeatureStatus;
+
+  /// No description provided for @planEssentialFeatureHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'7 days of history and 2 geofences'**
+  String get planEssentialFeatureHistory;
+
+  /// No description provided for @planProtectFeatureIncluded.
+  ///
+  /// In en, this message translates to:
+  /// **'Everything included in Essential'**
+  String get planProtectFeatureIncluded;
+
+  /// No description provided for @planProtectFeatureHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'30 days of history and 10 geofences'**
+  String get planProtectFeatureHistory;
+
+  /// No description provided for @planProtectFeatureSharing.
+  ///
+  /// In en, this message translates to:
+  /// **'Location sharing and remote immobilization'**
+  String get planProtectFeatureSharing;
+
+  /// No description provided for @planTotalFeatureIncluded.
+  ///
+  /// In en, this message translates to:
+  /// **'Everything included in Protect'**
+  String get planTotalFeatureIncluded;
+
+  /// No description provided for @planTotalFeatureHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'12 months of history and unlimited geofences'**
+  String get planTotalFeatureHistory;
+
+  /// No description provided for @planTotalFeatureProtection.
+  ///
+  /// In en, this message translates to:
+  /// **'Theft mode, intensive tracking, and authorized users'**
+  String get planTotalFeatureProtection;
+
+  /// No description provided for @noData.
+  ///
+  /// In en, this message translates to:
+  /// **'No data'**
+  String get noData;
+
+  /// No description provided for @invalidYear.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid year'**
+  String get invalidYear;
+
+  /// No description provided for @noGps.
+  ///
+  /// In en, this message translates to:
+  /// **'No GPS'**
+  String get noGps;
+
+  /// No description provided for @gps.
+  ///
+  /// In en, this message translates to:
+  /// **'GPS'**
+  String get gps;
+
+  /// No description provided for @or.
+  ///
+  /// In en, this message translates to:
+  /// **'OR'**
+  String get or;
+
+  /// No description provided for @continueWithGoogle.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue with Google'**
+  String get continueWithGoogle;
+
+  /// No description provided for @closePreview.
+  ///
+  /// In en, this message translates to:
+  /// **'Close preview'**
+  String get closePreview;
+
+  /// No description provided for @playbackProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'{position} / {total}'**
+  String playbackProgress(int position, int total);
 }
 
 class _AppLocalizationsDelegate

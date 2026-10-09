@@ -1471,4 +1471,103 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get temporarySharedLocation => 'Ubicacion compartida temporalmente';
+
+  @override
+  String get home => 'Inicio';
+
+  @override
+  String get guestUser => 'usuario';
+
+  @override
+  String homeGreeting(String name) {
+    return 'Hola, $name';
+  }
+
+  @override
+  String get homeTagline => 'Tu mundo, mas seguro';
+
+  @override
+  String get quickActions => 'Acciones rapidas';
+
+  @override
+  String get realTime => 'En tiempo real';
+
+  @override
+  String get alerts => 'Alertas';
+
+  @override
+  String get trackerPlans => 'Planes DT Tracker';
+
+  @override
+  String get planSelectionIntro =>
+      'Elige la proteccion que necesita cada vehiculo.';
+
+  @override
+  String get planEssentialDescription =>
+      'Ubicacion en tiempo real, 7 dias de historial y 2 geocercas.';
+
+  @override
+  String get planProtectDescription =>
+      'Todo Essential, 30 dias, compartir ubicacion e inmovilizacion remota.';
+
+  @override
+  String get planTotalDescription =>
+      'Todo Protect, 12 meses, geocercas ilimitadas y proteccion avanzada.';
+
+  @override
+  String get planEssentialFeatureLocation => 'Ubicacion GPS en tiempo real';
+
+  @override
+  String get planEssentialFeatureStatus =>
+      'Estado del vehiculo y del rastreador';
+
+  @override
+  String get planEssentialFeatureHistory => '7 dias de historial y 2 geocercas';
+
+  @override
+  String get planProtectFeatureIncluded => 'Todo lo incluido en Essential';
+
+  @override
+  String get planProtectFeatureHistory => '30 dias de historial y 10 geocercas';
+
+  @override
+  String get planProtectFeatureSharing =>
+      'Compartir ubicacion e inmovilizacion remota';
+
+  @override
+  String get planTotalFeatureIncluded => 'Todo lo incluido en Protect';
+
+  @override
+  String get planTotalFeatureHistory =>
+      '12 meses de historial y geocercas ilimitadas';
+
+  @override
+  String get planTotalFeatureProtection =>
+      'Modo robo, seguimiento intensivo y usuarios autorizados';
+
+  @override
+  String get noData => 'Sin datos';
+
+  @override
+  String get invalidYear => 'Ingresa un ano valido';
+
+  @override
+  String get noGps => 'Sin GPS';
+
+  @override
+  String get gps => 'GPS';
+
+  @override
+  String get or => 'O';
+
+  @override
+  String get continueWithGoogle => 'Continuar con Google';
+
+  @override
+  String get closePreview => 'Cerrar vista previa';
+
+  @override
+  String playbackProgress(int position, int total) {
+    return '$position / $total';
+  }
 }

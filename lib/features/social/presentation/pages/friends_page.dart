@@ -52,13 +52,13 @@ class _FriendsPageState extends State<FriendsPage> {
     });
     try {
       final values = await Future.wait([
-        _social.friends(),
-        _social.incomingRequests(),
-        _social.outgoingRequests(),
-        _social.blocks(),
-        _social.incomingLocationShares(),
-        _social.outgoingLocationShares(),
-        _social.vehicles(),
+        _safeList(_social.friends),
+        _safeList(_social.incomingRequests),
+        _safeList(_social.outgoingRequests),
+        _safeList(_social.blocks),
+        _safeList(_social.incomingLocationShares),
+        _safeList(_social.outgoingLocationShares),
+        _safeList(_social.vehicles),
       ]);
       if (!mounted) return;
       setState(() {
@@ -79,6 +79,16 @@ class _FriendsPageState extends State<FriendsPage> {
       if (mounted) setState(() => _error = _message(error));
     } finally {
       if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> _safeList(
+    Future<List<Map<String, dynamic>>> Function() request,
+  ) async {
+    try {
+      return await request();
+    } catch (_) {
+      return const [];
     }
   }
 

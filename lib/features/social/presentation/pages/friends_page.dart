@@ -29,6 +29,7 @@ class _FriendsPageState extends State<FriendsPage> {
   bool _loading = true;
   bool _working = false;
   bool _canUseFriends = false;
+  bool _canShareLocation = false;
   String? _error;
 
   @override
@@ -67,7 +68,12 @@ class _FriendsPageState extends State<FriendsPage> {
         _blocks = values[3];
         _incomingShares = values[4];
         _outgoingShares = values[5];
-        _canUseFriends = values[6].isNotEmpty;
+        final vehicles = values[6];
+        _canUseFriends = vehicles.isNotEmpty;
+        _canShareLocation = vehicles.any((vehicle) {
+          final plan = vehicle['plan'] ?? vehicle['entitlement']?['tier'];
+          return plan == 'protect' || plan == 'total';
+        });
       });
     } catch (error) {
       if (mounted) setState(() => _error = _message(error));
@@ -317,13 +323,13 @@ class _FriendsPageState extends State<FriendsPage> {
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _loading || _working || !_canUseFriends
-            ? null
-            : _startShareFlow,
-        icon: const Icon(Icons.share_location_outlined),
-        label: Text(context.l10n.shareLocation),
-      ),
+      floatingActionButton: _canShareLocation
+          ? FloatingActionButton.extended(
+              onPressed: _loading || _working ? null : _startShareFlow,
+              icon: const Icon(Icons.share_location_outlined),
+              label: Text(context.l10n.shareLocation),
+            )
+          : null,
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : TabBarView(

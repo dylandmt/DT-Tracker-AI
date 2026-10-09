@@ -22,6 +22,7 @@ import 'package:dt_tracker_ai/features/auth/domain/usecases/update_user_settings
 import 'package:dt_tracker_ai/features/auth/domain/usecases/upload_profile_image.dart';
 import 'package:dt_tracker_ai/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:dt_tracker_ai/features/settings/presentation/pages/settings_page.dart';
+import 'package:dt_tracker_ai/features/settings/presentation/pages/delete_account_page.dart';
 import 'package:dt_tracker_ai/injection_container.dart';
 import 'package:dt_tracker_ai/l10n/app_localizations.dart';
 
@@ -109,6 +110,13 @@ void main() {
       initialLocation: '/settings',
       routes: [
         GoRoute(
+          path: '/home/settings/delete-account',
+          builder: (_, _) => BlocProvider<AuthBloc>.value(
+            value: bloc,
+            child: const DeleteAccountPage(),
+          ),
+        ),
+        GoRoute(
           path: '/settings',
           builder: (_, _) => BlocProvider<AuthBloc>.value(
             value: bloc,
@@ -145,20 +153,28 @@ void main() {
     expect(deleteAccountTile(), findsOneWidget);
   });
 
-  testWidgets('opens confirmation and cancel does not send an event', (
-    tester,
-  ) async {
-    await pumpSettings(tester, AuthState.authenticated(user));
+  testWidgets(
+    'opens the dedicated deletion page and cancel does not send an event',
+    (tester) async {
+      await pumpSettings(tester, AuthState.authenticated(user));
 
-    await tester.tap(deleteAccountTile());
-    await tester.pumpAndSettle();
-    expect(find.text('Delete account?'), findsOneWidget);
+      await tester.tap(deleteAccountTile());
+      await tester.pumpAndSettle();
+      expect(
+        find.text('What happens when you delete your account?'),
+        findsOneWidget,
+      );
 
-    await tester.tap(find.text('Cancel'));
-    await tester.pumpAndSettle();
-    expect(find.text('Delete account?'), findsNothing);
-    expect(bloc.events, isEmpty);
-  });
+      await tester.tap(find.widgetWithText(FilledButton, 'Delete account'));
+      await tester.pumpAndSettle();
+      expect(find.text('Delete account?'), findsOneWidget);
+
+      await tester.tap(find.text('Cancel'));
+      await tester.pumpAndSettle();
+      expect(find.text('Delete account?'), findsNothing);
+      expect(bloc.events, isEmpty);
+    },
+  );
 
   testWidgets('confirming deletion sends exactly one account deletion event', (
     tester,
@@ -168,6 +184,8 @@ void main() {
     await tester.tap(deleteAccountTile());
     await tester.pumpAndSettle();
     await tester.tap(find.widgetWithText(FilledButton, 'Delete account'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(FilledButton, 'Delete account').last);
     await tester.pumpAndSettle();
 
     expect(bloc.events, hasLength(1));
@@ -188,28 +206,47 @@ void main() {
     expect(bloc.events, isEmpty);
   });
 
-  testWidgets('blocks all settings interaction during account deletion', (
+  testWidgets('shows account deletion progress on the dedicated page', (
     tester,
   ) async {
-    await pumpSettings(
-      tester,
+    final router = GoRouter(
+      initialLocation: '/home/settings/delete-account',
+      routes: [
+        GoRoute(
+          path: '/home/settings/delete-account',
+          builder: (_, _) => BlocProvider<AuthBloc>.value(
+            value: bloc,
+            child: const DeleteAccountPage(),
+          ),
+        ),
+      ],
+    );
+    bloc.emitState(
       AuthState(
         status: AuthStatus.loading,
         user: user,
         accountDeletionInProgress: true,
       ),
     );
-
-    expect(find.byType(ModalBarrier), findsAtLeastNWidgets(1));
-    expect(find.byType(CircularProgressIndicator), findsOneWidget);
-    expect(find.text('Deleting account...'), findsOneWidget);
-
-    await tester.tap(
-      find.widgetWithText(ListTile, 'Profile'),
-      warnIfMissed: false,
+    await tester.pumpWidget(
+      MaterialApp.router(
+        routerConfig: router,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+      ),
     );
     await tester.pump();
-    expect(bloc.events, isEmpty);
+
+    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    expect(find.text('Deleting account...'), findsOneWidget);
+    expect(
+      tester
+          .widget<FilledButton>(
+            find.widgetWithText(FilledButton, 'Delete account'),
+          )
+          .onPressed,
+      isNull,
+    );
   });
 
   testWidgets('error preserves settings and user without navigating to login', (

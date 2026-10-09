@@ -126,7 +126,7 @@ class SettingsPage extends StatelessWidget {
                     subtitle: l10n.deleteAccountDescription,
                     onTap: state.isLoading
                         ? null
-                        : () => _showDeleteAccountDialog(context),
+                        : () => context.push(RouteConstants.deleteAccount),
                   ),
 
                   // _buildListTile(
@@ -261,30 +261,6 @@ class SettingsPage extends StatelessWidget {
                   const SizedBox(height: 32),
                 ],
               ),
-              if (state.accountDeletionInProgress)
-                Positioned.fill(
-                  child: Stack(
-                    children: [
-                      const ModalBarrier(
-                        dismissible: false,
-                        color: Color(0x66000000),
-                      ),
-                      Center(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const CircularProgressIndicator(),
-                            const SizedBox(height: 16),
-                            Text(
-                              l10n.deletingAccount,
-                              style: TextStyle(color: colorScheme.onPrimary),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
             ],
           );
         },
@@ -354,33 +330,6 @@ class SettingsPage extends StatelessWidget {
               context.read<AuthBloc>().add(SignOutRequested());
             },
             child: Text(l10n.signOut),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showDeleteAccountDialog(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    showDialog(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(l10n.deleteAccountConfirmationTitle),
-        content: Text(l10n.deleteAccountConfirmation),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: Text(l10n.cancel),
-          ),
-          FilledButton(
-            style: FilledButton.styleFrom(
-              backgroundColor: Theme.of(context).colorScheme.error,
-            ),
-            onPressed: () {
-              Navigator.pop(dialogContext);
-              context.read<AuthBloc>().add(AccountDeletionRequested());
-            },
-            child: Text(l10n.deleteAccount),
           ),
         ],
       ),

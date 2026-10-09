@@ -287,7 +287,7 @@ abstract class AppLocalizations {
   /// No description provided for @deleteAccountDescription.
   ///
   /// In en, this message translates to:
-  /// **'Permanently delete your account and associated data'**
+  /// **'Review the permanent consequences before deleting'**
   String get deleteAccountDescription;
 
   /// No description provided for @deleteAccountConfirmationTitle.
@@ -299,8 +299,134 @@ abstract class AppLocalizations {
   /// No description provided for @deleteAccountConfirmation.
   ///
   /// In en, this message translates to:
-  /// **'This action is permanent and cannot be undone.'**
+  /// **'This action is permanent and cannot be undone. Your DT Tracker account will be removed.'**
   String get deleteAccountConfirmation;
+
+  /// No description provided for @deleteAccountIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Deleting your DT Tracker account is permanent. Please review what will happen before continuing.'**
+  String get deleteAccountIntro;
+
+  /// No description provided for @deleteAccountConsequencesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'What happens when you delete your account?'**
+  String get deleteAccountConsequencesTitle;
+
+  /// No description provided for @deleteAccountAccessConsequence.
+  ///
+  /// In en, this message translates to:
+  /// **'Your account will no longer be accessible and you will lose access to DT Tracker with it.'**
+  String get deleteAccountAccessConsequence;
+
+  /// No description provided for @deleteAccountServerConsequence.
+  ///
+  /// In en, this message translates to:
+  /// **'The server will permanently process the deletion of your account.'**
+  String get deleteAccountServerConsequence;
+
+  /// No description provided for @deleteAccountIrreversibleConsequence.
+  ///
+  /// In en, this message translates to:
+  /// **'This action cannot be undone.'**
+  String get deleteAccountIrreversibleConsequence;
+
+  /// No description provided for @statistics.
+  ///
+  /// In en, this message translates to:
+  /// **'Statistics'**
+  String get statistics;
+
+  /// No description provided for @vehicle.
+  ///
+  /// In en, this message translates to:
+  /// **'Vehicle'**
+  String get vehicle;
+
+  /// No description provided for @statisticsLoadError.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to load statistics.'**
+  String get statisticsLoadError;
+
+  /// No description provided for @vehicleWithoutTrackerStatistics.
+  ///
+  /// In en, this message translates to:
+  /// **'This vehicle does not have a linked tracker.'**
+  String get vehicleWithoutTrackerStatistics;
+
+  /// No description provided for @addVehicleForStatistics.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a vehicle to view statistics.'**
+  String get addVehicleForStatistics;
+
+  /// No description provided for @kmDriven.
+  ///
+  /// In en, this message translates to:
+  /// **'KM DRIVEN'**
+  String get kmDriven;
+
+  /// No description provided for @totalDistance.
+  ///
+  /// In en, this message translates to:
+  /// **'Total distance'**
+  String get totalDistance;
+
+  /// No description provided for @dailyAverage.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily average'**
+  String get dailyAverage;
+
+  /// No description provided for @averageSpeed.
+  ///
+  /// In en, this message translates to:
+  /// **'Average speed'**
+  String get averageSpeed;
+
+  /// No description provided for @maximumSpeed.
+  ///
+  /// In en, this message translates to:
+  /// **'Maximum speed'**
+  String get maximumSpeed;
+
+  /// No description provided for @movingTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Moving time'**
+  String get movingTime;
+
+  /// No description provided for @retry.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get retry;
+
+  /// No description provided for @selectUpToSevenDays.
+  ///
+  /// In en, this message translates to:
+  /// **'Select up to 7 days'**
+  String get selectUpToSevenDays;
+
+  /// No description provided for @statisticsRangeMaximum.
+  ///
+  /// In en, this message translates to:
+  /// **'The maximum range is 7 days.'**
+  String get statisticsRangeMaximum;
+
+  /// No description provided for @speedDuringDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Speed during the day'**
+  String get speedDuringDay;
+
+  /// No description provided for @noSpeedRecords.
+  ///
+  /// In en, this message translates to:
+  /// **'No speed records.'**
+  String get noSpeedRecords;
 
   /// No description provided for @deletingAccount.
   ///
@@ -1142,12 +1268,6 @@ abstract class AppLocalizations {
   /// **'Vehicle not found'**
   String get vehicleNotFound;
 
-  /// No description provided for @vehicle.
-  ///
-  /// In en, this message translates to:
-  /// **'Vehicle'**
-  String get vehicle;
-
   /// No description provided for @color.
   ///
   /// In en, this message translates to:
@@ -1867,12 +1987,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Max speed'**
   String get maxSpeed;
-
-  /// No description provided for @averageSpeed.
-  ///
-  /// In en, this message translates to:
-  /// **'Average speed'**
-  String get averageSpeed;
 
   /// No description provided for @points.
   ///

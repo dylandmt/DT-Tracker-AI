@@ -138,6 +138,12 @@ class _HomeDashboardPageState extends State<HomeDashboardPage> {
                       'Alertas',
                       () => context.push(RouteConstants.alerts),
                     ),
+                    _action(
+                      context,
+                      Icons.insights_outlined,
+                      'Estadisticas',
+                      () => context.push(RouteConstants.statistics),
+                    ),
                     if (_canShare)
                       _action(
                         context,

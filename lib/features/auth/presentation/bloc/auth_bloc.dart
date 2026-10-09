@@ -227,6 +227,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     AccountDeletionRequested event,
     Emitter<AuthState> emit,
   ) async {
+    if (state.accountDeletionInProgress) return;
+
     final user = state.user;
     if (user == null) {
       emit(AuthState.error('No user is signed in'));

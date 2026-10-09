@@ -88,6 +88,11 @@ import 'features/trips/domain/usecases/trip_usecases.dart';
 import 'features/trips/presentation/bloc/trip_bloc.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'features/auth/domain/usecases/sign_in_with_google.dart';
+import 'features/statistics/data/datasources/statistics_remote_datasource.dart';
+import 'features/statistics/data/repositories/statistics_repository_impl.dart';
+import 'features/statistics/domain/repositories/statistics_repository.dart';
+import 'features/statistics/domain/usecases/statistics_usecases.dart';
+import 'features/statistics/presentation/bloc/statistics_bloc.dart';
 
 final sl = GetIt.instance;
 
@@ -222,6 +227,21 @@ Future<void> initializeDependencies() async {
       deleteProfileImage: sl(),
       updateUserSettings: sl(),
     ),
+  );
+
+  //============================================================================
+  // Features - Statistics
+  //============================================================================
+  sl.registerLazySingleton<StatisticsRemoteDataSource>(
+    () => StatisticsRemoteDataSourceImpl(firebaseAuth: sl()),
+  );
+  sl.registerLazySingleton<StatisticsRepository>(
+    () => StatisticsRepositoryImpl(remoteDataSource: sl(), networkInfo: sl()),
+  );
+  sl.registerLazySingleton(() => GetVehicleStatistics(sl()));
+  sl.registerLazySingleton(() => GetDailyStatistics(sl()));
+  sl.registerFactory(
+    () => StatisticsBloc(getVehicles: sl(), getStatistics: sl()),
   );
 
   //============================================================================

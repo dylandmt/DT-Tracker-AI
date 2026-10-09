@@ -105,14 +105,83 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get deleteAccountDescription =>
-      'Permanently delete your account and associated data';
+      'Review the permanent consequences before deleting';
 
   @override
   String get deleteAccountConfirmationTitle => 'Delete account?';
 
   @override
   String get deleteAccountConfirmation =>
-      'This action is permanent and cannot be undone.';
+      'This action is permanent and cannot be undone. Your DT Tracker account will be removed.';
+
+  @override
+  String get deleteAccountIntro =>
+      'Deleting your DT Tracker account is permanent. Please review what will happen before continuing.';
+
+  @override
+  String get deleteAccountConsequencesTitle =>
+      'What happens when you delete your account?';
+
+  @override
+  String get deleteAccountAccessConsequence =>
+      'Your account will no longer be accessible and you will lose access to DT Tracker with it.';
+
+  @override
+  String get deleteAccountServerConsequence =>
+      'The server will permanently process the deletion of your account.';
+
+  @override
+  String get deleteAccountIrreversibleConsequence =>
+      'This action cannot be undone.';
+
+  @override
+  String get statistics => 'Statistics';
+
+  @override
+  String get vehicle => 'Vehicle';
+
+  @override
+  String get statisticsLoadError => 'Unable to load statistics.';
+
+  @override
+  String get vehicleWithoutTrackerStatistics =>
+      'This vehicle does not have a linked tracker.';
+
+  @override
+  String get addVehicleForStatistics => 'Add a vehicle to view statistics.';
+
+  @override
+  String get kmDriven => 'KM DRIVEN';
+
+  @override
+  String get totalDistance => 'Total distance';
+
+  @override
+  String get dailyAverage => 'Daily average';
+
+  @override
+  String get averageSpeed => 'Average speed';
+
+  @override
+  String get maximumSpeed => 'Maximum speed';
+
+  @override
+  String get movingTime => 'Moving time';
+
+  @override
+  String get retry => 'Retry';
+
+  @override
+  String get selectUpToSevenDays => 'Select up to 7 days';
+
+  @override
+  String get statisticsRangeMaximum => 'The maximum range is 7 days.';
+
+  @override
+  String get speedDuringDay => 'Speed during the day';
+
+  @override
+  String get noSpeedRecords => 'No speed records.';
 
   @override
   String get deletingAccount => 'Deleting account...';
@@ -611,9 +680,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get vehicleNotFound => 'Vehicle not found';
 
   @override
-  String get vehicle => 'Vehicle';
-
-  @override
   String get color => 'Color';
 
   @override
@@ -999,9 +1065,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get maxSpeed => 'Max speed';
-
-  @override
-  String get averageSpeed => 'Average speed';
 
   @override
   String get points => 'Points';

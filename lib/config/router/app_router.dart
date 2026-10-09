@@ -23,6 +23,7 @@ import '../../features/events/presentation/pages/events_page.dart';
 import '../../features/settings/presentation/pages/settings_page.dart';
 import '../../features/settings/presentation/pages/profile_page.dart';
 import '../../features/settings/presentation/pages/alerts_settings_page.dart';
+import '../../features/settings/presentation/pages/delete_account_page.dart';
 import '../../features/settings/presentation/pages/security_pin_page.dart';
 import '../../features/social/presentation/pages/friends_page.dart';
 import '../../features/social/presentation/pages/share_location_page.dart';
@@ -35,6 +36,10 @@ import '../../features/vehicles/presentation/pages/vehicle_form_page.dart';
 import '../../features/vehicles/presentation/pages/vehicles_page.dart';
 import '../../features/trips/presentation/bloc/trip_bloc.dart';
 import '../../features/trips/presentation/pages/trips_page.dart';
+import '../../features/statistics/presentation/bloc/statistics_bloc.dart';
+import '../../features/statistics/presentation/pages/daily_statistics_page.dart';
+import '../../features/statistics/presentation/pages/statistics_page.dart';
+import '../../features/vehicles/domain/entities/vehicle.dart';
 import '../../injection_container.dart';
 
 /// Application router configuration using GoRouter
@@ -148,6 +153,27 @@ class AppRouter {
         path: RouteConstants.shareLocation,
         name: RouteConstants.shareLocationName,
         builder: (context, state) => const ShareLocationPage(),
+      ),
+      GoRoute(
+        path: RouteConstants.statistics,
+        name: RouteConstants.statisticsName,
+        builder: (context, state) => BlocProvider(
+          create: (_) => sl<StatisticsBloc>(),
+          child: const StatisticsPage(),
+        ),
+        routes: [
+          GoRoute(
+            path: 'daily',
+            name: RouteConstants.dailyStatisticsName,
+            builder: (context, state) {
+              final data = state.extra! as Map<String, dynamic>;
+              return DailyStatisticsPage(
+                vehicle: data['vehicle']! as VehicleEntity,
+                date: data['date']! as DateTime,
+              );
+            },
+          ),
+        ],
       ),
 
       // Shell route with bottom navigation
@@ -296,6 +322,11 @@ class AppRouter {
                 path: 'alerts',
                 name: RouteConstants.alertsSettingsName,
                 builder: (context, state) => const AlertsSettingsPage(),
+              ),
+              GoRoute(
+                path: 'delete-account',
+                name: RouteConstants.deleteAccountName,
+                builder: (context, state) => const DeleteAccountPage(),
               ),
             ],
           ),

@@ -108,14 +108,84 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get deleteAccountDescription =>
-      'Elimina permanentemente tu cuenta y los datos asociados';
+      'Revisa las consecuencias permanentes antes de eliminarla';
 
   @override
   String get deleteAccountConfirmationTitle => '¿Eliminar cuenta?';
 
   @override
   String get deleteAccountConfirmation =>
-      'Esta acción es permanente y no se puede deshacer.';
+      'Esta acción es permanente y no se puede deshacer. Se eliminará tu cuenta de DT Tracker.';
+
+  @override
+  String get deleteAccountIntro =>
+      'Eliminar tu cuenta de DT Tracker es permanente. Revisa lo que sucederá antes de continuar.';
+
+  @override
+  String get deleteAccountConsequencesTitle =>
+      '¿Qué sucede al eliminar tu cuenta?';
+
+  @override
+  String get deleteAccountAccessConsequence =>
+      'Tu cuenta dejará de estar disponible y perderás el acceso a DT Tracker con ella.';
+
+  @override
+  String get deleteAccountServerConsequence =>
+      'El servidor procesará de forma permanente la eliminación de tu cuenta.';
+
+  @override
+  String get deleteAccountIrreversibleConsequence =>
+      'Esta acción no se puede deshacer.';
+
+  @override
+  String get statistics => 'Estadisticas';
+
+  @override
+  String get vehicle => 'Vehiculo';
+
+  @override
+  String get statisticsLoadError => 'No se pudieron cargar las estadisticas.';
+
+  @override
+  String get vehicleWithoutTrackerStatistics =>
+      'Este vehiculo no tiene un rastreador vinculado.';
+
+  @override
+  String get addVehicleForStatistics =>
+      'Agrega un vehiculo para ver estadisticas.';
+
+  @override
+  String get kmDriven => 'KM RECORRIDOS';
+
+  @override
+  String get totalDistance => 'Distancia total';
+
+  @override
+  String get dailyAverage => 'Promedio diario';
+
+  @override
+  String get averageSpeed => 'Velocidad promedio';
+
+  @override
+  String get maximumSpeed => 'Velocidad maxima';
+
+  @override
+  String get movingTime => 'Tiempo en movimiento';
+
+  @override
+  String get retry => 'Reintentar';
+
+  @override
+  String get selectUpToSevenDays => 'Selecciona hasta 7 dias';
+
+  @override
+  String get statisticsRangeMaximum => 'El rango maximo es de 7 dias.';
+
+  @override
+  String get speedDuringDay => 'Velocidad durante el dia';
+
+  @override
+  String get noSpeedRecords => 'Sin registros de velocidad.';
 
   @override
   String get deletingAccount => 'Eliminando cuenta...';
@@ -623,9 +693,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get vehicleNotFound => 'Vehiculo no encontrado';
 
   @override
-  String get vehicle => 'Vehiculo';
-
-  @override
   String get color => 'Color';
 
   @override
@@ -1014,9 +1081,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get maxSpeed => 'Velocidad maxima';
-
-  @override
-  String get averageSpeed => 'Velocidad promedio';
 
   @override
   String get points => 'Puntos';

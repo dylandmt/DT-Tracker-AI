@@ -63,11 +63,7 @@ class _HomeDashboardPageState extends State<HomeDashboardPage> {
     }
   }
 
-  bool get _canShare => _vehicles.any(
-    (vehicle) =>
-        vehicle.plan == VehiclePlan.protect ||
-        vehicle.plan == VehiclePlan.total,
-  );
+  bool get _canShare => _vehicles.isNotEmpty;
 
   @override
   Widget build(BuildContext context) {

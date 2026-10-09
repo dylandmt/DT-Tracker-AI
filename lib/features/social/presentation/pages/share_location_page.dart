@@ -36,7 +36,10 @@ class _ShareLocationPageState extends State<ShareLocationPage> {
         _friends = values[0];
         _vehicles = values[1].where((vehicle) {
           final trackerId = vehicle['trackerId'];
-          return trackerId is String && trackerId.isNotEmpty;
+          final plan = vehicle['plan'] ?? vehicle['entitlement']?['tier'];
+          return trackerId is String &&
+              trackerId.isNotEmpty &&
+              (plan == 'protect' || plan == 'total');
         }).toList();
       });
     } catch (_) {

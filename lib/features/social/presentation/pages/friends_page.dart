@@ -28,6 +28,7 @@ class _FriendsPageState extends State<FriendsPage> {
   List<Map<String, dynamic>> _searchResults = [];
   bool _loading = true;
   bool _working = false;
+  bool _canUseFriends = false;
   String? _error;
 
   @override
@@ -56,6 +57,7 @@ class _FriendsPageState extends State<FriendsPage> {
         _social.blocks(),
         _social.incomingLocationShares(),
         _social.outgoingLocationShares(),
+        _social.vehicles(),
       ]);
       if (!mounted) return;
       setState(() {
@@ -65,6 +67,7 @@ class _FriendsPageState extends State<FriendsPage> {
         _blocks = values[3];
         _incomingShares = values[4];
         _outgoingShares = values[5];
+        _canUseFriends = values[6].isNotEmpty;
       });
     } catch (error) {
       if (mounted) setState(() => _error = _message(error));
@@ -315,7 +318,9 @@ class _FriendsPageState extends State<FriendsPage> {
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: _loading || _working ? null : _startShareFlow,
+        onPressed: _loading || _working || !_canUseFriends
+            ? null
+            : _startShareFlow,
         icon: const Icon(Icons.share_location_outlined),
         label: Text(context.l10n.shareLocation),
       ),
@@ -441,7 +446,9 @@ class _FriendsPageState extends State<FriendsPage> {
       title: Text(_name(user)),
       subtitle: Text(_nickname(user)),
       trailing: FilledButton(
-        onPressed: _working ? null : () => _sendFriendRequest(user),
+        onPressed: _working || !_canUseFriends
+            ? null
+            : () => _sendFriendRequest(user),
         child: Text(context.l10n.addFriend),
       ),
     );
@@ -475,7 +482,7 @@ class _FriendsPageState extends State<FriendsPage> {
                     children: [
                       Expanded(
                         child: FilledButton(
-                          onPressed: _working
+                          onPressed: _working || !_canUseFriends
                               ? null
                               : () => _run(
                                   () => _social.acceptRequest(

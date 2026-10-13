@@ -1,18 +1,12 @@
 import 'package:flutter/material.dart';
 
-import '../../../../core/theme/app_colors.dart';
+import '../../../../core/design/dt_components.dart';
+import '../../../../core/design/dt_design_tokens.dart';
 import '../../../../core/utils/extensions.dart';
 import '../../domain/entities/tracker_info.dart';
 import '../../domain/entities/vehicle.dart';
 
-/// Card widget for displaying tracker status and link/unlink actions
 class TrackerStatusCard extends StatelessWidget {
-  final VehicleEntity vehicle;
-  final TrackerStatusEntity? trackerStatus;
-  final bool isLoading;
-  final VoidCallback? onLinkTracker;
-  final VoidCallback? onUnlinkTracker;
-
   const TrackerStatusCard({
     super.key,
     required this.vehicle,
@@ -22,238 +16,170 @@ class TrackerStatusCard extends StatelessWidget {
     this.onUnlinkTracker,
   });
 
+  final VehicleEntity vehicle;
+  final TrackerStatusEntity? trackerStatus;
+  final bool isLoading;
+  final VoidCallback? onLinkTracker;
+  final VoidCallback? onUnlinkTracker;
+
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final textTheme = Theme.of(context).textTheme;
-
-    if (!vehicle.hasTracker) {
-      return _buildNoTrackerCard(context, colorScheme, textTheme);
-    }
-
-    return _buildLinkedTrackerCard(context, colorScheme, textTheme);
+    if (!vehicle.hasTracker) return _unlinked(context);
+    return _linked(context);
   }
 
-  Widget _buildNoTrackerCard(
-    BuildContext context,
-    ColorScheme colorScheme,
-    TextTheme textTheme,
-  ) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+  Widget _unlinked(BuildContext context) => DTGlassCard(
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
           children: [
-            Row(
-              children: [
-                Icon(Icons.gps_off, color: colorScheme.error),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        context.l10n.noGpsTracker,
-                        style: textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        context.l10n.linkGpsTrackerToTrack,
-                        style: textTheme.bodySmall?.copyWith(
-                          color: colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            SizedBox(
-              width: double.infinity,
-              child: FilledButton.icon(
-                onPressed: isLoading ? null : onLinkTracker,
-                icon: isLoading
-                    ? const SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Icon(Icons.link),
-                label: Text(context.l10n.linkGpsTracker),
+            Container(
+              width: 44,
+              height: 44,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: context.dtColors.muted.withValues(alpha: .12),
+                shape: BoxShape.circle,
               ),
+              child: Icon(Icons.gps_off, color: context.dtColors.muted),
             ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildLinkedTrackerCard(
-    BuildContext context,
-    ColorScheme colorScheme,
-    TextTheme textTheme,
-  ) {
-    final isOnline = trackerStatus?.online ?? false;
-    final statusColor = isOnline
-        ? AppColors.statusOnline
-        : AppColors.statusOffline;
-
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: statusColor.withValues(alpha: 0.2),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(Icons.gps_fixed, color: statusColor, size: 20),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        context.l10n.gpsTrackerLinked,
-                        style: textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        vehicle.trackerId ?? '',
-                        style: textTheme.bodySmall?.copyWith(
-                          color: colorScheme.onSurfaceVariant,
-                          fontFamily: 'monospace',
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                // Status badge
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: statusColor,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    isOnline ? context.l10n.online : context.l10n.offline,
-                    style: const TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.white,
+            const SizedBox(width: DTSpacing.sm),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    context.l10n.noGpsTracker,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
-                ),
-              ],
-            ),
-            if (trackerStatus != null) ...[
-              const SizedBox(height: 16),
-              const Divider(height: 1),
-              const SizedBox(height: 16),
-              // Tracker stats
-              Row(
-                children: [
-                  _buildStatItem(
-                    context,
-                    Icons.battery_full,
-                    '${trackerStatus!.battery}%',
-                    context.l10n.battery,
-                    _getBatteryColor(trackerStatus!.battery),
-                  ),
-                  const SizedBox(width: 24),
-                  _buildStatItem(
-                    context,
-                    Icons.speed,
-                    trackerStatus!.speed.formatSpeed,
-                    context.l10n.speed,
-                    colorScheme.primary,
-                  ),
-                  const SizedBox(width: 24),
-                  _buildStatItem(
-                    context,
-                    Icons.access_time,
-                    trackerStatus!.lastUpdate.localizedTimeAgo(context),
-                    context.l10n.lastUpdate,
-                    colorScheme.onSurfaceVariant,
+                  const SizedBox(height: DTSpacing.xxs),
+                  Text(
+                    context.l10n.linkGpsTrackerToTrack,
+                    style: Theme.of(context).textTheme.bodySmall,
                   ),
                 ],
               ),
-            ],
-            const SizedBox(height: 16),
-            // Unlink button
-            SizedBox(
-              width: double.infinity,
-              child: OutlinedButton.icon(
-                onPressed: isLoading ? null : onUnlinkTracker,
-                icon: isLoading
-                    ? const SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Icon(Icons.link_off),
-                label: Text(context.l10n.unlinkTracker),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: colorScheme.error,
-                ),
-              ),
             ),
           ],
         ),
-      ),
-    );
-  }
+        const SizedBox(height: DTSpacing.md),
+        SizedBox(
+          width: double.infinity,
+          child: FilledButton.icon(
+            onPressed: isLoading ? null : onLinkTracker,
+            icon: _progressOrIcon(Icons.link),
+            label: Text(context.l10n.linkGpsTracker),
+          ),
+        ),
+      ],
+    ),
+  );
 
-  Widget _buildStatItem(
-    BuildContext context,
-    IconData icon,
-    String value,
-    String label,
-    Color color,
-  ) {
-    final textTheme = Theme.of(context).textTheme;
-    final colorScheme = Theme.of(context).colorScheme;
-
-    return Expanded(
+  Widget _linked(BuildContext context) {
+    final status = trackerStatus;
+    final online = status?.online ?? false;
+    final designStatus = online
+        ? DTVehicleStatus.online
+        : DTVehicleStatus.offline;
+    return DTGlassCard(
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(icon, size: 16, color: color),
-              const SizedBox(width: 4),
-              Flexible(
-                child: Text(
-                  value,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
+              Container(
+                width: 44,
+                height: 44,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color:
+                      (online
+                              ? context.dtColors.online
+                              : context.dtColors.offline)
+                          .withValues(alpha: .12),
+                  shape: BoxShape.circle,
                 ),
+                child: Icon(
+                  Icons.gps_fixed,
+                  color: online
+                      ? context.dtColors.online
+                      : context.dtColors.offline,
+                ),
+              ),
+              const SizedBox(width: DTSpacing.sm),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      context.l10n.gpsTrackerLinked,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: DTSpacing.xxs),
+                    Text(
+                      vehicle.trackerId ?? '',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(
+                        context,
+                      ).textTheme.bodySmall?.copyWith(fontFamily: 'monospace'),
+                    ),
+                  ],
+                ),
+              ),
+              DTStatusPill(
+                status: designStatus,
+                label: online ? context.l10n.online : context.l10n.offline,
               ),
             ],
           ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: textTheme.bodySmall?.copyWith(
-              color: colorScheme.onSurfaceVariant,
+          if (status != null) ...[
+            const SizedBox(height: DTSpacing.md),
+            Divider(color: context.dtColors.border, height: 1),
+            const SizedBox(height: DTSpacing.md),
+            Row(
+              children: [
+                _metric(
+                  context,
+                  Icons.battery_full_outlined,
+                  '${status.battery}%',
+                  context.l10n.battery,
+                  status.battery < 20
+                      ? context.dtColors.alert
+                      : context.dtColors.online,
+                ),
+                _metric(
+                  context,
+                  Icons.speed_outlined,
+                  status.speed.localizedSpeed(context),
+                  context.l10n.speed,
+                  Theme.of(context).colorScheme.primary,
+                ),
+                _metric(
+                  context,
+                  Icons.schedule_outlined,
+                  status.lastUpdate.localizedTimeAgo(context),
+                  context.l10n.lastUpdate,
+                  context.dtColors.textSecondary,
+                ),
+              ],
+            ),
+          ],
+          const SizedBox(height: DTSpacing.md),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: isLoading ? null : onUnlinkTracker,
+              icon: _progressOrIcon(Icons.link_off),
+              label: Text(context.l10n.unlinkTracker),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: context.dtColors.alert,
+              ),
             ),
           ),
         ],
@@ -261,9 +187,41 @@ class TrackerStatusCard extends StatelessWidget {
     );
   }
 
-  Color _getBatteryColor(int battery) {
-    if (battery >= 50) return AppColors.statusOnline;
-    if (battery >= 20) return AppColors.statusIdle;
-    return AppColors.statusAlert;
-  }
+  Widget _metric(
+    BuildContext context,
+    IconData icon,
+    String value,
+    String label,
+    Color color,
+  ) => Expanded(
+    child: Column(
+      children: [
+        Icon(icon, size: 18, color: color),
+        const SizedBox(height: DTSpacing.xxs),
+        Text(
+          value,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: Theme.of(context).textTheme.labelLarge?.copyWith(
+            color: color,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        Text(
+          label,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: Theme.of(context).textTheme.bodySmall,
+        ),
+      ],
+    ),
+  );
+
+  Widget _progressOrIcon(IconData icon) => isLoading
+      ? const SizedBox(
+          width: 18,
+          height: 18,
+          child: CircularProgressIndicator(strokeWidth: 2),
+        )
+      : Icon(icon);
 }

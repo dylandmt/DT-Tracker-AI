@@ -1,9 +1,14 @@
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
-import '../../../../injection_container.dart';
+
+import '../../../../core/constants/route_constants.dart';
+import '../../../../core/design/dt_components.dart';
+import '../../../../core/design/dt_design_tokens.dart';
 import '../../../../core/utils/extensions.dart';
+import '../../../../injection_container.dart';
 import '../../../vehicles/domain/entities/vehicle.dart';
 import '../../domain/entities/statistics.dart';
 import '../../domain/usecases/statistics_usecases.dart';
@@ -14,8 +19,10 @@ class DailyStatisticsPage extends StatefulWidget {
     required this.vehicle,
     required this.date,
   });
+
   final VehicleEntity vehicle;
   final DateTime date;
+
   @override
   State<DailyStatisticsPage> createState() => _DailyStatisticsPageState();
 }
@@ -23,6 +30,7 @@ class DailyStatisticsPage extends StatefulWidget {
 class _DailyStatisticsPageState extends State<DailyStatisticsPage> {
   DailyStatistics? _statistics;
   String? _error;
+
   @override
   void initState() {
     super.initState();
@@ -30,12 +38,11 @@ class _DailyStatisticsPageState extends State<DailyStatisticsPage> {
   }
 
   Future<void> _load() async {
+    setState(() => _error = null);
     final result = await sl<GetDailyStatistics>()(
       DailyStatisticsParams(vehicleId: widget.vehicle.id, date: widget.date),
     );
-    if (!mounted) {
-      return;
-    }
+    if (!mounted) return;
     result.fold(
       (failure) => setState(() => _error = failure.message),
       (value) => setState(() => _statistics = value),
@@ -45,86 +52,252 @@ class _DailyStatisticsPageState extends State<DailyStatisticsPage> {
   @override
   Widget build(BuildContext context) {
     final data = _statistics;
-    return Scaffold(
-      appBar: AppBar(title: Text(context.l10n.statistics)),
-      body: data == null
-          ? Center(
-              child: _error == null
-                  ? const CircularProgressIndicator()
-                  : Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(_error!),
-                        TextButton(
-                          onPressed: _load,
-                          child: Text(context.l10n.retry),
-                        ),
-                      ],
-                    ),
-            )
-          : ListView(
-              padding: const EdgeInsets.all(16),
-              children: [
-                Text(
-                  DateFormat.yMMMMd().format(widget.date),
-                  style: Theme.of(context).textTheme.headlineSmall,
+    return DTAppScaffold(
+      useAmbientBackground: false,
+      body: SafeArea(
+        child: data == null
+            ? _loadingOrError(context)
+            : ListView(
+                padding: const EdgeInsets.fromLTRB(
+                  DTSpacing.md,
+                  DTSpacing.md,
+                  DTSpacing.md,
+                  DTSpacing.xxl,
                 ),
-                Text(widget.vehicle.fullDescription ?? widget.vehicle.name),
-                const SizedBox(height: 24),
-                _summary(data.summary),
-                const SizedBox(height: 24),
-                Text(
-                  context.l10n.speedDuringDay,
-                  style: Theme.of(context).textTheme.titleMedium,
-                ),
-                const SizedBox(height: 12),
-                _SpeedChart(samples: data.speedSeries),
-              ],
-            ),
+                children: [
+                  _header(context),
+                  const SizedBox(height: DTSpacing.lg),
+                  DTVehicleSelector(
+                    label:
+                        widget.vehicle.fullDescription ?? widget.vehicle.name,
+                    leading: const Icon(Icons.directions_car_outlined),
+                    enabled: false,
+                    onTap: null,
+                  ),
+                  const SizedBox(height: DTSpacing.sm),
+                  DTSegmentedTabs(
+                    labels: [context.l10n.day, context.l10n.week],
+                    selectedIndex: 0,
+                    onSelected: (index) {
+                      if (index == 1) context.pop();
+                    },
+                  ),
+                  const SizedBox(height: DTSpacing.sm),
+                  DTDateRangeSelector(
+                    label: DateFormat.yMMMMd(
+                      Localizations.localeOf(context).toString(),
+                    ).format(widget.date.toLocal()),
+                    onTap: _pickDay,
+                  ),
+                  const SizedBox(height: DTSpacing.lg),
+                  _summary(context, data.summary),
+                  const SizedBox(height: DTSpacing.lg),
+                  DTSpeedChart(samples: data.speedSeries),
+                ],
+              ),
+      ),
     );
   }
 
-  Widget _summary(StatisticsSummary summary) => Wrap(
-    spacing: 12,
-    runSpacing: 12,
+  Widget _header(BuildContext context) => Row(
     children: [
-      for (final item in [
-        (
-          context.l10n.totalDistance,
-          '${summary.distanceKm.toStringAsFixed(1)} km',
+      IconButton(
+        tooltip: MaterialLocalizations.of(context).backButtonTooltip,
+        onPressed: () => context.pop(),
+        icon: const Icon(Icons.arrow_back),
+      ),
+      Expanded(
+        child: Text(
+          context.l10n.statistics,
+          textAlign: TextAlign.center,
+          style: Theme.of(
+            context,
+          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
         ),
-        (
-          context.l10n.averageSpeed,
-          '${summary.averageSpeedKmh.toStringAsFixed(1)} km/h',
-        ),
-        (
-          context.l10n.maximumSpeed,
-          '${summary.maxSpeedKmh.toStringAsFixed(0)} km/h',
-        ),
-        (
-          context.l10n.movingTime,
-          '${summary.movingMinutes.toStringAsFixed(0)} min',
-        ),
-      ])
-        SizedBox(
-          width: (MediaQuery.sizeOf(context).width - 44) / 2,
-          child: Card(
-            child: Padding(
-              padding: const EdgeInsets.all(14),
-              child: Column(
-                children: [
-                  Text(
-                    item.$2,
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  Text(item.$1),
-                ],
-              ),
-            ),
-          ),
-        ),
+      ),
+      const SizedBox(width: 48),
     ],
   );
+
+  Widget _loadingOrError(BuildContext context) => Center(
+    child: _error == null
+        ? const CircularProgressIndicator()
+        : Padding(
+            padding: const EdgeInsets.all(DTSpacing.xxl),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.error_outline,
+                  size: 56,
+                  color: context.dtColors.alert,
+                ),
+                const SizedBox(height: DTSpacing.md),
+                Text(_error!, textAlign: TextAlign.center),
+                const SizedBox(height: DTSpacing.sm),
+                TextButton(onPressed: _load, child: Text(context.l10n.retry)),
+              ],
+            ),
+          ),
+  );
+
+  Widget _summary(BuildContext context, StatisticsSummary summary) =>
+      GridView.count(
+        crossAxisCount: 2,
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        mainAxisSpacing: DTSpacing.xs,
+        crossAxisSpacing: DTSpacing.xs,
+        mainAxisExtent: _metricTileExtent(context),
+        children: [
+          DTMetricTile(
+            icon: const Icon(Icons.route_outlined),
+            value: '${summary.distanceKm.toStringAsFixed(1)} km',
+            label: context.l10n.totalDistance,
+          ),
+          DTMetricTile(
+            icon: const Icon(Icons.speed_outlined),
+            value: '${summary.averageSpeedKmh.toStringAsFixed(1)} km/h',
+            label: context.l10n.averageSpeed,
+          ),
+          DTMetricTile(
+            icon: const Icon(Icons.speed_outlined),
+            value: '${summary.maxSpeedKmh.toStringAsFixed(0)} km/h',
+            label: context.l10n.maximumSpeed,
+            color: context.dtColors.cyan,
+          ),
+          DTMetricTile(
+            icon: const Icon(Icons.schedule_outlined),
+            value: '${summary.movingMinutes.toStringAsFixed(0)} min',
+            label: context.l10n.movingTime,
+            color: context.dtColors.online,
+          ),
+        ],
+      );
+
+  double _metricTileExtent(BuildContext context) {
+    final textScale = MediaQuery.textScalerOf(context).scale(1);
+    return (116 + ((textScale - 1).clamp(0.0, .5) * 44)).toDouble();
+  }
+
+  Future<void> _pickDay() async {
+    final selected = await showDatePicker(
+      context: context,
+      initialDate: widget.date.toLocal(),
+      firstDate: DateTime.utc(2020),
+      lastDate: DateTime.now(),
+    );
+    if (!mounted || selected == null) return;
+    context.pushReplacement(
+      RouteConstants.dailyStatistics,
+      extra: {'vehicle': widget.vehicle, 'date': selected.toUtc()},
+    );
+  }
+}
+
+class DTSpeedChart extends StatefulWidget {
+  const DTSpeedChart({super.key, required this.samples});
+
+  final List<SpeedSample> samples;
+
+  @override
+  State<DTSpeedChart> createState() => _DTSpeedChartState();
+}
+
+class _DTSpeedChartState extends State<DTSpeedChart> {
+  int? _selectedIndex;
+
+  void _select(Offset position, double width) {
+    if (widget.samples.isEmpty) return;
+    final usableWidth =
+        width - _SpeedPainter.leftInset - _SpeedPainter.rightInset;
+    final fraction = ((position.dx - _SpeedPainter.leftInset) / usableWidth)
+        .clamp(0.0, 1.0);
+    final start = widget.samples.first.timestamp.millisecondsSinceEpoch;
+    final end = widget.samples.last.timestamp.millisecondsSinceEpoch;
+    final target = start + ((end - start) * fraction).round();
+    var nearest = 0;
+    var distance = double.infinity;
+    for (var index = 0; index < widget.samples.length; index += 1) {
+      final candidate =
+          (widget.samples[index].timestamp.millisecondsSinceEpoch - target)
+              .abs();
+      if (candidate < distance) {
+        nearest = index;
+        distance = candidate.toDouble();
+      }
+    }
+    setState(() => _selectedIndex = nearest);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (widget.samples.isEmpty) {
+      return DTGlassCard(
+        child: SizedBox(
+          height: 260,
+          child: Center(child: Text(context.l10n.noSpeedRecords)),
+        ),
+      );
+    }
+    final selected = _selectedIndex == null
+        ? null
+        : widget.samples[_selectedIndex!];
+    final axisMax = SpeedChartAxis.upperBound(
+      widget.samples.fold<double>(
+        0,
+        (maximum, sample) =>
+            maximum > sample.speedKmh ? maximum : sample.speedKmh,
+      ),
+    );
+    return DTGlassCard(
+      child: SizedBox(
+        height: 288,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              context.l10n.speedDuringDay,
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+            ),
+            Text('km/h', style: Theme.of(context).textTheme.bodySmall),
+            const SizedBox(height: DTSpacing.xs),
+            Expanded(
+              child: LayoutBuilder(
+                builder: (context, constraints) => GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTapDown: (details) =>
+                      _select(details.localPosition, constraints.maxWidth),
+                  onHorizontalDragUpdate: (details) =>
+                      _select(details.localPosition, constraints.maxWidth),
+                  child: CustomPaint(
+                    painter: _SpeedPainter(
+                      samples: widget.samples,
+                      lineColor: Theme.of(context).colorScheme.primary,
+                      labelColor: context.dtColors.textSecondary,
+                      axisMax: axisMax,
+                      selectedIndex: _selectedIndex,
+                    ),
+                    child: const SizedBox.expand(),
+                  ),
+                ),
+              ),
+            ),
+            if (selected != null)
+              Align(
+                alignment: Alignment.centerRight,
+                child: Text(
+                  '${DateFormat.Hm().format(selected.timestamp.toLocal())}  ${selected.speedKmh.toStringAsFixed(0)} km/h',
+                  style: Theme.of(context).textTheme.labelLarge,
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 class SpeedChartAxis {
@@ -142,118 +315,6 @@ class SpeedChartAxis {
   static const hours = [0, 6, 12, 18, 24];
 }
 
-class _SpeedChart extends StatefulWidget {
-  const _SpeedChart({required this.samples});
-  final List<SpeedSample> samples;
-
-  @override
-  State<_SpeedChart> createState() => _SpeedChartState();
-}
-
-class _SpeedChartState extends State<_SpeedChart> {
-  int? _selectedIndex;
-
-  void _select(Offset position, double width) {
-    final usableWidth =
-        width - _SpeedPainter.leftInset - _SpeedPainter.rightInset;
-    final fraction = ((position.dx - _SpeedPainter.leftInset) / usableWidth)
-        .clamp(0.0, 1.0);
-    final start = widget.samples.first.timestamp.millisecondsSinceEpoch;
-    final end = widget.samples.last.timestamp.millisecondsSinceEpoch;
-    final target = start + ((end - start) * fraction).round();
-    var nearest = 0;
-    var nearestDistance = double.infinity;
-    for (var index = 0; index < widget.samples.length; index += 1) {
-      final distance =
-          (widget.samples[index].timestamp.millisecondsSinceEpoch - target)
-              .abs();
-      if (distance < nearestDistance) {
-        nearest = index;
-        nearestDistance = distance.toDouble();
-      }
-    }
-    setState(() => _selectedIndex = nearest);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    if (widget.samples.isEmpty) {
-      return SizedBox(
-        height: 260,
-        child: Center(child: Text(context.l10n.noSpeedRecords)),
-      );
-    }
-    final colorScheme = Theme.of(context).colorScheme;
-    final selected = _selectedIndex == null
-        ? null
-        : widget.samples[_selectedIndex!];
-    final axisMax = SpeedChartAxis.upperBound(
-      widget.samples.fold<double>(
-        0,
-        (max, sample) => sample.speedKmh > max ? sample.speedKmh : max,
-      ),
-    );
-    return Container(
-      height: 288,
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
-      decoration: BoxDecoration(
-        color: colorScheme.inverseSurface,
-        borderRadius: BorderRadius.circular(22),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            context.l10n.speedDuringDay,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              color: colorScheme.onInverseSurface,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          Text(
-            'km/h',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: colorScheme.onInverseSurface.withValues(alpha: .7),
-            ),
-          ),
-          const SizedBox(height: 8),
-          Expanded(
-            child: LayoutBuilder(
-              builder: (context, constraints) => GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onTapDown: (details) =>
-                    _select(details.localPosition, constraints.maxWidth),
-                onHorizontalDragUpdate: (details) =>
-                    _select(details.localPosition, constraints.maxWidth),
-                child: CustomPaint(
-                  painter: _SpeedPainter(
-                    samples: widget.samples,
-                    lineColor: colorScheme.primary,
-                    labelColor: colorScheme.onInverseSurface,
-                    axisMax: axisMax,
-                    selectedIndex: _selectedIndex,
-                  ),
-                  child: const SizedBox.expand(),
-                ),
-              ),
-            ),
-          ),
-          if (selected != null)
-            Align(
-              alignment: Alignment.centerRight,
-              child: Text(
-                '${DateFormat.Hm().format(selected.timestamp.toLocal())}  ${selected.speedKmh.toStringAsFixed(0)} km/h',
-                style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                  color: colorScheme.onInverseSurface,
-                ),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-}
-
 class _SpeedPainter extends CustomPainter {
   const _SpeedPainter({
     required this.samples,
@@ -262,6 +323,7 @@ class _SpeedPainter extends CustomPainter {
     required this.axisMax,
     required this.selectedIndex,
   });
+
   static const leftInset = 38.0;
   static const rightInset = 8.0;
   static const topInset = 8.0;
@@ -287,12 +349,9 @@ class _SpeedPainter extends CustomPainter {
     ).millisecondsSinceEpoch;
     const dayLength = Duration.millisecondsPerDay;
     final gridPaint = Paint()
-      ..color = labelColor.withValues(alpha: .16)
+      ..color = labelColor.withValues(alpha: .18)
       ..strokeWidth = 1;
-    final labelStyle = TextStyle(
-      color: labelColor.withValues(alpha: .82),
-      fontSize: 11,
-    );
+    final labelStyle = TextStyle(color: labelColor, fontSize: 11);
     for (var tick = 0; tick <= 4; tick += 1) {
       final y = plot.bottom - plot.height * tick / 4;
       canvas.drawLine(Offset(plot.left, y), Offset(plot.right, y), gridPaint);
@@ -310,7 +369,6 @@ class _SpeedPainter extends CustomPainter {
     }
     for (final hour in SpeedChartAxis.hours) {
       final x = plot.left + plot.width * hour / 24;
-      canvas.drawLine(Offset(x, plot.top), Offset(x, plot.bottom), gridPaint);
       final text = TextPainter(
         text: TextSpan(
           text: '${hour.toString().padLeft(2, '0')}:00',
@@ -334,9 +392,9 @@ class _SpeedPainter extends CustomPainter {
       plot.bottom - plot.height * (sample.speedKmh / axisMax).clamp(0.0, 1.0),
     );
     final path = Path();
-    for (var i = 0; i < samples.length; i++) {
-      final offset = point(samples[i]);
-      if (i == 0) {
+    for (var index = 0; index < samples.length; index += 1) {
+      final offset = point(samples[index]);
+      if (index == 0) {
         path.moveTo(offset.dx, offset.dy);
       } else {
         path.lineTo(offset.dx, offset.dy);
@@ -351,7 +409,7 @@ class _SpeedPainter extends CustomPainter {
       Paint()
         ..shader = LinearGradient(
           colors: [
-            lineColor.withValues(alpha: .34),
+            lineColor.withValues(alpha: .32),
             lineColor.withValues(alpha: 0),
           ],
         ).createShader(plot),

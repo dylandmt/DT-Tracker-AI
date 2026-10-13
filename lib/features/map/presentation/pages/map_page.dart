@@ -5,12 +5,16 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../../../core/constants/route_constants.dart';
+import '../../../../core/design/dt_components.dart';
+import '../../../../core/design/dt_design_tokens.dart';
+import '../../../../core/design/dt_vehicle_marker.dart';
 import '../../../../core/permissions/permission_handler.dart';
 import '../../../../core/permissions/permission_status.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/extensions.dart';
 import '../../../../injection_container.dart';
 import '../../../../l10n/app_localizations.dart';
@@ -20,6 +24,7 @@ import '../../../social/data/datasources/social_backend_datasource.dart';
 import '../../domain/entities/trip_point.dart';
 import '../../domain/entities/vehicle_location.dart';
 import '../bloc/map_bloc.dart';
+import '../utils/map_panel_coordinator.dart';
 import '../widgets/map_controls.dart';
 import '../widgets/trip_playback_controls.dart';
 import '../widgets/vehicle_info_card.dart';
@@ -37,13 +42,17 @@ class _MapPageState extends State<MapPage> with WidgetsBindingObserver {
   GoogleMapController? _mapController;
   final Completer<GoogleMapController> _controllerCompleter = Completer();
 
-  bool _showVehicleList = false;
+  final _panelCoordinator = MapPanelCoordinator();
   bool _locationPermissionGranted = false;
   bool _isGettingLocation = false;
   bool _locationServicesEnabled = true;
   bool _servicesBannerDismissed = false;
   List<_SharedVehicleLocation> _sharedLocations = const [];
   Timer? _sharedLocationsTimer;
+  final Map<VehicleStatus, BitmapDescriptor> _vehicleMarkers = {};
+  Brightness? _markerBrightness;
+  double? _markerPixelRatio;
+  VehicleSheetStage _vehicleSheetStage = VehicleSheetStage.intermediate;
 
   // Default camera position (Mexico City)
   static const _defaultPosition = LatLng(19.4326, -99.1332);
@@ -63,6 +72,48 @@ class _MapPageState extends State<MapPage> with WidgetsBindingObserver {
     // Check location permission
     _checkLocationPermission();
     _checkLocationServices();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final brightness = Theme.of(context).brightness;
+    final pixelRatio = MediaQuery.devicePixelRatioOf(context);
+    if (_markerBrightness != brightness || _markerPixelRatio != pixelRatio) {
+      _markerBrightness = brightness;
+      _markerPixelRatio = pixelRatio;
+      _vehicleMarkers.clear();
+      WidgetsBinding.instance.addPostFrameCallback(
+        (_) => _loadVehicleMarkers(),
+      );
+    }
+  }
+
+  Future<void> _loadVehicleMarkers() async {
+    if (!mounted) return;
+    final colors = context.dtColors;
+    final onPrimary = Theme.of(context).colorScheme.onPrimary;
+    final markers = await Future.wait(
+      VehicleStatus.values.map(
+        (status) => DTVehicleMarker.create(
+          accent: switch (status) {
+            VehicleStatus.moving => colors.moving,
+            VehicleStatus.idle => colors.idle,
+            VehicleStatus.offline => colors.offline,
+          },
+          surface: colors.surfaceOverlay,
+          onPrimary: onPrimary,
+          devicePixelRatio: _markerPixelRatio ?? 1,
+          haloOpacity: status == VehicleStatus.offline ? .06 : .1,
+        ),
+      ),
+    );
+    if (!mounted) return;
+    setState(() {
+      for (var index = 0; index < VehicleStatus.values.length; index += 1) {
+        _vehicleMarkers[VehicleStatus.values[index]] = markers[index];
+      }
+    });
   }
 
   Future<void> _checkLocationPermission() async {
@@ -160,28 +211,40 @@ class _MapPageState extends State<MapPage> with WidgetsBindingObserver {
                   child: _buildServicesBanner(context),
                 ),
 
-              // Map controls (right side)
+              // Secondary controls yield visual space while details are expanded.
               Positioned(
-                right: 16,
+                right: DTSpacing.md,
                 top: MediaQuery.of(context).padding.top + 80,
-                child: MapControls(
-                  mapType: state.mapType,
-                  showTraffic: state.showTraffic,
-                  onZoomIn: _zoomIn,
-                  onZoomOut: _zoomOut,
-                  onMyLocation: _goToMyLocation,
-                  onFitBounds: () => _fitAllVehicles(state.vehicleLocations),
-                  onToggleTraffic: () {
-                    context.read<MapBloc>().add(const ToggleTrafficLayer());
-                  },
-                  onMapTypeChanged: (type) {
-                    context.read<MapBloc>().add(ChangeMapType(type));
-                  },
+                child: IgnorePointer(
+                  ignoring: _vehicleSheetStage == VehicleSheetStage.expanded,
+                  child: AnimatedOpacity(
+                    opacity: _vehicleSheetStage == VehicleSheetStage.expanded
+                        ? 0
+                        : 1,
+                    duration: MediaQuery.of(context).disableAnimations
+                        ? Duration.zero
+                        : DTMotion.fast,
+                    child: MapControls(
+                      mapType: state.mapType,
+                      showTraffic: state.showTraffic,
+                      onZoomIn: _zoomIn,
+                      onZoomOut: _zoomOut,
+                      onMyLocation: _goToMyLocation,
+                      onFitBounds: () =>
+                          _fitAllVehicles(state.vehicleLocations),
+                      onToggleTraffic: () {
+                        context.read<MapBloc>().add(const ToggleTrafficLayer());
+                      },
+                      onMapTypeChanged: (type) {
+                        context.read<MapBloc>().add(ChangeMapType(type));
+                      },
+                    ),
+                  ),
                 ),
               ),
 
               // Vehicle list panel (left side, sliding)
-              if (_showVehicleList)
+              if (_panelCoordinator.vehicleListVisible)
                 Positioned(
                   top: 0,
                   left: 0,
@@ -192,20 +255,21 @@ class _MapPageState extends State<MapPage> with WidgetsBindingObserver {
                       selectedVehicle: state.selectedVehicle,
                       onVehicleSelected: (vehicle) {
                         _selectVehicle(context, vehicle);
-                        setState(() => _showVehicleList = false);
                       },
-                      onClose: () => setState(() => _showVehicleList = false),
+                      onClose: () =>
+                          setState(_panelCoordinator.closeVehicleList),
                     ),
                   ),
                 ),
 
-              // Selected vehicle info card (bottom)
-              if (state.hasSelectedVehicle && !state.hasTripHistory)
-                Positioned(
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
+              // Selected vehicle sheet with compact, medium and expanded states.
+              if (_panelCoordinator.shouldShowVehicleSheet(
+                    state.hasSelectedVehicle,
+                  ) &&
+                  !state.hasTripHistory)
+                Positioned.fill(
                   child: VehicleInfoCard(
+                    key: ValueKey(state.selectedVehicle!.vehicleId),
                     vehicle: state.selectedVehicle!,
                     onClose: () {
                       context.read<MapBloc>().add(
@@ -218,6 +282,20 @@ class _MapPageState extends State<MapPage> with WidgetsBindingObserver {
                     },
                     onNavigate: () {
                       _openNavigation(state.selectedVehicle!);
+                    },
+                    onGeofences: () => context.push(RouteConstants.geofences),
+                    onAlerts: () => context.push(RouteConstants.alerts),
+                    onShare: () => context.push(RouteConstants.shareLocation),
+                    onLiveTracking: () => _animateToPosition(
+                      LatLng(
+                        state.selectedVehicle!.latitude,
+                        state.selectedVehicle!.longitude,
+                      ),
+                    ),
+                    onStageChanged: (stage) {
+                      if (_vehicleSheetStage != stage) {
+                        setState(() => _vehicleSheetStage = stage);
+                      }
                     },
                   ),
                 ),
@@ -258,9 +336,11 @@ class _MapPageState extends State<MapPage> with WidgetsBindingObserver {
 
               // Loading overlay
               if (state.isLoading)
-                const Positioned.fill(
+                Positioned.fill(
                   child: ColoredBox(
-                    color: Colors.black26,
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.scrim.withValues(alpha: .18),
                     child: Center(child: CircularProgressIndicator()),
                   ),
                 ),
@@ -268,7 +348,9 @@ class _MapPageState extends State<MapPage> with WidgetsBindingObserver {
               if (state.isTripLoading)
                 Positioned.fill(
                   child: ColoredBox(
-                    color: Colors.black26,
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.scrim.withValues(alpha: .18),
                     child: Center(
                       child: Card(
                         child: Padding(
@@ -355,7 +437,7 @@ class _MapPageState extends State<MapPage> with WidgetsBindingObserver {
         circles: _buildGeofenceCircles(geofences),
         style: Theme.of(context).brightness == Brightness.dark
             ? _darkMapStyle
-            : null,
+            : _lightMapStyle,
         mapType: _getGoogleMapType(state.mapType),
         trafficEnabled: state.showTraffic,
         myLocationEnabled: _locationPermissionGranted,
@@ -372,65 +454,54 @@ class _MapPageState extends State<MapPage> with WidgetsBindingObserver {
   }
 
   Widget _buildTopBar(BuildContext context, MapState state) {
-    final colorScheme = Theme.of(context).colorScheme;
-
     return Row(
       children: [
-        // Menu button to show vehicle list
-        Material(
-          color: colorScheme.surface,
-          elevation: 2,
-          borderRadius: BorderRadius.circular(12),
-          child: InkWell(
-            onTap: () => setState(() => _showVehicleList = !_showVehicleList),
-            borderRadius: BorderRadius.circular(12),
-            child: Container(
-              padding: const EdgeInsets.all(12),
-              child: Badge(
-                isLabelVisible: state.vehicleLocations.isNotEmpty,
-                label: Text('${state.vehicleLocations.length}'),
-                child: Icon(
-                  _showVehicleList ? Icons.close : Icons.menu,
-                  color: colorScheme.onSurface,
-                ),
-              ),
+        DTMapActionButton(
+          icon: Badge(
+            isLabelVisible: state.vehicleLocations.isNotEmpty,
+            label: Text('${state.vehicleLocations.length}'),
+            child: Icon(
+              _panelCoordinator.vehicleListVisible ? Icons.close : Icons.menu,
             ),
           ),
+          tooltip: AppLocalizations.of(context)!.vehicles,
+          onPressed: () => setState(() {
+            if (_panelCoordinator.vehicleListVisible) {
+              _panelCoordinator.closeVehicleList();
+            } else {
+              _panelCoordinator.openVehicleList();
+            }
+          }),
         ),
-
-        const SizedBox(width: 12),
-
-        // Status bar showing vehicle counts
+        const SizedBox(width: DTSpacing.xs),
         Expanded(
-          child: Material(
-            color: colorScheme.surface,
-            elevation: 2,
-            borderRadius: BorderRadius.circular(12),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  _StatusIndicator(
-                    icon: Icons.directions_car,
-                    label: AppLocalizations.of(context)!.total,
-                    count: state.vehicleLocations.length,
-                    color: colorScheme.primary,
-                  ),
-                  _StatusIndicator(
-                    icon: Icons.wifi,
-                    label: AppLocalizations.of(context)!.online,
-                    count: state.onlineVehicleCount,
-                    color: AppColors.statusOnline,
-                  ),
-                  _StatusIndicator(
-                    icon: Icons.play_arrow,
-                    label: AppLocalizations.of(context)!.moving,
-                    count: state.movingVehicleCount,
-                    color: AppColors.statusMoving,
-                  ),
-                ],
-              ),
+          child: DTGlassCard(
+            padding: const EdgeInsets.symmetric(
+              horizontal: DTSpacing.sm,
+              vertical: DTSpacing.xs,
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                _StatusIndicator(
+                  icon: Icons.directions_car_outlined,
+                  label: AppLocalizations.of(context)!.total,
+                  count: state.vehicleLocations.length,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+                _StatusIndicator(
+                  icon: Icons.wifi_outlined,
+                  label: AppLocalizations.of(context)!.online,
+                  count: state.onlineVehicleCount,
+                  color: context.dtColors.online,
+                ),
+                _StatusIndicator(
+                  icon: Icons.play_arrow_outlined,
+                  label: AppLocalizations.of(context)!.moving,
+                  count: state.movingVehicleCount,
+                  color: context.dtColors.moving,
+                ),
+              ],
             ),
           ),
         ),
@@ -444,17 +515,15 @@ class _MapPageState extends State<MapPage> with WidgetsBindingObserver {
     TripPointEntity? playbackPoint,
   }) {
     final markers = vehicles.map((vehicle) {
-      final markerColor = _getMarkerColor(vehicle.status);
-
       return Marker(
         markerId: MarkerId(vehicle.vehicleId),
         position: LatLng(vehicle.latitude, vehicle.longitude),
-        icon: BitmapDescriptor.defaultMarkerWithHue(markerColor),
-        infoWindow: InfoWindow(
-          title: vehicle.vehicleName,
-          snippet: '${vehicle.plateNumber} • ${vehicle.formattedSpeed}',
-        ),
+        icon:
+            _vehicleMarkers[vehicle.status] ??
+            BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure),
+        infoWindow: InfoWindow.noText,
         onTap: () => _selectVehicle(context, vehicle),
+        zIndexInt: selectedVehicle?.vehicleId == vehicle.vehicleId ? 2 : 1,
       );
     }).toSet();
 
@@ -547,7 +616,7 @@ class _MapPageState extends State<MapPage> with WidgetsBindingObserver {
           points: tripPoints
               .map((point) => LatLng(point.latitude, point.longitude))
               .toList(),
-          color: AppColors.routeColor,
+          color: Theme.of(context).colorScheme.primary,
           width: 5,
         ),
       };
@@ -564,7 +633,7 @@ class _MapPageState extends State<MapPage> with WidgetsBindingObserver {
           points: playedPoints
               .map((point) => LatLng(point.latitude, point.longitude))
               .toList(),
-          color: AppColors.routeColor,
+          color: Theme.of(context).colorScheme.primary,
           width: 6,
         ),
       );
@@ -577,7 +646,7 @@ class _MapPageState extends State<MapPage> with WidgetsBindingObserver {
           points: remainingPoints
               .map((point) => LatLng(point.latitude, point.longitude))
               .toList(),
-          color: Colors.blueGrey,
+          color: context.dtColors.muted,
           width: 4,
         ),
       );
@@ -593,20 +662,14 @@ class _MapPageState extends State<MapPage> with WidgetsBindingObserver {
           circleId: CircleId('geofence-${geofence.id}'),
           center: LatLng(geofence.latitude, geofence.longitude),
           radius: geofence.radiusMeters,
-          fillColor: AppColors.geofenceFill,
-          strokeColor: AppColors.geofenceStroke,
+          fillColor: Theme.of(
+            context,
+          ).colorScheme.primary.withValues(alpha: .2),
+          strokeColor: Theme.of(context).colorScheme.primary,
           strokeWidth: 2,
         ),
       )
       .toSet();
-
-  double _getMarkerColor(VehicleStatus status) {
-    return switch (status) {
-      VehicleStatus.moving => BitmapDescriptor.hueBlue,
-      VehicleStatus.idle => BitmapDescriptor.hueOrange,
-      VehicleStatus.offline => BitmapDescriptor.hueRed,
-    };
-  }
 
   MapType _getGoogleMapType(MapViewType type) {
     return switch (type) {
@@ -618,6 +681,17 @@ class _MapPageState extends State<MapPage> with WidgetsBindingObserver {
   }
 
   void _selectVehicle(BuildContext context, VehicleLocationEntity vehicle) {
+    final selectedFromList = _panelCoordinator.vehicleListVisible;
+    setState(() {
+      if (selectedFromList) {
+        _panelCoordinator.selectVehicle();
+      } else {
+        _panelCoordinator.selectMarker();
+      }
+    });
+    if (_vehicleSheetStage != VehicleSheetStage.intermediate) {
+      setState(() => _vehicleSheetStage = VehicleSheetStage.intermediate);
+    }
     context.read<MapBloc>().add(SelectVehicle(vehicle));
     _animateToPosition(LatLng(vehicle.latitude, vehicle.longitude));
   }
@@ -974,17 +1048,22 @@ class _MapPageState extends State<MapPage> with WidgetsBindingObserver {
 }
 
 const _darkMapStyle = '''[
-  {"elementType":"geometry","stylers":[{"color":"#1d2433"}]},
-  {"elementType":"labels.text.fill","stylers":[{"color":"#c9d2e3"}]},
-  {"elementType":"labels.text.stroke","stylers":[{"color":"#1d2433"}]},
-  {"featureType":"administrative","elementType":"geometry.stroke","stylers":[{"color":"#46536b"}]},
-  {"featureType":"landscape","elementType":"geometry","stylers":[{"color":"#1b2230"}]},
-  {"featureType":"poi","elementType":"geometry","stylers":[{"color":"#242d3e"}]},
-  {"featureType":"poi.park","elementType":"geometry","stylers":[{"color":"#1c3540"}]},
-  {"featureType":"road","elementType":"geometry","stylers":[{"color":"#303b50"}]},
-  {"featureType":"road.highway","elementType":"geometry","stylers":[{"color":"#44516a"}]},
-  {"featureType":"transit","elementType":"geometry","stylers":[{"color":"#293448"}]},
-  {"featureType":"water","elementType":"geometry","stylers":[{"color":"#111b29"}]}
+  {"elementType":"geometry","stylers":[{"color":"#050B16"}]},
+  {"elementType":"labels.text.fill","stylers":[{"color":"#A5B6D2"}]},
+  {"elementType":"labels.text.stroke","stylers":[{"color":"#050B16"}]},
+  {"featureType":"landscape","elementType":"geometry","stylers":[{"color":"#0B1629"}]},
+  {"featureType":"poi","elementType":"geometry","stylers":[{"color":"#101F36"}]},
+  {"featureType":"road","elementType":"geometry","stylers":[{"color":"#253D5D"}]},
+  {"featureType":"water","elementType":"geometry","stylers":[{"color":"#081326"}]}
+]''';
+
+const _lightMapStyle = '''[
+  {"elementType":"geometry","stylers":[{"color":"#F7F9FD"}]},
+  {"elementType":"labels.text.fill","stylers":[{"color":"#58687F"}]},
+  {"elementType":"labels.text.stroke","stylers":[{"color":"#FFFFFF"}]},
+  {"featureType":"landscape","elementType":"geometry","stylers":[{"color":"#EEF3FA"}]},
+  {"featureType":"road","elementType":"geometry","stylers":[{"color":"#FFFFFF"}]},
+  {"featureType":"water","elementType":"geometry","stylers":[{"color":"#D7E8FF"}]}
 ]''';
 
 class _StatusIndicator extends StatelessWidget {

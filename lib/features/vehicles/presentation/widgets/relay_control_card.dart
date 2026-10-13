@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../../../core/design/dt_components.dart';
+import '../../../../core/design/dt_design_tokens.dart';
 import '../../../../core/errors/exceptions.dart';
 import '../../../../core/utils/extensions.dart';
 import '../../../../injection_container.dart';
@@ -187,16 +189,20 @@ class _RelayControlCardState extends State<RelayControlCard> {
         ? _pendingDesiredState ?? desiredState
         : reportedState ?? desiredState;
     final isImmobilized = effectiveState == 'OFF';
-    final stateColor = isImmobilized ? Colors.green : Colors.red;
-    final stateColorPowerIndicator = isImmobilized ? Colors.red : Colors.green;
+    final stateColor = isImmobilized
+        ? context.dtColors.idle
+        : context.dtColors.online;
+    final stateColorPowerIndicator = isImmobilized
+        ? context.dtColors.alert
+        : context.dtColors.online;
     final actionLabel = isImmobilized
         ? context.l10n.activateVehicle
         : context.l10n.immobilizeVehicle;
     final requestedState = isImmobilized ? 'ON' : 'OFF';
 
-    return Card(
+    return DTGlassCard(
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.zero,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -208,7 +214,9 @@ class _RelayControlCardState extends State<RelayControlCard> {
                   isImmobilized
                       ? context.l10n.vehicleImmobilized
                       : context.l10n.vehicleActive,
-                  style: TextStyle(fontWeight: FontWeight.w600),
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ],
             ),

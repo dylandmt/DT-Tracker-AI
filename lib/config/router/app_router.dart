@@ -154,28 +154,6 @@ class AppRouter {
         name: RouteConstants.shareLocationName,
         builder: (context, state) => const ShareLocationPage(),
       ),
-      GoRoute(
-        path: RouteConstants.statistics,
-        name: RouteConstants.statisticsName,
-        builder: (context, state) => BlocProvider(
-          create: (_) => sl<StatisticsBloc>(),
-          child: const StatisticsPage(),
-        ),
-        routes: [
-          GoRoute(
-            path: 'daily',
-            name: RouteConstants.dailyStatisticsName,
-            builder: (context, state) {
-              final data = state.extra! as Map<String, dynamic>;
-              return DailyStatisticsPage(
-                vehicle: data['vehicle']! as VehicleEntity,
-                date: data['date']! as DateTime,
-              );
-            },
-          ),
-        ],
-      ),
-
       // Shell route with bottom navigation
       ShellRoute(
         navigatorKey: _shellNavigatorKey,
@@ -279,6 +257,32 @@ class AppRouter {
                 child: const MapPage(),
               ),
             ),
+          ),
+
+          // Statistics tab
+          GoRoute(
+            path: RouteConstants.statistics,
+            name: RouteConstants.statisticsName,
+            pageBuilder: (context, state) => NoTransitionPage(
+              child: BlocProvider(
+                create: (_) => sl<StatisticsBloc>(),
+                child: const StatisticsPage(),
+              ),
+            ),
+            routes: [
+              GoRoute(
+                path: 'daily',
+                name: RouteConstants.dailyStatisticsName,
+                parentNavigatorKey: _rootNavigatorKey,
+                builder: (context, state) {
+                  final data = state.extra! as Map<String, dynamic>;
+                  return DailyStatisticsPage(
+                    vehicle: data['vehicle']! as VehicleEntity,
+                    date: data['date']! as DateTime,
+                  );
+                },
+              ),
+            ],
           ),
 
           // Friends tab

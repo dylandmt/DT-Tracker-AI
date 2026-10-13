@@ -6,6 +6,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/route_constants.dart';
+import '../../../../core/design/dt_components.dart';
+import '../../../../core/design/dt_design_tokens.dart';
 import '../../../../config/environment/environment.dart';
 import '../../../../core/security/tracker_security_dialogs.dart';
 import '../../../../core/utils/image_cache.dart';
@@ -128,7 +130,7 @@ class _VehicleDetailPageState extends State<VehicleDetailPage> {
                     slivers: [
                       // App Bar with image
                       SliverAppBar(
-                        expandedHeight: 250,
+                        expandedHeight: 236,
                         pinned: true,
                         flexibleSpace: FlexibleSpaceBar(
                           background: vehicle.imageUrls.isNotEmpty
@@ -177,78 +179,24 @@ class _VehicleDetailPageState extends State<VehicleDetailPage> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              // Vehicle name and plate
+                              _buildVehicleHeader(context, vehicle),
+                              const SizedBox(height: DTSpacing.lg),
                               Text(
-                                vehicle.name,
-                                style: textTheme.headlineSmall?.copyWith(
-                                  fontWeight: FontWeight.bold,
+                                context.l10n.vehicleDetails,
+                                style: textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.w700,
                                 ),
                               ),
-                              const SizedBox(height: 4),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 6,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: colorScheme.primaryContainer,
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                                child: Text(
-                                  vehicle.plateNumber,
-                                  style: textTheme.titleMedium?.copyWith(
-                                    color: colorScheme.onPrimaryContainer,
-                                    fontWeight: FontWeight.w600,
-                                  ),
+                              const SizedBox(height: DTSpacing.sm),
+                              _buildVehicleInfoCard(context, vehicle),
+                              const SizedBox(height: DTSpacing.lg),
+                              Text(
+                                context.l10n.tracker,
+                                style: textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.w700,
                                 ),
                               ),
-                              if (EnvironmentConfig.isDev &&
-                                  vehicle.plan != null) ...[
-                                const SizedBox(height: 8),
-                                Chip(
-                                  label: Text(
-                                    '${context.l10n.vehiclePlan}: ${switch (vehicle.plan) {
-                                      VehiclePlan.essential => context.l10n.planEssential,
-                                      VehiclePlan.protect => context.l10n.planProtect,
-                                      VehiclePlan.total => context.l10n.planTotal,
-                                      null => '',
-                                    }}',
-                                  ),
-                                ),
-                              ],
-
-                              const SizedBox(height: 24),
-
-                              // Vehicle details
-                              if (vehicle.fullDescription != null) ...[
-                                _buildDetailRow(
-                                  context,
-                                  Icons.directions_car,
-                                  context.l10n.vehicle,
-                                  vehicle.fullDescription!,
-                                ),
-                                const SizedBox(height: 12),
-                              ],
-                              if (vehicle.color != null) ...[
-                                _buildDetailRow(
-                                  context,
-                                  Icons.palette_outlined,
-                                  context.l10n.color,
-                                  localizedVehicleColor(
-                                    context.l10n,
-                                    vehicle.color!,
-                                  ),
-                                ),
-                                const SizedBox(height: 12),
-                              ],
-                              _buildDetailRow(
-                                context,
-                                Icons.calendar_today_outlined,
-                                context.l10n.added,
-                                vehicle.createdAt.localizedDate(context),
-                              ),
-
-                              const SizedBox(height: 24),
+                              const SizedBox(height: DTSpacing.sm),
 
                               // Tracker status card
                               BlocProvider(
@@ -327,7 +275,7 @@ class _VehicleDetailPageState extends State<VehicleDetailPage> {
                               if (vehicle.hasTracker &&
                                   (vehicle.plan == VehiclePlan.protect ||
                                       vehicle.plan == VehiclePlan.total)) ...[
-                                const SizedBox(height: 16),
+                                const SizedBox(height: DTSpacing.lg),
                                 RelayControlCard(vehicleId: vehicle.id),
                               ],
                             ],
@@ -391,28 +339,139 @@ class _VehicleDetailPageState extends State<VehicleDetailPage> {
     );
   }
 
+  Widget _buildVehicleHeader(BuildContext context, VehicleEntity vehicle) =>
+      DTGlassCard(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              vehicle.name,
+              style: Theme.of(
+                context,
+              ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w700),
+            ),
+            const SizedBox(height: DTSpacing.xs),
+            Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: DTSpacing.sm,
+                vertical: DTSpacing.xs,
+              ),
+              decoration: BoxDecoration(
+                color: Theme.of(
+                  context,
+                ).colorScheme.primary.withValues(alpha: .14),
+                borderRadius: const BorderRadius.all(DTRadius.pill),
+              ),
+              child: Text(
+                vehicle.plateNumber,
+                style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                  color: Theme.of(context).colorScheme.primary,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+            if (vehicle.fullDescription != null) ...[
+              const SizedBox(height: DTSpacing.sm),
+              Text(
+                vehicle.fullDescription!,
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+            ],
+            if (EnvironmentConfig.isDev && vehicle.plan != null) ...[
+              const SizedBox(height: DTSpacing.sm),
+              Text(
+                '${context.l10n.vehiclePlan}: ${switch (vehicle.plan) {
+                  VehiclePlan.essential => context.l10n.planEssential,
+                  VehiclePlan.protect => context.l10n.planProtect,
+                  VehiclePlan.total => context.l10n.planTotal,
+                  null => '',
+                }}',
+                style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                  color: context.dtColors.textSecondary,
+                ),
+              ),
+            ],
+          ],
+        ),
+      );
+
+  Widget _buildVehicleInfoCard(BuildContext context, VehicleEntity vehicle) =>
+      DTGlassCard(
+        child: Column(
+          children: [
+            if (vehicle.brand != null)
+              _buildDetailRow(
+                context,
+                Icons.sell_outlined,
+                context.l10n.brand,
+                vehicle.brand!,
+              ),
+            if (vehicle.brand != null && vehicle.model != null)
+              const Divider(height: DTSpacing.lg),
+            if (vehicle.model != null)
+              _buildDetailRow(
+                context,
+                Icons.directions_car_outlined,
+                context.l10n.model,
+                vehicle.model!,
+              ),
+            if ((vehicle.brand != null || vehicle.model != null) &&
+                vehicle.year != null)
+              const Divider(height: DTSpacing.lg),
+            if (vehicle.year != null)
+              _buildDetailRow(
+                context,
+                Icons.calendar_today_outlined,
+                context.l10n.year,
+                vehicle.year.toString(),
+              ),
+            if ((vehicle.brand != null ||
+                    vehicle.model != null ||
+                    vehicle.year != null) &&
+                vehicle.color != null)
+              const Divider(height: DTSpacing.lg),
+            if (vehicle.color != null)
+              _buildDetailRow(
+                context,
+                Icons.palette_outlined,
+                context.l10n.color,
+                localizedVehicleColor(context.l10n, vehicle.color!),
+              ),
+            const Divider(height: DTSpacing.lg),
+            _buildDetailRow(
+              context,
+              Icons.schedule_outlined,
+              context.l10n.added,
+              vehicle.createdAt.localizedDate(context),
+            ),
+          ],
+        ),
+      );
+
   Widget _buildDetailRow(
     BuildContext context,
     IconData icon,
     String label,
     String value,
   ) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final textTheme = Theme.of(context).textTheme;
-
     return Row(
       children: [
-        Icon(icon, size: 20, color: colorScheme.onSurfaceVariant),
-        const SizedBox(width: 12),
-        Text(
-          '$label: ',
-          style: textTheme.bodyMedium?.copyWith(
-            color: colorScheme.onSurfaceVariant,
+        Icon(icon, size: 18, color: context.dtColors.textSecondary),
+        const SizedBox(width: DTSpacing.xs),
+        Expanded(
+          child: Text(
+            label,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: context.dtColors.textSecondary,
+            ),
           ),
         ),
         Text(
           value,
-          style: textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
+          textAlign: TextAlign.end,
+          style: Theme.of(
+            context,
+          ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
         ),
       ],
     );

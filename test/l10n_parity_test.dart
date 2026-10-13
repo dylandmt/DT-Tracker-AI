@@ -24,12 +24,10 @@ void main() {
       final englishMetadata = english['@$key'] as Map<String, dynamic>?;
       final spanishMetadata = spanish['@$key'] as Map<String, dynamic>?;
       final englishPlaceholders =
-          (englishMetadata?['placeholders'] as Map<String, dynamic>? ?? {})
-              .keys
+          (englishMetadata?['placeholders'] as Map<String, dynamic>? ?? {}).keys
               .toSet();
       final spanishPlaceholders =
-          (spanishMetadata?['placeholders'] as Map<String, dynamic>? ?? {})
-              .keys
+          (spanishMetadata?['placeholders'] as Map<String, dynamic>? ?? {}).keys
               .toSet();
       expect(spanishPlaceholders, englishPlaceholders, reason: key);
     }

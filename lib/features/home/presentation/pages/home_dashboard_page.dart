@@ -1,9 +1,13 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 import '../../../../core/constants/route_constants.dart';
+import '../../../../core/design/dt_components.dart';
+import '../../../../core/design/dt_design_tokens.dart';
+import '../../../../core/design/dt_vehicle_marker.dart';
 import '../../../../core/usecases/usecase.dart';
 import '../../../../core/utils/extensions.dart';
 import '../../../../injection_container.dart';
@@ -24,8 +28,11 @@ class _HomeDashboardPageState extends State<HomeDashboardPage> {
   List<VehicleEntity> _vehicles = const [];
   VehicleEntity? _selected;
   VehicleLocationEntity? _location;
-  VehiclePlan? _expandedPlan;
+  BitmapDescriptor? _vehicleMarker;
+  Brightness? _markerBrightness;
+  double? _markerPixelRatio;
   bool _loading = true;
+  MapType _mapType = MapType.normal;
 
   @override
   void initState() {
@@ -39,7 +46,10 @@ class _HomeDashboardPageState extends State<HomeDashboardPage> {
     result.fold((_) => setState(() => _loading = false), (vehicles) async {
       setState(() {
         _vehicles = vehicles;
-        _selected = vehicles.isEmpty ? null : vehicles.first;
+        _selected ??= vehicles.isEmpty ? null : vehicles.first;
+        if (_selected != null && !vehicles.any((v) => v.id == _selected!.id)) {
+          _selected = vehicles.isEmpty ? null : vehicles.first;
+        }
         _loading = false;
       });
       await _loadLocation();
@@ -49,143 +59,81 @@ class _HomeDashboardPageState extends State<HomeDashboardPage> {
   Future<void> _loadLocation() async {
     final vehicle = _selected;
     if (vehicle?.hasTracker != true) {
-      if (mounted) {
-        setState(() => _location = null);
-      }
+      if (mounted) setState(() => _location = null);
       return;
     }
+    final colorScheme = Theme.of(context).colorScheme;
+    final markerSurface = context.dtColors.surfaceOverlay;
+    final markerBrightness = Theme.of(context).brightness;
+    final markerPixelRatio = MediaQuery.devicePixelRatioOf(context);
     final result = await sl<GetVehicleLocation>()(IdParams(id: vehicle!.id));
-    if (mounted) {
-      result.fold(
-        (_) => setState(() => _location = null),
-        (value) => setState(() => _location = value),
-      );
-    }
+    if (!mounted) return;
+    result.fold((_) => setState(() => _location = null), (value) async {
+      final needsMarker =
+          _vehicleMarker == null ||
+          _markerBrightness != markerBrightness ||
+          _markerPixelRatio != markerPixelRatio;
+      final marker = needsMarker
+          ? await DTVehicleMarker.create(
+              accent: colorScheme.primary,
+              surface: markerSurface,
+              onPrimary: colorScheme.onPrimary,
+              devicePixelRatio: markerPixelRatio,
+            )
+          : _vehicleMarker;
+      if (mounted) {
+        setState(() {
+          _location = value;
+          _vehicleMarker = marker;
+          _markerBrightness = markerBrightness;
+          _markerPixelRatio = markerPixelRatio;
+        });
+      }
+    });
   }
-
-  bool get _canShare => _vehicles.isNotEmpty;
 
   @override
   Widget build(BuildContext context) {
-    final selected = _selected;
-    return Scaffold(
+    return DTAppScaffold(
       body: SafeArea(
         child: RefreshIndicator(
           onRefresh: _loadVehicles,
           child: ListView(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+            padding: const EdgeInsets.fromLTRB(
+              DTSpacing.md,
+              DTSpacing.sm,
+              DTSpacing.md,
+              DTSpacing.xxl,
+            ),
             children: [
-              BlocBuilder<AuthBloc, AuthState>(
-                builder: (_, state) => Text(
-                  context.l10n.homeGreeting(
-                    state.user?.firstName ??
-                        state.user?.displayName ??
-                        context.l10n.guestUser,
-                  ),
-                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                context.l10n.homeTagline,
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
-              ),
-              const SizedBox(height: 20),
+              _header(context),
+              const SizedBox(height: DTSpacing.sm),
               if (_loading)
-                const Center(
-                  child: Padding(
-                    padding: EdgeInsets.all(48),
-                    child: CircularProgressIndicator(),
-                  ),
+                const Padding(
+                  padding: EdgeInsets.all(DTSpacing.xxxl),
+                  child: Center(child: CircularProgressIndicator()),
                 )
-              else if (selected == null)
+              else if (_selected == null)
                 _emptyState(context)
               else ...[
-                _vehicleMap(context, selected),
-                const SizedBox(height: 16),
+                DTVehicleSelector(
+                  label: _selected!.name,
+                  leading: const Icon(Icons.directions_car_outlined),
+                  onTap: _showVehicleSelector,
+                ),
+                const SizedBox(height: DTSpacing.sm),
+                _locationPreview(context),
+                const SizedBox(height: DTSpacing.sm),
                 _metrics(context),
-                const SizedBox(height: 24),
+                const SizedBox(height: DTSpacing.lg),
                 Text(
                   context.l10n.quickActions,
                   style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
-                const SizedBox(height: 12),
-                Wrap(
-                  spacing: 10,
-                  runSpacing: 10,
-                  children: [
-                    _action(
-                      context,
-                      Icons.gps_fixed,
-                      context.l10n.realTime,
-                      () => context.go(RouteConstants.homeMap),
-                    ),
-                    _action(
-                      context,
-                      Icons.fence,
-                      context.l10n.geofences,
-                      () => context.push(RouteConstants.geofences),
-                    ),
-                    _action(
-                      context,
-                      Icons.notifications_active,
-                      context.l10n.alerts,
-                      () => context.push(RouteConstants.alerts),
-                    ),
-                    _action(
-                      context,
-                      Icons.insights_outlined,
-                      context.l10n.statistics,
-                      () => context.push(RouteConstants.statistics),
-                    ),
-                    if (_canShare)
-                      _action(
-                        context,
-                        Icons.people,
-                        context.l10n.friends,
-                        () => context.go(RouteConstants.homeFriends),
-                      ),
-                  ],
-                ),
-                const SizedBox(height: 28),
-                Text(
-                  context.l10n.trackerPlans,
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  context.l10n.planSelectionIntro,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                _plan(
-                  context,
-                  VehiclePlan.essential,
-                  context.l10n.planEssential,
-                  context.l10n.planEssentialDescription,
-                ),
-                _plan(
-                  context,
-                  VehiclePlan.protect,
-                  context.l10n.planProtect,
-                  context.l10n.planProtectDescription,
-                ),
-                _plan(
-                  context,
-                  VehiclePlan.total,
-                  context.l10n.planTotal,
-                  context.l10n.planTotalDescription,
-                ),
+                const SizedBox(height: DTSpacing.xs),
+                _quickActions(context),
               ],
             ],
           ),
@@ -194,15 +142,76 @@ class _HomeDashboardPageState extends State<HomeDashboardPage> {
     );
   }
 
+  Widget _header(BuildContext context) => BlocBuilder<AuthBloc, AuthState>(
+    builder: (_, state) {
+      final user = state.user;
+      final name =
+          user?.firstName ?? user?.displayName ?? context.l10n.guestUser;
+      final isDark = Theme.of(context).brightness == Brightness.dark;
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Image.asset(
+                isDark
+                    ? 'assets/images/dt_tracker_logo_dark.png'
+                    : 'assets/images/dt_tracker_logo_light.png',
+                height: 30,
+                fit: BoxFit.contain,
+                semanticLabel: context.l10n.appTitle,
+              ),
+              const Spacer(),
+              IconButton.filledTonal(
+                tooltip: context.l10n.alerts,
+                onPressed: () => context.push(RouteConstants.alerts),
+                icon: const Icon(Icons.notifications_none_outlined),
+              ),
+              const SizedBox(width: DTSpacing.xs),
+              _profileAvatar(context, user?.photoUrl),
+            ],
+          ),
+          const SizedBox(height: DTSpacing.xs),
+          Text(
+            context.l10n.homeGreeting(name),
+            style: Theme.of(
+              context,
+            ).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w700),
+          ),
+          const SizedBox(height: DTSpacing.xxs),
+          Text(
+            context.l10n.homeTagline,
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              color: context.dtColors.textSecondary,
+            ),
+          ),
+        ],
+      );
+    },
+  );
+
+  Widget _profileAvatar(BuildContext context, String? photoUrl) => CircleAvatar(
+    radius: 21,
+    backgroundColor: context.dtColors.surfaceRaised,
+    foregroundImage: photoUrl == null
+        ? null
+        : CachedNetworkImageProvider(photoUrl),
+    child: photoUrl == null ? const Icon(Icons.person_outline) : null,
+  );
+
   Widget _emptyState(BuildContext context) => Center(
     child: Padding(
-      padding: const EdgeInsets.all(48),
+      padding: const EdgeInsets.all(DTSpacing.xxxl),
       child: Column(
         children: [
-          const Icon(Icons.directions_car_outlined, size: 56),
-          const SizedBox(height: 12),
+          Icon(
+            Icons.directions_car_outlined,
+            size: 56,
+            color: context.dtColors.muted,
+          ),
+          const SizedBox(height: DTSpacing.sm),
           Text(context.l10n.addFirstVehicle),
-          const SizedBox(height: 12),
+          const SizedBox(height: DTSpacing.sm),
           FilledButton(
             onPressed: () => context.push(RouteConstants.vehicleAdd),
             child: Text(context.l10n.addVehicle),
@@ -212,84 +221,106 @@ class _HomeDashboardPageState extends State<HomeDashboardPage> {
     ),
   );
 
-  Widget _vehicleMap(BuildContext context, VehicleEntity vehicle) {
+  Widget _locationPreview(BuildContext context) {
     final location = _location;
-    final position = location == null
-        ? const LatLng(19.4326, -99.1332)
-        : LatLng(location.latitude, location.longitude);
-    return Card(
-      clipBehavior: Clip.antiAlias,
+    if (location == null) {
+      return DTGlassCard(
+        padding: EdgeInsets.zero,
+        child: SizedBox(
+          height: 196,
+          child: Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.location_off_outlined,
+                  color: context.dtColors.muted,
+                ),
+                const SizedBox(height: DTSpacing.xs),
+                Text(
+                  context.l10n.noData,
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+    final position = LatLng(location.latitude, location.longitude);
+    return ClipRRect(
+      borderRadius: const BorderRadius.all(DTRadius.lg),
       child: SizedBox(
-        height: 250,
+        height: 196,
         child: Stack(
           children: [
             GoogleMap(
-              key: ValueKey('${vehicle.id}-${location?.lastUpdate}'),
-              initialCameraPosition: CameraPosition(
-                target: position,
-                zoom: location == null ? 10 : 15,
-              ),
-              markers: location == null
-                  ? const {}
-                  : {
-                      Marker(
-                        markerId: MarkerId(vehicle.id),
-                        position: position,
+              key: ValueKey(_selected!.id),
+              initialCameraPosition: CameraPosition(target: position, zoom: 15),
+              markers: {
+                Marker(
+                  markerId: MarkerId(_selected!.id),
+                  position: position,
+                  icon:
+                      _vehicleMarker ??
+                      BitmapDescriptor.defaultMarkerWithHue(
+                        BitmapDescriptor.hueAzure,
                       ),
-                    },
+                  anchor: const Offset(.5, .5),
+                ),
+              },
+              mapType: _mapType,
+              style: Theme.of(context).brightness == Brightness.dark
+                  ? _darkMapStyle
+                  : null,
               zoomControlsEnabled: false,
               myLocationButtonEnabled: false,
               mapToolbarEnabled: false,
+              compassEnabled: false,
             ),
             Positioned(
-              top: 12,
-              left: 12,
-              right: 12,
-              child: Card(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                  child: DropdownButtonHideUnderline(
-                    child: DropdownButton<String>(
-                      isExpanded: true,
-                      value: vehicle.id,
-                      items: _vehicles
-                          .map(
-                            (item) => DropdownMenuItem(
-                              value: item.id,
-                              child: Text(item.name),
-                            ),
-                          )
-                          .toList(),
-                      onChanged: (id) async {
-                        setState(() {
-                          _selected = _vehicles.firstWhere(
-                            (item) => item.id == id,
-                          );
-                          _location = null;
-                        });
-                        await _loadLocation();
-                      },
-                    ),
-                  ),
-                ),
+              top: DTSpacing.sm,
+              left: DTSpacing.sm,
+              child: DTStatusPill(
+                status: location.isOnline
+                    ? DTVehicleStatus.online
+                    : DTVehicleStatus.offline,
+                label: location.isOnline
+                    ? context.l10n.online
+                    : context.l10n.offline,
               ),
             ),
             Positioned(
-              bottom: 12,
-              left: 12,
-              child: Chip(
-                avatar: Icon(
-                  location?.isOnline == true
-                      ? Icons.circle
-                      : Icons.circle_outlined,
-                  color: location?.isOnline == true ? Colors.green : null,
-                  size: 14,
-                ),
-                label: Text(
-                  location?.isOnline == true
-                      ? context.l10n.online
-                      : context.l10n.offline,
-                ),
+              top: DTSpacing.sm,
+              right: DTSpacing.sm,
+              child: Column(
+                children: [
+                  DTMapActionButton(
+                    icon: const Icon(Icons.layers_outlined, size: 18),
+                    tooltip: context.l10n.mapType,
+                    size: 44,
+                    selected: _mapType == MapType.satellite,
+                    onPressed: () => setState(() {
+                      _mapType = _mapType == MapType.normal
+                          ? MapType.satellite
+                          : MapType.normal;
+                    }),
+                  ),
+                  const SizedBox(height: DTSpacing.xxs),
+                  DTMapActionButton(
+                    icon: const Icon(Icons.navigation_outlined, size: 18),
+                    tooltip: context.l10n.navigate,
+                    size: 44,
+                    onPressed: () => context.go(RouteConstants.homeMap),
+                  ),
+                  const SizedBox(height: DTSpacing.xxs),
+                  DTMapActionButton(
+                    icon: const Icon(Icons.fullscreen, size: 18),
+                    tooltip: context.l10n.realTime,
+                    size: 44,
+                    onPressed: () => context.go(RouteConstants.homeMap),
+                  ),
+                ],
               ),
             ),
           ],
@@ -300,174 +331,139 @@ class _HomeDashboardPageState extends State<HomeDashboardPage> {
 
   Widget _metrics(BuildContext context) => Row(
     children: [
-      _metric(
-        context,
-        Icons.schedule,
-        _location?.lastUpdate.localizedTimeAgo(context) ?? context.l10n.noData,
-        context.l10n.updated,
+      Expanded(
+        child: DTMetricTile(
+          icon: const Icon(Icons.schedule_outlined),
+          value:
+              _location?.lastUpdate.localizedTimeAgo(context) ??
+              context.l10n.noData,
+          label: context.l10n.updated,
+          compact: true,
+        ),
       ),
-      _metric(
-        context,
-        Icons.speed,
-        _location == null ? '-' : _location!.formattedSpeed,
-        context.l10n.speed,
+      const SizedBox(width: DTSpacing.xs),
+      Expanded(
+        child: DTMetricTile(
+          icon: const Icon(Icons.speed_outlined),
+          value: _location?.formattedSpeed ?? '-',
+          label: context.l10n.speed,
+          compact: true,
+        ),
       ),
-      _metric(
-        context,
-        Icons.battery_full,
-        _location == null ? '-' : '${_location!.battery}%',
-        context.l10n.battery,
+      const SizedBox(width: DTSpacing.xs),
+      Expanded(
+        child: DTMetricTile(
+          icon: const Icon(Icons.battery_full_outlined),
+          value: _location == null ? '-' : '${_location!.battery}%',
+          label: context.l10n.battery,
+          color: _location?.isBatteryLow == true
+              ? context.dtColors.alert
+              : context.dtColors.online,
+          compact: true,
+        ),
       ),
     ],
   );
 
-  Widget _metric(
-    BuildContext context,
-    IconData icon,
-    String value,
-    String label,
-  ) => Expanded(
-    child: Card(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 6),
-        child: Column(
-          children: [
-            Icon(icon, color: Theme.of(context).colorScheme.primary),
-            const SizedBox(height: 6),
-            Text(
-              value,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: Theme.of(
-                context,
-              ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
-            ),
-            Text(label, style: Theme.of(context).textTheme.bodySmall),
-          ],
-        ),
+  Widget _quickActions(BuildContext context) => GridView.count(
+    crossAxisCount: 2,
+    shrinkWrap: true,
+    physics: const NeverScrollableScrollPhysics(),
+    mainAxisSpacing: DTSpacing.xs,
+    crossAxisSpacing: DTSpacing.xs,
+    childAspectRatio: 2.05,
+    children: [
+      DTActionTile(
+        icon: const Icon(Icons.gps_fixed),
+        label: context.l10n.realTime,
+        subtitle: context.l10n.liveLocation,
+        color: Theme.of(context).colorScheme.primary,
+        compact: true,
+        showTrailing: false,
+        onTap: () => context.go(RouteConstants.homeMap),
       ),
-    ),
+      DTActionTile(
+        icon: const Icon(Icons.fence),
+        label: context.l10n.geofences,
+        subtitle: context.l10n.zonesAndAlerts,
+        color: context.dtColors.purple,
+        compact: true,
+        showTrailing: false,
+        onTap: () => context.push(RouteConstants.geofences),
+      ),
+      DTActionTile(
+        icon: const Icon(Icons.notifications_active_outlined),
+        label: context.l10n.alerts,
+        subtitle: context.l10n.recentEvents,
+        color: context.dtColors.idle,
+        compact: true,
+        showTrailing: false,
+        onTap: () => context.push(RouteConstants.alerts),
+      ),
+      DTActionTile(
+        icon: const Icon(Icons.bar_chart_outlined),
+        label: context.l10n.statistics,
+        subtitle: context.l10n.usageAndReports,
+        color: context.dtColors.online,
+        compact: true,
+        showTrailing: false,
+        onTap: () => context.push(RouteConstants.statistics),
+      ),
+    ],
   );
 
-  Widget _action(
-    BuildContext context,
-    IconData icon,
-    String label,
-    VoidCallback onTap,
-  ) => SizedBox(
-    width: (MediaQuery.sizeOf(context).width - 42) / 2,
-    child: InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
-      child: Card(
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            children: [
-              Icon(icon, color: Theme.of(context).colorScheme.primary),
-              const SizedBox(height: 8),
-              Text(label, textAlign: TextAlign.center),
-            ],
+  Future<void> _showVehicleSelector() async {
+    final selected = await showModalBottomSheet<VehicleEntity>(
+      context: context,
+      showDragHandle: true,
+      builder: (context) => SafeArea(
+        child: ListView.separated(
+          shrinkWrap: true,
+          padding: const EdgeInsets.fromLTRB(
+            DTSpacing.md,
+            0,
+            DTSpacing.md,
+            DTSpacing.xl,
           ),
-        ),
-      ),
-    ),
-  );
-
-  Widget _plan(
-    BuildContext context,
-    VehiclePlan plan,
-    String title,
-    String description,
-  ) {
-    final expanded = _expandedPlan == plan;
-    final isCurrentPlan = _selected?.plan == plan;
-    final icon = plan == VehiclePlan.essential
-        ? Icons.location_on
-        : plan == VehiclePlan.protect
-        ? Icons.shield
-        : Icons.workspace_premium;
-    final details = switch (plan) {
-      VehiclePlan.essential => [
-        context.l10n.planEssentialFeatureLocation,
-        context.l10n.planEssentialFeatureStatus,
-        context.l10n.planEssentialFeatureHistory,
-      ],
-      VehiclePlan.protect => [
-        context.l10n.planProtectFeatureIncluded,
-        context.l10n.planProtectFeatureHistory,
-        context.l10n.planProtectFeatureSharing,
-      ],
-      VehiclePlan.total => [
-        context.l10n.planTotalFeatureIncluded,
-        context.l10n.planTotalFeatureHistory,
-        context.l10n.planTotalFeatureProtection,
-      ],
-    };
-
-    return Card(
-      color: isCurrentPlan
-          ? Theme.of(context).colorScheme.primaryContainer
-          : null,
-      child: InkWell(
-        onTap: () => setState(() {
-          _expandedPlan = expanded ? null : plan;
-        }),
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Icon(icon),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      title,
-                      style: const TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                  if (isCurrentPlan) const Icon(Icons.check_circle),
-                  const SizedBox(width: 4),
-                  Icon(expanded ? Icons.expand_less : Icons.expand_more),
-                ],
+          itemCount: _vehicles.length,
+          separatorBuilder: (_, _) => const SizedBox(height: DTSpacing.xs),
+          itemBuilder: (context, index) {
+            final vehicle = _vehicles[index];
+            return ListTile(
+              shape: const RoundedRectangleBorder(
+                borderRadius: BorderRadius.all(DTRadius.md),
               ),
-              const SizedBox(height: 8),
-              Text(description),
-              AnimatedCrossFade(
-                duration: const Duration(milliseconds: 180),
-                crossFadeState: expanded
-                    ? CrossFadeState.showSecond
-                    : CrossFadeState.showFirst,
-                firstChild: const SizedBox.shrink(),
-                secondChild: Padding(
-                  padding: const EdgeInsets.only(top: 12),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: details
-                        .map(
-                          (detail) => Padding(
-                            padding: const EdgeInsets.only(bottom: 6),
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Icon(Icons.check, size: 18),
-                                const SizedBox(width: 8),
-                                Expanded(child: Text(detail)),
-                              ],
-                            ),
-                          ),
-                        )
-                        .toList(),
-                  ),
-                ),
-              ),
-            ],
-          ),
+              tileColor: vehicle.id == _selected?.id
+                  ? context.dtColors.surfaceRaised
+                  : null,
+              leading: const Icon(Icons.directions_car_outlined),
+              title: Text(vehicle.name),
+              subtitle: Text(vehicle.fullDescription ?? ''),
+              trailing: vehicle.id == _selected?.id
+                  ? const Icon(Icons.check)
+                  : null,
+              onTap: () => Navigator.pop(context, vehicle),
+            );
+          },
         ),
       ),
     );
+    if (selected == null || selected.id == _selected?.id || !mounted) return;
+    setState(() {
+      _selected = selected;
+      _location = null;
+      _vehicleMarker = null;
+      _markerBrightness = null;
+      _markerPixelRatio = null;
+    });
+    await _loadLocation();
   }
 }
+
+const _darkMapStyle = '''[
+  {"elementType":"geometry","stylers":[{"color":"#0B1629"}]},
+  {"elementType":"labels.text.fill","stylers":[{"color":"#A5B6D2"}]},
+  {"elementType":"labels.text.stroke","stylers":[{"color":"#0B1629"}]},
+  {"featureType":"road","elementType":"geometry","stylers":[{"color":"#253D5D"}]},
+  {"featureType":"water","elementType":"geometry","stylers":[{"color":"#081326"}]}
+]''';

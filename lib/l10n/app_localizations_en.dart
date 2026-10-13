@@ -12,7 +12,38 @@ class AppLocalizationsEn extends AppLocalizations {
   String get appTitle => 'DT Tracker';
 
   @override
+  String get all => 'All';
+
+  @override
   String get settings => 'Settings';
+
+  @override
+  String get social => 'Social';
+
+  @override
+  String get socialSettingsSubtitle =>
+      'Connect and stay close to your friends.';
+
+  @override
+  String get manageFriends => 'Manage friends and friend requests.';
+
+  @override
+  String get settingsSubtitle =>
+      'Manage your account, security and app preferences.';
+
+  @override
+  String get accountSettingsSubtitle =>
+      'Manage your personal information and account.';
+
+  @override
+  String get securitySettingsSubtitle =>
+      'Keep your account and devices secure.';
+
+  @override
+  String get appSettingsSubtitle => 'Customize your app experience.';
+
+  @override
+  String get versionLabel => 'Version';
 
   @override
   String get account => 'Account';
@@ -138,6 +169,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get statistics => 'Statistics';
 
   @override
+  String get day => 'Day';
+
+  @override
+  String get week => 'Week';
+
+  @override
   String get vehicle => 'Vehicle';
 
   @override
@@ -203,7 +240,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get myVehicles => 'My Vehicles';
 
   @override
+  String get myVehiclesSubtitle => 'Manage your vehicles and linked trackers';
+
+  @override
+  String get searchVehicles => 'Search vehicles';
+
+  @override
   String get addVehicle => 'Add Vehicle';
+
+  @override
+  String get addVehicleSubtitle => 'Add the essential details for your vehicle';
+
+  @override
+  String get editVehicleSubtitle => 'Keep your vehicle information up to date';
 
   @override
   String get vehicleDeleted => 'Vehicle deleted successfully';
@@ -1470,6 +1519,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get quickActions => 'Quick actions';
 
   @override
+  String get liveLocation => 'Live location';
+
+  @override
+  String get zonesAndAlerts => 'Zones & alerts';
+
+  @override
+  String get recentEvents => 'Recent events';
+
+  @override
+  String get usageAndReports => 'Usage & reports';
+
+  @override
   String get realTime => 'Real time';
 
   @override
@@ -1548,4 +1609,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String playbackProgress(int position, int total) {
     return '$position / $total';
   }
+
+  @override
+  String get addPhoto => 'Add photo';
+
+  @override
+  String get noPhotosYet => 'No photos yet';
 }

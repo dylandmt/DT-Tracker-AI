@@ -6,6 +6,7 @@ import 'package:dt_tracker_ai/features/home/presentation/pages/home_dashboard_pa
 import 'package:dt_tracker_ai/features/vehicles/domain/repositories/vehicle_repository.dart';
 import 'package:dt_tracker_ai/features/vehicles/domain/entities/vehicle.dart';
 import 'package:dt_tracker_ai/features/vehicles/domain/usecases/get_vehicles.dart';
+import 'package:dt_tracker_ai/features/vehicles/presentation/cubit/selected_vehicle_cubit.dart';
 import 'package:dt_tracker_ai/injection_container.dart';
 import 'package:dt_tracker_ai/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
@@ -17,14 +18,24 @@ class _MockAuthBloc extends Mock implements AuthBloc {}
 
 class _MockVehicleRepository extends Mock implements VehicleRepository {}
 
+class _MockSelectedVehicleCubit extends Mock implements SelectedVehicleCubit {}
+
 void main() {
   late _MockAuthBloc authBloc;
   late _MockVehicleRepository vehicleRepository;
+  late _MockSelectedVehicleCubit selectedVehicleCubit;
 
   setUp(() async {
     await sl.reset();
     authBloc = _MockAuthBloc();
     vehicleRepository = _MockVehicleRepository();
+    selectedVehicleCubit = _MockSelectedVehicleCubit();
+    when(() => selectedVehicleCubit.state).thenReturn(
+      const SelectedVehicleState(status: SelectedVehicleStatus.ready),
+    );
+    when(
+      () => selectedVehicleCubit.stream,
+    ).thenAnswer((_) => const Stream<SelectedVehicleState>.empty());
     when(() => authBloc.state).thenReturn(AuthState.initial());
     when(
       () => authBloc.stream,
@@ -41,8 +52,11 @@ void main() {
     tester,
   ) async {
     await tester.pumpWidget(
-      BlocProvider<AuthBloc>.value(
-        value: authBloc,
+      MultiBlocProvider(
+        providers: [
+          BlocProvider<AuthBloc>.value(value: authBloc),
+          BlocProvider<SelectedVehicleCubit>.value(value: selectedVehicleCubit),
+        ],
         child: MaterialApp(
           theme: AppTheme.lightTheme,
           darkTheme: AppTheme.darkTheme,

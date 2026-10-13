@@ -4,6 +4,7 @@ import 'package:dt_tracker_ai/features/statistics/presentation/bloc/statistics_b
 import 'package:dt_tracker_ai/features/statistics/presentation/pages/daily_statistics_page.dart';
 import 'package:dt_tracker_ai/features/statistics/presentation/pages/statistics_page.dart';
 import 'package:dt_tracker_ai/features/vehicles/domain/entities/vehicle.dart';
+import 'package:dt_tracker_ai/features/vehicles/presentation/cubit/selected_vehicle_cubit.dart';
 import 'package:dt_tracker_ai/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -12,10 +13,13 @@ import 'package:mocktail/mocktail.dart';
 
 class _MockStatisticsBloc extends Mock implements StatisticsBloc {}
 
+class _MockSelectedVehicleCubit extends Mock implements SelectedVehicleCubit {}
+
 void main() {
   setUpAll(
     () => registerFallbackValue(
       StatisticsRequested(
+        vehicle: null,
         from: DateTime.utc(2026, 10, 6),
         to: DateTime.utc(2026, 10, 12),
       ),
@@ -62,6 +66,22 @@ void main() {
     ),
   );
 
+  Widget withSelection(Widget child) {
+    final cubit = _MockSelectedVehicleCubit();
+    when(() => cubit.state).thenReturn(
+      SelectedVehicleState(
+        status: SelectedVehicleStatus.ready,
+        vehicles: [vehicle],
+        selectedVehicle: vehicle,
+        userId: 'user-1',
+      ),
+    );
+    when(
+      () => cubit.stream,
+    ).thenAnswer((_) => const Stream<SelectedVehicleState>.empty());
+    return BlocProvider<SelectedVehicleCubit>.value(value: cubit, child: child);
+  }
+
   testWidgets('weekly statistics renders real metric units in light mode', (
     tester,
   ) async {
@@ -81,7 +101,7 @@ void main() {
     await tester.pumpWidget(
       BlocProvider<StatisticsBloc>.value(
         value: bloc,
-        child: subject(const StatisticsPage()),
+        child: withSelection(subject(const StatisticsPage())),
       ),
     );
 
@@ -155,9 +175,11 @@ void main() {
       await tester.pumpWidget(
         BlocProvider<StatisticsBloc>.value(
           value: bloc,
-          child: subject(
-            const StatisticsPage(),
-            textScaler: const TextScaler.linear(1.3),
+          child: withSelection(
+            subject(
+              const StatisticsPage(),
+              textScaler: const TextScaler.linear(1.3),
+            ),
           ),
         ),
       );
@@ -166,10 +188,12 @@ void main() {
       await tester.pumpWidget(
         BlocProvider<StatisticsBloc>.value(
           value: bloc,
-          child: subject(
-            const StatisticsPage(),
-            dark: true,
-            textScaler: const TextScaler.linear(1.3),
+          child: withSelection(
+            subject(
+              const StatisticsPage(),
+              dark: true,
+              textScaler: const TextScaler.linear(1.3),
+            ),
           ),
         ),
       );

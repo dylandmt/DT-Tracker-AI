@@ -138,16 +138,18 @@ class MapBloc extends Bloc<MapEvent, MapState> {
     if (state.selectedVehicle == null) return;
 
     _stopPlaybackTimer();
+    final vehicleId = state.selectedVehicle!.vehicleId;
     emit(state.copyWith(tripStatus: TripStatus.loading));
 
     final result = await getTripHistory(
       TripHistoryParams(
-        vehicleId: state.selectedVehicle!.vehicleId,
+        vehicleId: vehicleId,
         startDate: event.startDate,
         endDate: event.endDate,
       ),
     );
 
+    if (state.selectedVehicle?.vehicleId != vehicleId) return;
     result.fold(
       (failure) {
         emit(

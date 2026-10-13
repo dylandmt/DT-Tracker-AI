@@ -64,6 +64,7 @@ import 'features/vehicles/domain/usecases/watch_vehicles.dart';
 import 'features/vehicles/presentation/bloc/tracker_link_bloc.dart';
 import 'features/vehicles/presentation/bloc/vehicle_form_bloc.dart';
 import 'features/vehicles/presentation/bloc/vehicles_bloc.dart';
+import 'features/vehicles/presentation/cubit/selected_vehicle_cubit.dart';
 import 'features/map/data/datasources/map_remote_datasource.dart';
 import 'features/map/data/repositories/map_repository_impl.dart';
 import 'features/map/domain/repositories/map_repository.dart';
@@ -240,9 +241,7 @@ Future<void> initializeDependencies() async {
   );
   sl.registerLazySingleton(() => GetVehicleStatistics(sl()));
   sl.registerLazySingleton(() => GetDailyStatistics(sl()));
-  sl.registerFactory(
-    () => StatisticsBloc(getVehicles: sl(), getStatistics: sl()),
-  );
+  sl.registerFactory(() => StatisticsBloc(getStatistics: sl()));
 
   //============================================================================
   // Features - Trips
@@ -340,6 +339,13 @@ Future<void> initializeDependencies() async {
       getVehicles: sl(),
       watchVehicles: sl(),
       deleteVehicle: sl(),
+    ),
+  );
+  sl.registerLazySingleton(
+    () => SelectedVehicleCubit(
+      firebaseAuth: sl(),
+      watchVehicles: sl(),
+      preferences: sl(),
     ),
   );
 

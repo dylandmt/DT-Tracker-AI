@@ -21,6 +21,7 @@ import '../../../../l10n/app_localizations.dart';
 import '../../../geofences/domain/entities/geofence.dart';
 import '../../../geofences/presentation/bloc/geofence_bloc.dart';
 import '../../../social/data/datasources/social_backend_datasource.dart';
+import '../../../vehicles/presentation/cubit/selected_vehicle_cubit.dart';
 import '../../domain/entities/trip_point.dart';
 import '../../domain/entities/vehicle_location.dart';
 import '../bloc/map_bloc.dart';
@@ -147,234 +148,245 @@ class _MapPageState extends State<MapPage> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: BlocConsumer<MapBloc, MapState>(
+      body: BlocListener<SelectedVehicleCubit, SelectedVehicleState>(
         listenWhen: (previous, current) =>
-            (previous.errorMessage != current.errorMessage &&
-                current.errorMessage != null) ||
-            (previous.tripStatus != current.tripStatus &&
-                current.tripStatus == TripStatus.loaded) ||
-            (previous.playbackPosition != current.playbackPosition &&
-                current.currentPlaybackPoint != null),
-        listener: (context, state) {
-          if (state.errorMessage != null) {
-            context.showErrorSnackBar(state.errorMessage!);
-            context.read<MapBloc>().add(const ClearMapError());
-          }
-          if (state.tripStatus == TripStatus.loaded) {
-            if (state.hasTripHistory) {
-              _fitTripPoints(state.tripPoints);
-            } else {
-              context.showSnackBar(
-                AppLocalizations.of(context)!.noTripDataForDate,
-              );
+            previous.selectedVehicle?.id != current.selectedVehicle?.id,
+        listener: (_, __) => _syncMapSelection(),
+        child: BlocConsumer<MapBloc, MapState>(
+          listenWhen: (previous, current) =>
+              (previous.errorMessage != current.errorMessage &&
+                  current.errorMessage != null) ||
+              (previous.tripStatus != current.tripStatus &&
+                  current.tripStatus == TripStatus.loaded) ||
+              (previous.playbackPosition != current.playbackPosition &&
+                  current.currentPlaybackPoint != null) ||
+              previous.vehicleLocations != current.vehicleLocations,
+          listener: (context, state) {
+            _syncMapSelection();
+            if (state.errorMessage != null) {
+              context.showErrorSnackBar(state.errorMessage!);
+              context.read<MapBloc>().add(const ClearMapError());
             }
-          }
-          if (state.currentPlaybackPoint != null &&
-              (state.isPlaying || state.isPaused)) {
-            _followPlaybackPoint(state.tripPoints, state.playbackPosition);
-          }
-        },
-        builder: (context, state) {
-          final geofences = context.watch<GeofenceBloc>().state.geofences;
-          return Stack(
-            children: [
-              // Google Map
-              _buildMap(context, state, geofences),
+            if (state.tripStatus == TripStatus.loaded) {
+              if (state.hasTripHistory) {
+                _fitTripPoints(state.tripPoints);
+              } else {
+                context.showSnackBar(
+                  AppLocalizations.of(context)!.noTripDataForDate,
+                );
+              }
+            }
+            if (state.currentPlaybackPoint != null &&
+                (state.isPlaying || state.isPaused)) {
+              _followPlaybackPoint(state.tripPoints, state.playbackPosition);
+            }
+          },
+          builder: (context, state) {
+            final geofences = context.watch<GeofenceBloc>().state.geofences;
+            return Stack(
+              children: [
+                // Google Map
+                _buildMap(context, state, geofences),
 
-              // Safe area overlay for status bar
-              Positioned(
-                top: 0,
-                left: 0,
-                right: 0,
-                child: Container(
-                  height: MediaQuery.of(context).padding.top,
-                  color: Theme.of(
-                    context,
-                  ).colorScheme.surface.withValues(alpha: 0.8),
-                ),
-              ),
-
-              // Top bar with search and menu
-              Positioned(
-                top: MediaQuery.of(context).padding.top + 8,
-                left: 16,
-                right: 16,
-                child: _buildTopBar(context, state),
-              ),
-
-              // Location services banner
-              if (!_locationServicesEnabled && !_servicesBannerDismissed)
-                Positioned(
-                  top: MediaQuery.of(context).padding.top + 60,
-                  left: 16,
-                  right: 16,
-                  child: _buildServicesBanner(context),
-                ),
-
-              // Secondary controls yield visual space while details are expanded.
-              Positioned(
-                right: DTSpacing.md,
-                top: MediaQuery.of(context).padding.top + 80,
-                child: IgnorePointer(
-                  ignoring: _vehicleSheetStage == VehicleSheetStage.expanded,
-                  child: AnimatedOpacity(
-                    opacity: _vehicleSheetStage == VehicleSheetStage.expanded
-                        ? 0
-                        : 1,
-                    duration: MediaQuery.of(context).disableAnimations
-                        ? Duration.zero
-                        : DTMotion.fast,
-                    child: MapControls(
-                      mapType: state.mapType,
-                      showTraffic: state.showTraffic,
-                      onZoomIn: _zoomIn,
-                      onZoomOut: _zoomOut,
-                      onMyLocation: _goToMyLocation,
-                      onFitBounds: () =>
-                          _fitAllVehicles(state.vehicleLocations),
-                      onToggleTraffic: () {
-                        context.read<MapBloc>().add(const ToggleTrafficLayer());
-                      },
-                      onMapTypeChanged: (type) {
-                        context.read<MapBloc>().add(ChangeMapType(type));
-                      },
-                    ),
-                  ),
-                ),
-              ),
-
-              // Vehicle list panel (left side, sliding)
-              if (_panelCoordinator.vehicleListVisible)
+                // Safe area overlay for status bar
                 Positioned(
                   top: 0,
                   left: 0,
-                  bottom: 0,
-                  child: SafeArea(
-                    child: VehicleListPanel(
-                      vehicles: state.vehicleLocations,
-                      selectedVehicle: state.selectedVehicle,
-                      onVehicleSelected: (vehicle) {
-                        _selectVehicle(context, vehicle);
-                      },
-                      onClose: () =>
-                          setState(_panelCoordinator.closeVehicleList),
-                    ),
+                  right: 0,
+                  child: Container(
+                    height: MediaQuery.of(context).padding.top,
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.surface.withValues(alpha: 0.8),
                   ),
                 ),
 
-              // Selected vehicle sheet with compact, medium and expanded states.
-              if (_panelCoordinator.shouldShowVehicleSheet(
-                    state.hasSelectedVehicle,
-                  ) &&
-                  !state.hasTripHistory)
-                Positioned.fill(
-                  child: VehicleInfoCard(
-                    key: ValueKey(state.selectedVehicle!.vehicleId),
-                    vehicle: state.selectedVehicle!,
-                    onClose: () {
-                      context.read<MapBloc>().add(
-                        const ClearVehicleSelection(),
-                      );
-                    },
-                    onViewHistory: () {
-                      // TODO: Navigate to trip history page
-                      _showTripHistoryDialog(context, state.selectedVehicle!);
-                    },
-                    onNavigate: () {
-                      _openNavigation(state.selectedVehicle!);
-                    },
-                    onGeofences: () => context.push(RouteConstants.geofences),
-                    onAlerts: () => context.push(RouteConstants.alerts),
-                    onShare: () => context.push(RouteConstants.shareLocation),
-                    onLiveTracking: () => _animateToPosition(
-                      LatLng(
-                        state.selectedVehicle!.latitude,
-                        state.selectedVehicle!.longitude,
-                      ),
-                    ),
-                    onStageChanged: (stage) {
-                      if (_vehicleSheetStage != stage) {
-                        setState(() => _vehicleSheetStage = stage);
-                      }
-                    },
-                  ),
-                ),
-
-              if (state.hasTripHistory && state.currentPlaybackPoint != null)
+                // Top bar with search and menu
                 Positioned(
+                  top: MediaQuery.of(context).padding.top + 8,
                   left: 16,
                   right: 16,
-                  bottom: 24,
-                  child: SafeArea(
-                    top: false,
-                    child: TripPlaybackControls(
-                      currentPoint: state.currentPlaybackPoint!,
-                      position: state.playbackPosition,
-                      pointCount: state.tripPoints.length,
-                      isPlaying: state.isPlaying,
-                      speed: state.playbackSpeed,
-                      onPlayPause: () {
-                        context.read<MapBloc>().add(
-                          state.isPlaying
-                              ? const PauseTripPlayback()
-                              : const StartTripPlayback(),
-                        );
-                      },
-                      onStop: () =>
-                          context.read<MapBloc>().add(const StopTripPlayback()),
-                      onSeek: (position) => context.read<MapBloc>().add(
-                        UpdatePlaybackPosition(position),
+                  child: _buildTopBar(context, state),
+                ),
+
+                // Location services banner
+                if (!_locationServicesEnabled && !_servicesBannerDismissed)
+                  Positioned(
+                    top: MediaQuery.of(context).padding.top + 60,
+                    left: 16,
+                    right: 16,
+                    child: _buildServicesBanner(context),
+                  ),
+
+                // Secondary controls yield visual space while details are expanded.
+                Positioned(
+                  right: DTSpacing.md,
+                  top: MediaQuery.of(context).padding.top + 80,
+                  child: IgnorePointer(
+                    ignoring: _vehicleSheetStage == VehicleSheetStage.expanded,
+                    child: AnimatedOpacity(
+                      opacity: _vehicleSheetStage == VehicleSheetStage.expanded
+                          ? 0
+                          : 1,
+                      duration: MediaQuery.of(context).disableAnimations
+                          ? Duration.zero
+                          : DTMotion.fast,
+                      child: MapControls(
+                        mapType: state.mapType,
+                        showTraffic: state.showTraffic,
+                        onZoomIn: _zoomIn,
+                        onZoomOut: _zoomOut,
+                        onMyLocation: _goToMyLocation,
+                        onFitBounds: () =>
+                            _fitAllVehicles(state.vehicleLocations),
+                        onToggleTraffic: () {
+                          context.read<MapBloc>().add(
+                            const ToggleTrafficLayer(),
+                          );
+                        },
+                        onMapTypeChanged: (type) {
+                          context.read<MapBloc>().add(ChangeMapType(type));
+                        },
                       ),
-                      onSpeedChanged: (speed) => context.read<MapBloc>().add(
-                        ChangePlaybackSpeed(speed),
-                      ),
-                      onClose: () =>
-                          context.read<MapBloc>().add(const ClearTripHistory()),
                     ),
                   ),
                 ),
 
-              // Loading overlay
-              if (state.isLoading)
-                Positioned.fill(
-                  child: ColoredBox(
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.scrim.withValues(alpha: .18),
-                    child: Center(child: CircularProgressIndicator()),
+                // Vehicle list panel (left side, sliding)
+                if (_panelCoordinator.vehicleListVisible)
+                  Positioned(
+                    top: 0,
+                    left: 0,
+                    bottom: 0,
+                    child: SafeArea(
+                      child: VehicleListPanel(
+                        vehicles: state.vehicleLocations,
+                        selectedVehicle: state.selectedVehicle,
+                        onVehicleSelected: (vehicle) {
+                          _selectVehicle(context, vehicle);
+                        },
+                        onClose: () =>
+                            setState(_panelCoordinator.closeVehicleList),
+                      ),
+                    ),
                   ),
-                ),
 
-              if (state.isTripLoading)
-                Positioned.fill(
-                  child: ColoredBox(
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.scrim.withValues(alpha: .18),
-                    child: Center(
-                      child: Card(
-                        child: Padding(
-                          padding: const EdgeInsets.all(24),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const CircularProgressIndicator(),
-                              const SizedBox(height: 16),
-                              Text(
-                                AppLocalizations.of(
-                                  context,
-                                )!.loadingTripHistory,
-                              ),
-                            ],
+                // Selected vehicle sheet with compact, medium and expanded states.
+                if (_panelCoordinator.shouldShowVehicleSheet(
+                      state.hasSelectedVehicle,
+                    ) &&
+                    !state.hasTripHistory)
+                  Positioned.fill(
+                    child: VehicleInfoCard(
+                      key: ValueKey(state.selectedVehicle!.vehicleId),
+                      vehicle: state.selectedVehicle!,
+                      onClose: () {
+                        context.read<MapBloc>().add(
+                          const ClearVehicleSelection(),
+                        );
+                      },
+                      onViewHistory: () {
+                        // TODO: Navigate to trip history page
+                        _showTripHistoryDialog(context, state.selectedVehicle!);
+                      },
+                      onNavigate: () {
+                        _openNavigation(state.selectedVehicle!);
+                      },
+                      onGeofences: () => context.push(RouteConstants.geofences),
+                      onAlerts: () => context.push(RouteConstants.alerts),
+                      onShare: () => context.push(RouteConstants.shareLocation),
+                      onLiveTracking: () => _animateToPosition(
+                        LatLng(
+                          state.selectedVehicle!.latitude,
+                          state.selectedVehicle!.longitude,
+                        ),
+                      ),
+                      onStageChanged: (stage) {
+                        if (_vehicleSheetStage != stage) {
+                          setState(() => _vehicleSheetStage = stage);
+                        }
+                      },
+                    ),
+                  ),
+
+                if (state.hasTripHistory && state.currentPlaybackPoint != null)
+                  Positioned(
+                    left: 16,
+                    right: 16,
+                    bottom: 24,
+                    child: SafeArea(
+                      top: false,
+                      child: TripPlaybackControls(
+                        currentPoint: state.currentPlaybackPoint!,
+                        position: state.playbackPosition,
+                        pointCount: state.tripPoints.length,
+                        isPlaying: state.isPlaying,
+                        speed: state.playbackSpeed,
+                        onPlayPause: () {
+                          context.read<MapBloc>().add(
+                            state.isPlaying
+                                ? const PauseTripPlayback()
+                                : const StartTripPlayback(),
+                          );
+                        },
+                        onStop: () => context.read<MapBloc>().add(
+                          const StopTripPlayback(),
+                        ),
+                        onSeek: (position) => context.read<MapBloc>().add(
+                          UpdatePlaybackPosition(position),
+                        ),
+                        onSpeedChanged: (speed) => context.read<MapBloc>().add(
+                          ChangePlaybackSpeed(speed),
+                        ),
+                        onClose: () => context.read<MapBloc>().add(
+                          const ClearTripHistory(),
+                        ),
+                      ),
+                    ),
+                  ),
+
+                // Loading overlay
+                if (state.isLoading)
+                  Positioned.fill(
+                    child: ColoredBox(
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.scrim.withValues(alpha: .18),
+                      child: Center(child: CircularProgressIndicator()),
+                    ),
+                  ),
+
+                if (state.isTripLoading)
+                  Positioned.fill(
+                    child: ColoredBox(
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.scrim.withValues(alpha: .18),
+                      child: Center(
+                        child: Card(
+                          child: Padding(
+                            padding: const EdgeInsets.all(24),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const CircularProgressIndicator(),
+                                const SizedBox(height: 16),
+                                Text(
+                                  AppLocalizations.of(
+                                    context,
+                                  )!.loadingTripHistory,
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       ),
                     ),
                   ),
-                ),
-            ],
-          );
-        },
+              ],
+            );
+          },
+        ),
       ),
     );
   }
@@ -692,8 +704,28 @@ class _MapPageState extends State<MapPage> with WidgetsBindingObserver {
     if (_vehicleSheetStage != VehicleSheetStage.intermediate) {
       setState(() => _vehicleSheetStage = VehicleSheetStage.intermediate);
     }
-    context.read<MapBloc>().add(SelectVehicle(vehicle));
+    context.read<SelectedVehicleCubit>().selectVehicle(vehicle.vehicleId);
     _animateToPosition(LatLng(vehicle.latitude, vehicle.longitude));
+  }
+
+  void _syncMapSelection() {
+    if (!mounted) return;
+    final selectedId = context
+        .read<SelectedVehicleCubit>()
+        .state
+        .selectedVehicle
+        ?.id;
+    final mapBloc = context.read<MapBloc>();
+    final currentId = mapBloc.state.selectedVehicle?.vehicleId;
+    if (selectedId == currentId) return;
+    final location = mapBloc.state.vehicleLocations
+        .where((item) => item.vehicleId == selectedId)
+        .firstOrNull;
+    if (location == null) {
+      mapBloc.add(const ClearVehicleSelection());
+      return;
+    }
+    mapBloc.add(SelectVehicle(location));
   }
 
   Future<void> _animateToPosition(LatLng position, {double zoom = 15}) async {

@@ -9,6 +9,8 @@ import '../../../../core/design/dt_design_tokens.dart';
 import '../../../../core/utils/extensions.dart';
 import '../../domain/entities/statistics.dart';
 import '../bloc/statistics_bloc.dart';
+import '../../../vehicles/presentation/cubit/selected_vehicle_cubit.dart';
+import '../../../vehicles/domain/entities/vehicle.dart';
 
 class StatisticsPage extends StatefulWidget {
   const StatisticsPage({super.key});
@@ -26,8 +28,20 @@ class _StatisticsPageState extends State<StatisticsPage> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) => _requestStatistics(
+        context.read<SelectedVehicleCubit>().state.selectedVehicle,
+      ),
+    );
+  }
+
+  void _requestStatistics(VehicleEntity? vehicle) {
     context.read<StatisticsBloc>().add(
-      StatisticsRequested(from: _initialFrom, to: _initialTo),
+      StatisticsRequested(
+        vehicle: vehicle,
+        from: context.read<StatisticsBloc>().state.from ?? _initialFrom,
+        to: context.read<StatisticsBloc>().state.to ?? _initialTo,
+      ),
     );
   }
 
@@ -35,94 +49,96 @@ class _StatisticsPageState extends State<StatisticsPage> {
   Widget build(BuildContext context) => DTAppScaffold(
     useAmbientBackground: false,
     body: SafeArea(
-      child: BlocBuilder<StatisticsBloc, StatisticsState>(
-        builder: (context, state) {
-          if (state.status == StatisticsStatus.loading &&
-              state.statistics == null) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (state.status == StatisticsStatus.error) {
-            return _message(
-              Icons.error_outline,
-              state.failure?.message ?? context.l10n.statisticsLoadError,
-              action: () => context.read<StatisticsBloc>().add(
+      child: BlocListener<SelectedVehicleCubit, SelectedVehicleState>(
+        listenWhen: (previous, current) =>
+            previous.selectedVehicle?.id != current.selectedVehicle?.id,
+        listener: (_, selection) =>
+            _requestStatistics(selection.selectedVehicle),
+        child: BlocBuilder<StatisticsBloc, StatisticsState>(
+          builder: (context, state) {
+            final selection = context.watch<SelectedVehicleCubit>().state;
+            final vehicle = selection.selectedVehicle;
+            return RefreshIndicator(
+              onRefresh: () async => context.read<StatisticsBloc>().add(
                 StatisticsRequested(
+                  vehicle: vehicle,
                   from: state.from ?? _initialFrom,
                   to: state.to ?? _initialTo,
                 ),
               ),
-            );
-          }
-          if (state.status == StatisticsStatus.empty) {
-            return _message(
-              Icons.insights_outlined,
-              state.selectedVehicle?.hasTracker == false
-                  ? context.l10n.vehicleWithoutTrackerStatistics
-                  : context.l10n.addVehicleForStatistics,
-            );
-          }
-          final statistics = state.statistics;
-          final vehicle = state.selectedVehicle;
-          if (statistics == null || vehicle == null) {
-            return const SizedBox.shrink();
-          }
-          return RefreshIndicator(
-            onRefresh: () async => context.read<StatisticsBloc>().add(
-              StatisticsRangeChanged(from: statistics.from, to: statistics.to),
-            ),
-            child: ListView(
-              padding: const EdgeInsets.fromLTRB(
-                DTSpacing.md,
-                DTSpacing.md,
-                DTSpacing.md,
-                DTSpacing.xxl,
-              ),
-              children: [
-                _header(context),
-                const SizedBox(height: DTSpacing.lg),
-                DTVehicleSelector(
-                  label: vehicle.fullDescription ?? vehicle.name,
-                  leading: const Icon(Icons.directions_car_outlined),
-                  onTap: state.status == StatisticsStatus.loading
-                      ? null
-                      : () => _showVehicleSelector(state),
+              child: ListView(
+                padding: const EdgeInsets.fromLTRB(
+                  DTSpacing.md,
+                  DTSpacing.md,
+                  DTSpacing.md,
+                  DTSpacing.xxl,
                 ),
-                const SizedBox(height: DTSpacing.sm),
-                DTSegmentedTabs(
-                  labels: [context.l10n.day, context.l10n.week],
-                  selectedIndex: 1,
-                  onSelected: (index) {
-                    if (index == 0) {
-                      context.push(
+                children: [
+                  _header(context),
+                  const SizedBox(height: DTSpacing.lg),
+                  if (vehicle != null) ...[
+                    DTVehicleSelector(
+                      label: vehicle.fullDescription ?? vehicle.name,
+                      leading: const Icon(Icons.directions_car_outlined),
+                      onTap: () => _showVehicleSelector(selection),
+                    ),
+                    const SizedBox(height: DTSpacing.sm),
+                  ],
+                  if (state.status == StatisticsStatus.loading)
+                    const Padding(
+                      padding: EdgeInsets.all(DTSpacing.xxxl),
+                      child: Center(child: CircularProgressIndicator()),
+                    )
+                  else if (state.status == StatisticsStatus.error)
+                    _message(
+                      Icons.error_outline,
+                      state.failure?.message ??
+                          context.l10n.statisticsLoadError,
+                      action: () => _requestStatistics(vehicle),
+                    )
+                  else if (state.status == StatisticsStatus.empty)
+                    _message(
+                      Icons.insights_outlined,
+                      vehicle?.hasTracker == false
+                          ? context.l10n.vehicleWithoutTrackerStatistics
+                          : context.l10n.addVehicleForStatistics,
+                    )
+                  else if (state.statistics case final statistics?) ...[
+                    DTSegmentedTabs(
+                      labels: [context.l10n.day, context.l10n.week],
+                      selectedIndex: 1,
+                      onSelected: (index) {
+                        if (index == 0) {
+                          context.push(
+                            RouteConstants.dailyStatistics,
+                            extra: {'vehicle': vehicle, 'date': statistics.to},
+                          );
+                        }
+                      },
+                    ),
+                    const SizedBox(height: DTSpacing.sm),
+                    DTDateRangeSelector(
+                      label: _rangeLabel(context, statistics),
+                      onTap: () => _pickRange(statistics),
+                    ),
+                    const SizedBox(height: DTSpacing.lg),
+                    _WeeklyDistanceChart(
+                      days: statistics.days,
+                      onTap: (day) => context.push(
                         RouteConstants.dailyStatistics,
-                        extra: {'vehicle': vehicle, 'date': statistics.to},
-                      );
-                    }
-                  },
-                ),
-                const SizedBox(height: DTSpacing.sm),
-                DTDateRangeSelector(
-                  label: _rangeLabel(context, statistics),
-                  onTap: state.status == StatisticsStatus.loading
-                      ? () {}
-                      : () => _pickRange(statistics),
-                ),
-                const SizedBox(height: DTSpacing.lg),
-                _WeeklyDistanceChart(
-                  days: statistics.days,
-                  onTap: (day) => context.push(
-                    RouteConstants.dailyStatistics,
-                    extra: {'vehicle': vehicle, 'date': day.date},
-                  ),
-                ),
-                const SizedBox(height: DTSpacing.md),
-                _totalDistance(context, statistics.summary),
-                const SizedBox(height: DTSpacing.sm),
-                _summaryGrid(context, statistics.summary),
-              ],
-            ),
-          );
-        },
+                        extra: {'vehicle': vehicle, 'date': day.date},
+                      ),
+                    ),
+                    const SizedBox(height: DTSpacing.md),
+                    _totalDistance(context, statistics.summary),
+                    const SizedBox(height: DTSpacing.sm),
+                    _summaryGrid(context, statistics.summary),
+                  ],
+                ],
+              ),
+            );
+          },
+        ),
       ),
     ),
   );
@@ -239,7 +255,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
     return '${format.format(statistics.from.toLocal())} - ${format.format(statistics.to.toLocal())}';
   }
 
-  Future<void> _showVehicleSelector(StatisticsState state) async {
+  Future<void> _showVehicleSelector(SelectedVehicleState state) async {
     final selected = await showModalBottomSheet<String>(
       context: context,
       builder: (context) => DTVehicleBottomSheet(
@@ -263,7 +279,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
     if (!mounted || selected == null || selected == state.selectedVehicle?.id) {
       return;
     }
-    context.read<StatisticsBloc>().add(StatisticsVehicleChanged(selected));
+    context.read<SelectedVehicleCubit>().selectVehicle(selected);
   }
 
   Future<void> _pickRange(VehicleStatistics statistics) async {

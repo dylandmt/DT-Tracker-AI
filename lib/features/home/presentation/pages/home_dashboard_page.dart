@@ -15,7 +15,7 @@ import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../map/domain/entities/vehicle_location.dart';
 import '../../../map/domain/usecases/get_vehicle_location.dart';
 import '../../../vehicles/domain/entities/vehicle.dart';
-import '../../../vehicles/domain/usecases/get_vehicles.dart';
+import '../../../vehicles/presentation/cubit/selected_vehicle_cubit.dart';
 
 class HomeDashboardPage extends StatefulWidget {
   const HomeDashboardPage({super.key});
@@ -25,41 +25,32 @@ class HomeDashboardPage extends StatefulWidget {
 }
 
 class _HomeDashboardPageState extends State<HomeDashboardPage> {
-  List<VehicleEntity> _vehicles = const [];
-  VehicleEntity? _selected;
   VehicleLocationEntity? _location;
   BitmapDescriptor? _vehicleMarker;
   Brightness? _markerBrightness;
   double? _markerPixelRatio;
-  bool _loading = true;
+  int _locationRequest = 0;
   MapType _mapType = MapType.normal;
 
   @override
   void initState() {
     super.initState();
-    _loadVehicles();
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) => _loadLocation(
+        context.read<SelectedVehicleCubit>().state.selectedVehicle,
+      ),
+    );
   }
 
-  Future<void> _loadVehicles() async {
-    final result = await sl<GetVehicles>()(const NoParams());
-    if (!mounted) return;
-    result.fold((_) => setState(() => _loading = false), (vehicles) async {
-      setState(() {
-        _vehicles = vehicles;
-        _selected ??= vehicles.isEmpty ? null : vehicles.first;
-        if (_selected != null && !vehicles.any((v) => v.id == _selected!.id)) {
-          _selected = vehicles.isEmpty ? null : vehicles.first;
-        }
-        _loading = false;
-      });
-      await _loadLocation();
-    });
-  }
-
-  Future<void> _loadLocation() async {
-    final vehicle = _selected;
+  Future<void> _loadLocation(VehicleEntity? vehicle) async {
+    final request = ++_locationRequest;
+    if (mounted) {
+      setState(() => _location = null);
+    }
     if (vehicle?.hasTracker != true) {
-      if (mounted) setState(() => _location = null);
+      if (mounted && request == _locationRequest) {
+        setState(() => _location = null);
+      }
       return;
     }
     final colorScheme = Theme.of(context).colorScheme;
@@ -67,7 +58,12 @@ class _HomeDashboardPageState extends State<HomeDashboardPage> {
     final markerBrightness = Theme.of(context).brightness;
     final markerPixelRatio = MediaQuery.devicePixelRatioOf(context);
     final result = await sl<GetVehicleLocation>()(IdParams(id: vehicle!.id));
-    if (!mounted) return;
+    if (!mounted ||
+        request != _locationRequest ||
+        context.read<SelectedVehicleCubit>().state.selectedVehicle?.id !=
+            vehicle.id) {
+      return;
+    }
     result.fold((_) => setState(() => _location = null), (value) async {
       final needsMarker =
           _vehicleMarker == null ||
@@ -81,7 +77,10 @@ class _HomeDashboardPageState extends State<HomeDashboardPage> {
               devicePixelRatio: markerPixelRatio,
             )
           : _vehicleMarker;
-      if (mounted) {
+      if (mounted &&
+          request == _locationRequest &&
+          context.read<SelectedVehicleCubit>().state.selectedVehicle?.id ==
+              vehicle.id) {
         setState(() {
           _location = value;
           _vehicleMarker = marker;
@@ -94,48 +93,58 @@ class _HomeDashboardPageState extends State<HomeDashboardPage> {
 
   @override
   Widget build(BuildContext context) {
-    return DTAppScaffold(
-      body: SafeArea(
-        child: RefreshIndicator(
-          onRefresh: _loadVehicles,
-          child: ListView(
-            padding: const EdgeInsets.fromLTRB(
-              DTSpacing.md,
-              DTSpacing.sm,
-              DTSpacing.md,
-              DTSpacing.xxl,
-            ),
-            children: [
-              _header(context),
-              const SizedBox(height: DTSpacing.sm),
-              if (_loading)
-                const Padding(
-                  padding: EdgeInsets.all(DTSpacing.xxxl),
-                  child: Center(child: CircularProgressIndicator()),
-                )
-              else if (_selected == null)
-                _emptyState(context)
-              else ...[
-                DTVehicleSelector(
-                  label: _selected!.name,
-                  leading: const Icon(Icons.directions_car_outlined),
-                  onTap: _showVehicleSelector,
-                ),
-                const SizedBox(height: DTSpacing.sm),
-                _locationPreview(context),
-                const SizedBox(height: DTSpacing.sm),
-                _metrics(context),
-                const SizedBox(height: DTSpacing.lg),
-                Text(
-                  context.l10n.quickActions,
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.w700,
+    return BlocListener<SelectedVehicleCubit, SelectedVehicleState>(
+      listenWhen: (previous, current) =>
+          previous.selectedVehicle?.id != current.selectedVehicle?.id,
+      listener: (_, state) => _loadLocation(state.selectedVehicle),
+      child: DTAppScaffold(
+        body: SafeArea(
+          child: RefreshIndicator(
+            onRefresh: () async {},
+            child: BlocBuilder<SelectedVehicleCubit, SelectedVehicleState>(
+              builder: (context, selection) {
+                final selected = selection.selectedVehicle;
+                return ListView(
+                  padding: const EdgeInsets.fromLTRB(
+                    DTSpacing.md,
+                    DTSpacing.sm,
+                    DTSpacing.md,
+                    DTSpacing.xxl,
                   ),
-                ),
-                const SizedBox(height: DTSpacing.xs),
-                _quickActions(context),
-              ],
-            ],
+                  children: [
+                    _header(context),
+                    const SizedBox(height: DTSpacing.sm),
+                    if (selection.status == SelectedVehicleStatus.initial ||
+                        selection.status == SelectedVehicleStatus.loading)
+                      const Padding(
+                        padding: EdgeInsets.all(DTSpacing.xxxl),
+                        child: Center(child: CircularProgressIndicator()),
+                      )
+                    else if (selected == null)
+                      _emptyState(context)
+                    else ...[
+                      DTVehicleSelector(
+                        label: selected.name,
+                        leading: const Icon(Icons.directions_car_outlined),
+                        onTap: _showVehicleSelector,
+                      ),
+                      const SizedBox(height: DTSpacing.sm),
+                      _locationPreview(context),
+                      const SizedBox(height: DTSpacing.sm),
+                      _metrics(context),
+                      const SizedBox(height: DTSpacing.lg),
+                      Text(
+                        context.l10n.quickActions,
+                        style: Theme.of(context).textTheme.headlineSmall
+                            ?.copyWith(fontWeight: FontWeight.w700),
+                      ),
+                      const SizedBox(height: DTSpacing.xs),
+                      _quickActions(context),
+                    ],
+                  ],
+                );
+              },
+            ),
           ),
         ),
       ),
@@ -255,11 +264,19 @@ class _HomeDashboardPageState extends State<HomeDashboardPage> {
         child: Stack(
           children: [
             GoogleMap(
-              key: ValueKey(_selected!.id),
+              key: ValueKey(
+                context.read<SelectedVehicleCubit>().state.selectedVehicle!.id,
+              ),
               initialCameraPosition: CameraPosition(target: position, zoom: 15),
               markers: {
                 Marker(
-                  markerId: MarkerId(_selected!.id),
+                  markerId: MarkerId(
+                    context
+                        .read<SelectedVehicleCubit>()
+                        .state
+                        .selectedVehicle!
+                        .id,
+                  ),
                   position: position,
                   icon:
                       _vehicleMarker ??
@@ -425,21 +442,36 @@ class _HomeDashboardPageState extends State<HomeDashboardPage> {
             DTSpacing.md,
             DTSpacing.xl,
           ),
-          itemCount: _vehicles.length,
+          itemCount: context.read<SelectedVehicleCubit>().state.vehicles.length,
           separatorBuilder: (_, _) => const SizedBox(height: DTSpacing.xs),
           itemBuilder: (context, index) {
-            final vehicle = _vehicles[index];
+            final vehicle = context
+                .read<SelectedVehicleCubit>()
+                .state
+                .vehicles[index];
             return ListTile(
               shape: const RoundedRectangleBorder(
                 borderRadius: BorderRadius.all(DTRadius.md),
               ),
-              tileColor: vehicle.id == _selected?.id
+              tileColor:
+                  vehicle.id ==
+                      context
+                          .read<SelectedVehicleCubit>()
+                          .state
+                          .selectedVehicle
+                          ?.id
                   ? context.dtColors.surfaceRaised
                   : null,
               leading: const Icon(Icons.directions_car_outlined),
               title: Text(vehicle.name),
               subtitle: Text(vehicle.fullDescription ?? ''),
-              trailing: vehicle.id == _selected?.id
+              trailing:
+                  vehicle.id ==
+                      context
+                          .read<SelectedVehicleCubit>()
+                          .state
+                          .selectedVehicle
+                          ?.id
                   ? const Icon(Icons.check)
                   : null,
               onTap: () => Navigator.pop(context, vehicle),
@@ -448,15 +480,8 @@ class _HomeDashboardPageState extends State<HomeDashboardPage> {
         ),
       ),
     );
-    if (selected == null || selected.id == _selected?.id || !mounted) return;
-    setState(() {
-      _selected = selected;
-      _location = null;
-      _vehicleMarker = null;
-      _markerBrightness = null;
-      _markerPixelRatio = null;
-    });
-    await _loadLocation();
+    if (selected == null || !mounted) return;
+    context.read<SelectedVehicleCubit>().selectVehicle(selected.id);
   }
 }
 

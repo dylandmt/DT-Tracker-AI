@@ -61,8 +61,11 @@ class _HomePageState extends State<HomePage> {
     if (location.startsWith('/home/vehicles')) {
       return 2;
     }
-    if (location.startsWith('/home/settings')) {
+    if (location.startsWith(RouteConstants.statistics)) {
       return 3;
+    }
+    if (location.startsWith('/home/settings')) {
+      return 4;
     }
     // Default to vehicles
     return 0;
@@ -81,6 +84,9 @@ class _HomePageState extends State<HomePage> {
         context.go('/home/vehicles');
         break;
       case 3:
+        context.go(RouteConstants.statistics);
+        break;
+      case 4:
         context.go('/home/settings');
         break;
     }

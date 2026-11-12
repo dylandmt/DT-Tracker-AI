@@ -4,6 +4,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../../../../core/design/dt_design_tokens.dart';
 import '../../../../core/permissions/permission_handler.dart';
 import '../../../../core/permissions/permission_status.dart';
 import '../../../../core/utils/extensions.dart';
@@ -42,6 +43,7 @@ class _VehicleImagePickerState extends State<VehicleImagePicker> {
   int get _currentCount => widget.imageUrls.length;
   int get _remainingSlots => VehicleEntity.maxImages - _currentCount;
   bool get _canAddMore => _remainingSlots > 0 && widget.enabled;
+  bool get _showAddSlot => widget.vehicle != null;
 
   Future<void> _pickImage(ImageSource source) async {
     if (!_canAddMore) return;
@@ -200,12 +202,20 @@ class _VehicleImagePickerState extends State<VehicleImagePicker> {
           ],
         ),
         const SizedBox(height: 12),
-        // Images grid
+        if (_currentCount == 0) ...[
+          Text(
+            context.l10n.noPhotosYet,
+            style: textTheme.bodySmall?.copyWith(
+              color: colorScheme.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: 8),
+        ],
         SizedBox(
           height: 100,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
-            itemCount: _currentCount + (_canAddMore ? 1 : 0),
+            itemCount: _currentCount + (_showAddSlot ? 1 : 0),
             separatorBuilder: (_, __) => const SizedBox(width: 8),
             itemBuilder: (context, index) {
               // Add button
@@ -228,14 +238,14 @@ class _VehicleImagePickerState extends State<VehicleImagePicker> {
 
   Widget _buildAddButton(ColorScheme colorScheme) {
     return InkWell(
-      onTap: widget.enabled ? _showImageSourceDialog : null,
-      borderRadius: BorderRadius.circular(12),
+      onTap: _canAddMore ? _showImageSourceDialog : null,
+      borderRadius: const BorderRadius.all(DTRadius.md),
       child: Container(
         width: 100,
         height: 100,
         decoration: BoxDecoration(
           color: colorScheme.surfaceContainerHighest,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: const BorderRadius.all(DTRadius.md),
           border: Border.all(
             color: colorScheme.outline.withValues(alpha: 0.5),
             style: BorderStyle.solid,
@@ -253,7 +263,7 @@ class _VehicleImagePickerState extends State<VehicleImagePicker> {
             ),
             const SizedBox(height: 4),
             Text(
-              context.l10n.add,
+              context.l10n.addPhoto,
               style: TextStyle(
                 fontSize: 12,
                 color: widget.enabled
@@ -277,7 +287,7 @@ class _VehicleImagePickerState extends State<VehicleImagePicker> {
       children: [
         // Image
         ClipRRect(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: const BorderRadius.all(DTRadius.md),
           child: SizedBox(
             width: 100,
             height: 100,
@@ -313,7 +323,7 @@ class _VehicleImagePickerState extends State<VehicleImagePicker> {
             child: Container(
               decoration: BoxDecoration(
                 color: Colors.black.withValues(alpha: 0.5),
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: const BorderRadius.all(DTRadius.md),
               ),
               child: const Center(
                 child: CircularProgressIndicator(

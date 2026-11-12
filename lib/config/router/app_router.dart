@@ -30,6 +30,7 @@ import '../../features/social/presentation/pages/share_location_page.dart';
 import '../../features/vehicles/presentation/bloc/tracker_link_bloc.dart';
 import '../../features/vehicles/presentation/bloc/vehicle_form_bloc.dart';
 import '../../features/vehicles/presentation/bloc/vehicles_bloc.dart';
+import '../../features/vehicles/presentation/cubit/selected_vehicle_cubit.dart';
 import '../../features/vehicles/presentation/pages/link_tracker_page.dart';
 import '../../features/vehicles/presentation/pages/vehicle_detail_page.dart';
 import '../../features/vehicles/presentation/pages/vehicle_form_page.dart';
@@ -154,35 +155,18 @@ class AppRouter {
         name: RouteConstants.shareLocationName,
         builder: (context, state) => const ShareLocationPage(),
       ),
-      GoRoute(
-        path: RouteConstants.statistics,
-        name: RouteConstants.statisticsName,
-        builder: (context, state) => BlocProvider(
-          create: (_) => sl<StatisticsBloc>(),
-          child: const StatisticsPage(),
-        ),
-        routes: [
-          GoRoute(
-            path: 'daily',
-            name: RouteConstants.dailyStatisticsName,
-            builder: (context, state) {
-              final data = state.extra! as Map<String, dynamic>;
-              return DailyStatisticsPage(
-                vehicle: data['vehicle']! as VehicleEntity,
-                date: data['date']! as DateTime,
-              );
-            },
-          ),
-        ],
-      ),
-
       // Shell route with bottom navigation
       ShellRoute(
         navigatorKey: _shellNavigatorKey,
         builder: (context, state, child) {
           // Provide AuthBloc at shell level for settings page
-          return BlocProvider(
-            create: (_) => sl<AuthBloc>()..add(CheckAuthStatus()),
+          return MultiBlocProvider(
+            providers: [
+              BlocProvider(
+                create: (_) => sl<AuthBloc>()..add(CheckAuthStatus()),
+              ),
+              BlocProvider.value(value: sl<SelectedVehicleCubit>()),
+            ],
             child: HomePage(child: child),
           );
         },
@@ -279,6 +263,32 @@ class AppRouter {
                 child: const MapPage(),
               ),
             ),
+          ),
+
+          // Statistics tab
+          GoRoute(
+            path: RouteConstants.statistics,
+            name: RouteConstants.statisticsName,
+            pageBuilder: (context, state) => NoTransitionPage(
+              child: BlocProvider(
+                create: (_) => sl<StatisticsBloc>(),
+                child: const StatisticsPage(),
+              ),
+            ),
+            routes: [
+              GoRoute(
+                path: 'daily',
+                name: RouteConstants.dailyStatisticsName,
+                parentNavigatorKey: _rootNavigatorKey,
+                builder: (context, state) {
+                  final data = state.extra! as Map<String, dynamic>;
+                  return DailyStatisticsPage(
+                    vehicle: data['vehicle']! as VehicleEntity,
+                    date: data['date']! as DateTime,
+                  );
+                },
+              ),
+            ],
           ),
 
           // Friends tab

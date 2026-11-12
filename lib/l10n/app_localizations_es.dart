@@ -12,7 +12,39 @@ class AppLocalizationsEs extends AppLocalizations {
   String get appTitle => 'DT Tracker';
 
   @override
+  String get all => 'Todos';
+
+  @override
   String get settings => 'Configuracion';
+
+  @override
+  String get social => 'Social';
+
+  @override
+  String get socialSettingsSubtitle =>
+      'Conecta y mantente cerca de tus amigos.';
+
+  @override
+  String get manageFriends => 'Administra tus amigos y solicitudes de amistad.';
+
+  @override
+  String get settingsSubtitle =>
+      'Administra tu cuenta, seguridad y preferencias.';
+
+  @override
+  String get accountSettingsSubtitle =>
+      'Administra tu informacion personal y cuenta.';
+
+  @override
+  String get securitySettingsSubtitle =>
+      'Mantén segura tu cuenta y dispositivos.';
+
+  @override
+  String get appSettingsSubtitle =>
+      'Personaliza tu experiencia en la aplicacion.';
+
+  @override
+  String get versionLabel => 'Version';
 
   @override
   String get account => 'Cuenta';
@@ -141,6 +173,12 @@ class AppLocalizationsEs extends AppLocalizations {
   String get statistics => 'Estadisticas';
 
   @override
+  String get day => 'Dia';
+
+  @override
+  String get week => 'Semana';
+
+  @override
   String get vehicle => 'Vehiculo';
 
   @override
@@ -207,7 +245,22 @@ class AppLocalizationsEs extends AppLocalizations {
   String get myVehicles => 'Mis vehiculos';
 
   @override
+  String get myVehiclesSubtitle =>
+      'Administra tus vehiculos y rastreadores vinculados';
+
+  @override
+  String get searchVehicles => 'Buscar vehiculos';
+
+  @override
   String get addVehicle => 'Agregar vehiculo';
+
+  @override
+  String get addVehicleSubtitle =>
+      'Agrega la informacion esencial de tu vehiculo';
+
+  @override
+  String get editVehicleSubtitle =>
+      'Mantén actualizada la informacion de tu vehiculo';
 
   @override
   String get vehicleDeleted => 'Vehiculo eliminado correctamente';
@@ -1490,6 +1543,18 @@ class AppLocalizationsEs extends AppLocalizations {
   String get quickActions => 'Acciones rapidas';
 
   @override
+  String get liveLocation => 'Ubicacion en vivo';
+
+  @override
+  String get zonesAndAlerts => 'Zonas y alertas';
+
+  @override
+  String get recentEvents => 'Eventos recientes';
+
+  @override
+  String get usageAndReports => 'Uso y reportes';
+
+  @override
   String get realTime => 'En tiempo real';
 
   @override
@@ -1570,4 +1635,10 @@ class AppLocalizationsEs extends AppLocalizations {
   String playbackProgress(int position, int total) {
     return '$position / $total';
   }
+
+  @override
+  String get addPhoto => 'Agregar foto';
+
+  @override
+  String get noPhotosYet => 'Aun no hay fotos';
 }

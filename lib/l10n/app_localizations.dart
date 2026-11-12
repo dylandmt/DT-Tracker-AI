@@ -104,11 +104,65 @@ abstract class AppLocalizations {
   /// **'DT Tracker'**
   String get appTitle;
 
+  /// No description provided for @all.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get all;
+
   /// No description provided for @settings.
   ///
   /// In en, this message translates to:
   /// **'Settings'**
   String get settings;
+
+  /// No description provided for @social.
+  ///
+  /// In en, this message translates to:
+  /// **'Social'**
+  String get social;
+
+  /// No description provided for @socialSettingsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect and stay close to your friends.'**
+  String get socialSettingsSubtitle;
+
+  /// No description provided for @manageFriends.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage friends and friend requests.'**
+  String get manageFriends;
+
+  /// No description provided for @settingsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage your account, security and app preferences.'**
+  String get settingsSubtitle;
+
+  /// No description provided for @accountSettingsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage your personal information and account.'**
+  String get accountSettingsSubtitle;
+
+  /// No description provided for @securitySettingsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep your account and devices secure.'**
+  String get securitySettingsSubtitle;
+
+  /// No description provided for @appSettingsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Customize your app experience.'**
+  String get appSettingsSubtitle;
+
+  /// No description provided for @versionLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Version'**
+  String get versionLabel;
 
   /// No description provided for @account.
   ///
@@ -338,6 +392,18 @@ abstract class AppLocalizations {
   /// **'Statistics'**
   String get statistics;
 
+  /// No description provided for @day.
+  ///
+  /// In en, this message translates to:
+  /// **'Day'**
+  String get day;
+
+  /// No description provided for @week.
+  ///
+  /// In en, this message translates to:
+  /// **'Week'**
+  String get week;
+
   /// No description provided for @vehicle.
   ///
   /// In en, this message translates to:
@@ -464,11 +530,35 @@ abstract class AppLocalizations {
   /// **'My Vehicles'**
   String get myVehicles;
 
+  /// No description provided for @myVehiclesSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage your vehicles and linked trackers'**
+  String get myVehiclesSubtitle;
+
+  /// No description provided for @searchVehicles.
+  ///
+  /// In en, this message translates to:
+  /// **'Search vehicles'**
+  String get searchVehicles;
+
   /// No description provided for @addVehicle.
   ///
   /// In en, this message translates to:
   /// **'Add Vehicle'**
   String get addVehicle;
+
+  /// No description provided for @addVehicleSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add the essential details for your vehicle'**
+  String get addVehicleSubtitle;
+
+  /// No description provided for @editVehicleSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep your vehicle information up to date'**
+  String get editVehicleSubtitle;
 
   /// No description provided for @vehicleDeleted.
   ///
@@ -2714,6 +2804,30 @@ abstract class AppLocalizations {
   /// **'Quick actions'**
   String get quickActions;
 
+  /// No description provided for @liveLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Live location'**
+  String get liveLocation;
+
+  /// No description provided for @zonesAndAlerts.
+  ///
+  /// In en, this message translates to:
+  /// **'Zones & alerts'**
+  String get zonesAndAlerts;
+
+  /// No description provided for @recentEvents.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent events'**
+  String get recentEvents;
+
+  /// No description provided for @usageAndReports.
+  ///
+  /// In en, this message translates to:
+  /// **'Usage & reports'**
+  String get usageAndReports;
+
   /// No description provided for @realTime.
   ///
   /// In en, this message translates to:
@@ -2857,6 +2971,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{position} / {total}'**
   String playbackProgress(int position, int total);
+
+  /// No description provided for @addPhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Add photo'**
+  String get addPhoto;
+
+  /// No description provided for @noPhotosYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No photos yet'**
+  String get noPhotosYet;
 }
 
 class _AppLocalizationsDelegate

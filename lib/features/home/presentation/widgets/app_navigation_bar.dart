@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/design/dt_components.dart';
 import '../../../../core/utils/extensions.dart';
 
 /// Navigation destinations for the app
-enum AppDestination { home, map, vehicles, settings }
+enum AppDestination { home, map, vehicles, statistics, settings }
 
 /// App bottom navigation bar using Material 3 NavigationBar
 class AppNavigationBar extends StatelessWidget {
@@ -18,29 +19,33 @@ class AppNavigationBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return NavigationBar(
+    return DTBottomNavigation(
       selectedIndex: currentIndex,
       onDestinationSelected: onDestinationSelected,
-      labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
       destinations: [
-        NavigationDestination(
-          icon: Icon(Icons.home_outlined),
-          selectedIcon: Icon(Icons.home),
+        DTNavigationDestination(
+          icon: Icons.home_outlined,
+          selectedIcon: Icons.home,
           label: context.l10n.home,
         ),
-        NavigationDestination(
-          icon: Icon(Icons.map_outlined),
-          selectedIcon: Icon(Icons.map),
+        DTNavigationDestination(
+          icon: Icons.map_outlined,
+          selectedIcon: Icons.map,
           label: context.l10n.map,
         ),
-        NavigationDestination(
-          icon: Icon(Icons.directions_car_outlined),
-          selectedIcon: Icon(Icons.directions_car),
+        DTNavigationDestination(
+          icon: Icons.directions_car_outlined,
+          selectedIcon: Icons.directions_car,
           label: context.l10n.vehicles,
         ),
-        NavigationDestination(
-          icon: Icon(Icons.settings_outlined),
-          selectedIcon: Icon(Icons.settings),
+        DTNavigationDestination(
+          icon: Icons.bar_chart_outlined,
+          selectedIcon: Icons.bar_chart,
+          label: context.l10n.statistics,
+        ),
+        DTNavigationDestination(
+          icon: Icons.settings_outlined,
+          selectedIcon: Icons.settings,
           label: context.l10n.settings,
         ),
       ],

@@ -1,19 +1,11 @@
 import 'package:flutter/material.dart';
 
-import '../bloc/map_bloc.dart';
+import '../../../../core/design/dt_components.dart';
+import '../../../../core/design/dt_design_tokens.dart';
 import '../../../../core/utils/extensions.dart';
+import '../bloc/map_bloc.dart';
 
-/// Map control buttons (zoom, map type, etc.)
 class MapControls extends StatelessWidget {
-  final MapViewType mapType;
-  final bool showTraffic;
-  final VoidCallback onZoomIn;
-  final VoidCallback onZoomOut;
-  final VoidCallback onMyLocation;
-  final VoidCallback onFitBounds;
-  final VoidCallback onToggleTraffic;
-  final ValueChanged<MapViewType> onMapTypeChanged;
-
   const MapControls({
     super.key,
     required this.mapType,
@@ -26,262 +18,117 @@ class MapControls extends StatelessWidget {
     required this.onMapTypeChanged,
   });
 
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        // Map type button
-        _ControlButton(
-          icon: Icons.layers,
-          onPressed: () => _showMapTypeSheet(context),
-          tooltip: context.l10n.mapType,
-        ),
-        const SizedBox(height: 8),
-
-        // Traffic toggle
-        _ControlButton(
-          icon: Icons.traffic,
-          onPressed: onToggleTraffic,
-          isActive: showTraffic,
-          tooltip: showTraffic
-              ? context.l10n.hideTraffic
-              : context.l10n.showTraffic,
-        ),
-        const SizedBox(height: 8),
-
-        // Zoom in
-        _ControlButton(
-          icon: Icons.add,
-          onPressed: onZoomIn,
-          tooltip: context.l10n.zoomIn,
-        ),
-        const SizedBox(height: 4),
-
-        // Zoom out
-        _ControlButton(
-          icon: Icons.remove,
-          onPressed: onZoomOut,
-          tooltip: context.l10n.zoomOut,
-        ),
-        const SizedBox(height: 8),
-
-        // My location
-        _ControlButton(
-          icon: Icons.my_location,
-          onPressed: onMyLocation,
-          tooltip: context.l10n.myLocation,
-        ),
-        const SizedBox(height: 8),
-
-        // Fit all vehicles
-        _ControlButton(
-          icon: Icons.fit_screen,
-          onPressed: onFitBounds,
-          tooltip: context.l10n.fitAllVehicles,
-        ),
-      ],
-    );
-  }
-
-  void _showMapTypeSheet(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) => _MapTypeSheet(
-        currentType: mapType,
-        onTypeSelected: (type) {
-          onMapTypeChanged(type);
-          Navigator.pop(context);
-        },
-      ),
-    );
-  }
-}
-
-class _ControlButton extends StatelessWidget {
-  final IconData icon;
-  final VoidCallback onPressed;
-  final bool isActive;
-  final String tooltip;
-
-  const _ControlButton({
-    required this.icon,
-    required this.onPressed,
-    this.isActive = false,
-    required this.tooltip,
-  });
+  final MapViewType mapType;
+  final bool showTraffic;
+  final VoidCallback onZoomIn;
+  final VoidCallback onZoomOut;
+  final VoidCallback onMyLocation;
+  final VoidCallback onFitBounds;
+  final VoidCallback onToggleTraffic;
+  final ValueChanged<MapViewType> onMapTypeChanged;
 
   @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-
-    return Tooltip(
-      message: tooltip,
-      child: Material(
-        color: isActive ? colorScheme.primaryContainer : colorScheme.surface,
-        elevation: 2,
-        borderRadius: BorderRadius.circular(8),
-        child: InkWell(
-          onTap: onPressed,
-          borderRadius: BorderRadius.circular(8),
-          child: Container(
-            width: 40,
-            height: 40,
-            alignment: Alignment.center,
-            child: Icon(
-              icon,
-              size: 20,
-              color: isActive ? colorScheme.primary : colorScheme.onSurface,
-            ),
-          ),
-        ),
+  Widget build(BuildContext context) => Column(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      DTMapActionButton(
+        icon: const Icon(Icons.layers_outlined),
+        tooltip: context.l10n.mapType,
+        onPressed: () => _showMapTypeSheet(context),
+        selected: mapType != MapViewType.normal,
       ),
-    );
-  }
-}
+      const SizedBox(height: DTSpacing.xs),
+      DTMapActionButton(
+        icon: const Icon(Icons.traffic_outlined),
+        tooltip: showTraffic
+            ? context.l10n.hideTraffic
+            : context.l10n.showTraffic,
+        onPressed: onToggleTraffic,
+        selected: showTraffic,
+      ),
+      const SizedBox(height: DTSpacing.xs),
+      _ZoomControl(onZoomIn: onZoomIn, onZoomOut: onZoomOut),
+      const SizedBox(height: DTSpacing.xs),
+      DTMapActionButton(
+        icon: const Icon(Icons.my_location_outlined),
+        tooltip: context.l10n.myLocation,
+        onPressed: onMyLocation,
+      ),
+      const SizedBox(height: DTSpacing.xs),
+      DTMapActionButton(
+        icon: const Icon(Icons.fit_screen_outlined),
+        tooltip: context.l10n.fitAllVehicles,
+        onPressed: onFitBounds,
+      ),
+    ],
+  );
 
-class _MapTypeSheet extends StatelessWidget {
-  final MapViewType currentType;
-  final ValueChanged<MapViewType> onTypeSelected;
-
-  const _MapTypeSheet({
-    required this.currentType,
-    required this.onTypeSelected,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-
-    return Padding(
-      padding: const EdgeInsets.all(16),
+  void _showMapTypeSheet(BuildContext context) => showModalBottomSheet<void>(
+    context: context,
+    backgroundColor: Colors.transparent,
+    showDragHandle: false,
+    builder: (context) => DTVehicleBottomSheet(
+      showHandle: true,
       child: Column(
         mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Handle bar
-          Center(
-            child: Container(
-              width: 40,
-              height: 4,
-              margin: const EdgeInsets.only(bottom: 16),
-              decoration: BoxDecoration(
-                color: Theme.of(
-                  context,
-                ).colorScheme.onSurfaceVariant.withValues(alpha: 0.3),
-                borderRadius: BorderRadius.circular(2),
+        children: MapViewType.values
+            .map(
+              (type) => ListTile(
+                leading: Icon(_iconFor(type)),
+                title: Text(_labelFor(context, type)),
+                trailing: type == mapType ? const Icon(Icons.check) : null,
+                onTap: () {
+                  onMapTypeChanged(type);
+                  Navigator.pop(context);
+                },
               ),
-            ),
-          ),
-
-          Text(
-            context.l10n.mapType,
-            style: textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 16),
-
-          // Map type options
-          Row(
-            children: [
-              _MapTypeOption(
-                type: MapViewType.normal,
-                label: context.l10n.normal,
-                icon: Icons.map,
-                isSelected: currentType == MapViewType.normal,
-                onTap: () => onTypeSelected(MapViewType.normal),
-              ),
-              const SizedBox(width: 12),
-              _MapTypeOption(
-                type: MapViewType.satellite,
-                label: context.l10n.satellite,
-                icon: Icons.satellite_alt,
-                isSelected: currentType == MapViewType.satellite,
-                onTap: () => onTypeSelected(MapViewType.satellite),
-              ),
-              const SizedBox(width: 12),
-              _MapTypeOption(
-                type: MapViewType.terrain,
-                label: context.l10n.terrain,
-                icon: Icons.terrain,
-                isSelected: currentType == MapViewType.terrain,
-                onTap: () => onTypeSelected(MapViewType.terrain),
-              ),
-              const SizedBox(width: 12),
-              _MapTypeOption(
-                type: MapViewType.hybrid,
-                label: context.l10n.hybrid,
-                icon: Icons.layers,
-                isSelected: currentType == MapViewType.hybrid,
-                onTap: () => onTypeSelected(MapViewType.hybrid),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-        ],
+            )
+            .toList(),
       ),
-    );
-  }
+    ),
+  );
+
+  String _labelFor(BuildContext context, MapViewType type) => switch (type) {
+    MapViewType.normal => context.l10n.normal,
+    MapViewType.satellite => context.l10n.satellite,
+    MapViewType.terrain => context.l10n.terrain,
+    MapViewType.hybrid => context.l10n.hybrid,
+  };
+
+  IconData _iconFor(MapViewType type) => switch (type) {
+    MapViewType.normal => Icons.map_outlined,
+    MapViewType.satellite => Icons.satellite_alt_outlined,
+    MapViewType.terrain => Icons.terrain_outlined,
+    MapViewType.hybrid => Icons.layers_outlined,
+  };
 }
 
-class _MapTypeOption extends StatelessWidget {
-  final MapViewType type;
-  final String label;
-  final IconData icon;
-  final bool isSelected;
-  final VoidCallback onTap;
+class _ZoomControl extends StatelessWidget {
+  const _ZoomControl({required this.onZoomIn, required this.onZoomOut});
 
-  const _MapTypeOption({
-    required this.type,
-    required this.label,
-    required this.icon,
-    required this.isSelected,
-    required this.onTap,
-  });
+  final VoidCallback onZoomIn;
+  final VoidCallback onZoomOut;
 
   @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final textTheme = Theme.of(context).textTheme;
-
-    return Expanded(
-      child: GestureDetector(
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          decoration: BoxDecoration(
-            color: isSelected
-                ? colorScheme.primaryContainer
-                : colorScheme.surfaceContainerHighest,
-            borderRadius: BorderRadius.circular(12),
-            border: isSelected
-                ? Border.all(color: colorScheme.primary, width: 2)
-                : null,
-          ),
-          child: Column(
-            children: [
-              Icon(
-                icon,
-                color: isSelected
-                    ? colorScheme.primary
-                    : colorScheme.onSurfaceVariant,
-              ),
-              const SizedBox(height: 4),
-              Text(
-                label,
-                style: textTheme.bodySmall?.copyWith(
-                  color: isSelected
-                      ? colorScheme.primary
-                      : colorScheme.onSurfaceVariant,
-                  fontWeight: isSelected ? FontWeight.bold : null,
-                ),
-              ),
-            ],
-          ),
+  Widget build(BuildContext context) => Material(
+    color: Theme.of(context).colorScheme.surface,
+    elevation: 2,
+    shape: const StadiumBorder(),
+    child: Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        IconButton(
+          tooltip: context.l10n.zoomIn,
+          onPressed: onZoomIn,
+          icon: const Icon(Icons.add),
         ),
-      ),
-    );
-  }
+        Container(width: 28, height: 1, color: context.dtColors.border),
+        IconButton(
+          tooltip: context.l10n.zoomOut,
+          onPressed: onZoomOut,
+          icon: const Icon(Icons.remove),
+        ),
+      ],
+    ),
+  );
 }

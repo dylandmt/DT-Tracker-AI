@@ -2,9 +2,7 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/errors/failures.dart';
-import '../../../../core/usecases/usecase.dart';
 import '../../../vehicles/domain/entities/vehicle.dart';
-import '../../../vehicles/domain/usecases/get_vehicles.dart';
 import '../../domain/entities/statistics.dart';
 import '../../domain/usecases/statistics_usecases.dart';
 
@@ -12,13 +10,12 @@ part 'statistics_event.dart';
 part 'statistics_state.dart';
 
 class StatisticsBloc extends Bloc<StatisticsEvent, StatisticsState> {
-  StatisticsBloc({required this.getVehicles, required this.getStatistics})
+  StatisticsBloc({required this.getStatistics})
     : super(const StatisticsState()) {
     on<StatisticsRequested>(_onRequested);
     on<StatisticsVehicleChanged>(_onVehicleChanged);
     on<StatisticsRangeChanged>(_onRangeChanged);
   }
-  final GetVehicles getVehicles;
   final GetVehicleStatistics getStatistics;
   int _request = 0;
 
@@ -34,32 +31,25 @@ class StatisticsBloc extends Bloc<StatisticsEvent, StatisticsState> {
         clearFailure: true,
       ),
     );
-    final vehiclesResult = await getVehicles(const NoParams());
-    await vehiclesResult.fold(
-      (failure) async => emit(
-        state.copyWith(status: StatisticsStatus.error, failure: failure),
-      ),
-      (vehicles) async {
-        if (vehicles.isEmpty) {
-          emit(
-            state.copyWith(status: StatisticsStatus.empty, vehicles: vehicles),
-          );
-          return;
-        }
-        final vehicle = vehicles.first;
-        emit(state.copyWith(vehicles: vehicles, selectedVehicle: vehicle));
-        await _load(vehicle, event.from, event.to, emit);
-      },
-    );
+    final vehicle = event.vehicle;
+    if (vehicle == null) {
+      emit(
+        state.copyWith(status: StatisticsStatus.empty, clearStatistics: true),
+      );
+      return;
+    }
+    emit(state.copyWith(selectedVehicle: vehicle));
+    await _load(vehicle, event.from, event.to, emit);
   }
 
   Future<void> _onVehicleChanged(
     StatisticsVehicleChanged event,
     Emitter<StatisticsState> emit,
   ) async {
-    final vehicle = state.vehicles.firstWhere(
-      (item) => item.id == event.vehicleId,
-    );
+    final vehicle = state.vehicles
+        .where((item) => item.id == event.vehicleId)
+        .firstOrNull;
+    if (vehicle == null) return;
     final from = state.from;
     final to = state.to;
     if (from == null || to == null) return;
@@ -98,11 +88,13 @@ class StatisticsBloc extends Bloc<StatisticsEvent, StatisticsState> {
     DateTime to,
     Emitter<StatisticsState> emit,
   ) async {
+    final request = ++_request;
     if (!vehicle.hasTracker) {
-      emit(state.copyWith(status: StatisticsStatus.empty));
+      emit(
+        state.copyWith(status: StatisticsStatus.empty, clearStatistics: true),
+      );
       return;
     }
-    final request = ++_request;
     final result = await getStatistics(
       StatisticsParams(vehicleId: vehicle.id, from: from, to: to),
     );

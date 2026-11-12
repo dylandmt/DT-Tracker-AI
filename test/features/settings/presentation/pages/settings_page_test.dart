@@ -6,6 +6,7 @@ import 'package:mocktail/mocktail.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:dt_tracker_ai/core/localization/locale_controller.dart';
+import 'package:dt_tracker_ai/core/theme/app_theme.dart';
 import 'package:dt_tracker_ai/core/theme/theme_controller.dart';
 import 'package:dt_tracker_ai/features/auth/domain/entities/user.dart';
 import 'package:dt_tracker_ai/features/auth/domain/usecases/auth_state_changes.dart';
@@ -127,12 +128,18 @@ void main() {
           path: '/login',
           builder: (_, _) => const Scaffold(body: Text('Login page')),
         ),
+        GoRoute(
+          path: '/home/friends',
+          builder: (_, _) => const Scaffold(body: Text('Friends page')),
+        ),
       ],
     );
 
     await tester.pumpWidget(
       MaterialApp.router(
         routerConfig: router,
+        theme: AppTheme.lightTheme,
+        darkTheme: AppTheme.darkTheme,
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
       ),
@@ -151,6 +158,64 @@ void main() {
     await pumpSettings(tester, AuthState.authenticated(user));
 
     expect(deleteAccountTile(), findsOneWidget);
+  });
+
+  testWidgets('renders profile and all settings sections for long user data', (
+    tester,
+  ) async {
+    final longUser = user.copyWith(
+      displayName: 'Alexandria Montgomery-Rutherford Longname',
+      email: 'alexandria.montgomery-rutherford@example-domain.test',
+    );
+    await pumpSettings(tester, AuthState.authenticated(longUser));
+
+    expect(
+      find.text('Alexandria Montgomery-Rutherford Longname'),
+      findsOneWidget,
+    );
+    expect(
+      find.text('alexandria.montgomery-rutherford@example-domain.test'),
+      findsOneWidget,
+    );
+    expect(find.text('Account'), findsOneWidget);
+
+    await tester.drag(find.byType(Scrollable).first, const Offset(0, -360));
+    await tester.pumpAndSettle();
+    expect(find.text('Security'), findsOneWidget);
+    expect(find.text('Social'), findsOneWidget);
+
+    await tester.drag(find.byType(Scrollable).first, const Offset(0, -600));
+    await tester.pumpAndSettle();
+
+    expect(find.text('App'), findsOneWidget);
+    expect(find.text('Language'), findsOneWidget);
+    expect(find.text('Light'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('sign out keeps its confirmation flow', (tester) async {
+    await pumpSettings(tester, AuthState.authenticated(user));
+
+    await tester.scrollUntilVisible(find.text('Sign out'), 300);
+    await tester.tap(find.text('Sign out'));
+    await tester.pumpAndSettle();
+    expect(find.text('Are you sure you want to sign out?'), findsOneWidget);
+
+    await tester.tap(find.text('Cancel'));
+    await tester.pumpAndSettle();
+    expect(bloc.events, isEmpty);
+  });
+
+  testWidgets('shows Social and reuses the Friends route', (tester) async {
+    await pumpSettings(tester, AuthState.authenticated(user));
+
+    await tester.scrollUntilVisible(find.text('Friends'), 300);
+    expect(find.text('Social'), findsOneWidget);
+    expect(find.text('Manage friends and friend requests.'), findsOneWidget);
+    await tester.tap(find.text('Friends'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Friends page'), findsOneWidget);
   });
 
   testWidgets(

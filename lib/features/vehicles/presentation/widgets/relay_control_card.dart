@@ -27,7 +27,6 @@ class _RelayControlCardState extends State<RelayControlCard> {
   Map<String, dynamic>? _relay;
   bool _loading = true;
   bool _submitting = false;
-  String? _pendingDesiredState;
 
   @override
   void initState() {
@@ -71,7 +70,6 @@ class _RelayControlCardState extends State<RelayControlCard> {
 
     setState(() {
       _submitting = true;
-      _pendingDesiredState = desiredState;
     });
     try {
       await _dataSource.requestRelayCommand(
@@ -92,7 +90,6 @@ class _RelayControlCardState extends State<RelayControlCard> {
       if (mounted) {
         setState(() {
           _submitting = false;
-          _pendingDesiredState = null;
         });
       }
     }
@@ -184,11 +181,13 @@ class _RelayControlCardState extends State<RelayControlCard> {
     final reportedState = relay?['reportedState']?.toString();
     final commandStatus = relay?['commandStatus']?.toString();
     final isPending = _submitting || commandStatus == 'PENDING';
-    // While awaiting the tracker ACK, reflect the state requested by the user.
-    final effectiveState = isPending
-        ? _pendingDesiredState ?? desiredState
-        : reportedState ?? desiredState;
-    final isImmobilized = effectiveState == 'OFF';
+    // Only device-reported state determines the physical relay indicator.
+    // A requested OFF state must never be presented as an applied OFF state.
+    final isStateKnown = reportedState == 'ON' || reportedState == 'OFF';
+    final isImmobilized = reportedState == 'OFF';
+    final isConfirmed = commandStatus == 'EXECUTED' &&
+        isStateKnown &&
+        reportedState == desiredState;
     final stateColor = isImmobilized
         ? context.dtColors.idle
         : context.dtColors.online;
@@ -211,9 +210,11 @@ class _RelayControlCardState extends State<RelayControlCard> {
                 Icon(Icons.power_settings_new, color: stateColorPowerIndicator),
                 const SizedBox(width: 8),
                 Text(
-                  isImmobilized
-                      ? context.l10n.vehicleImmobilized
-                      : context.l10n.vehicleActive,
+                  !isStateKnown
+                      ? context.l10n.confirmingVehicleState
+                      : isImmobilized
+                          ? context.l10n.vehicleImmobilized
+                          : context.l10n.vehicleActive,
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w700,
                   ),
@@ -227,7 +228,14 @@ class _RelayControlCardState extends State<RelayControlCard> {
               Text(
                 isPending
                     ? context.l10n.confirmingVehicleState
-                    : context.l10n.vehicleStateConfirmed,
+                    : isConfirmed
+                        ? context.l10n.vehicleStateConfirmed
+                        : commandStatus == 'EXPIRED' ||
+                                commandStatus == 'FAILED'
+                            ? 'Comando: $commandStatus'
+                            : commandStatus == 'EXECUTED'
+                                ? context.l10n.confirmingVehicleState
+                                : 'Estado no confirmado',
               ),
               if (isPending) ...[
                 const SizedBox(height: 8),
@@ -245,7 +253,7 @@ class _RelayControlCardState extends State<RelayControlCard> {
                 width: double.infinity,
                 child: FilledButton(
                   style: FilledButton.styleFrom(backgroundColor: stateColor),
-                  onPressed: isPending
+                  onPressed: isPending || !isStateKnown
                       ? null
                       : () => _requestState(requestedState),
                   child: Text(actionLabel),

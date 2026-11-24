@@ -104,11 +104,65 @@ abstract class AppLocalizations {
   /// **'DT Tracker'**
   String get appTitle;
 
+  /// No description provided for @all.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get all;
+
   /// No description provided for @settings.
   ///
   /// In en, this message translates to:
   /// **'Settings'**
   String get settings;
+
+  /// No description provided for @social.
+  ///
+  /// In en, this message translates to:
+  /// **'Social'**
+  String get social;
+
+  /// No description provided for @socialSettingsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect and stay close to your friends.'**
+  String get socialSettingsSubtitle;
+
+  /// No description provided for @manageFriends.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage friends and friend requests.'**
+  String get manageFriends;
+
+  /// No description provided for @settingsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage your account, security and app preferences.'**
+  String get settingsSubtitle;
+
+  /// No description provided for @accountSettingsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage your personal information and account.'**
+  String get accountSettingsSubtitle;
+
+  /// No description provided for @securitySettingsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep your account and devices secure.'**
+  String get securitySettingsSubtitle;
+
+  /// No description provided for @appSettingsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Customize your app experience.'**
+  String get appSettingsSubtitle;
+
+  /// No description provided for @versionLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Version'**
+  String get versionLabel;
 
   /// No description provided for @account.
   ///
@@ -287,7 +341,7 @@ abstract class AppLocalizations {
   /// No description provided for @deleteAccountDescription.
   ///
   /// In en, this message translates to:
-  /// **'Permanently delete your account and associated data'**
+  /// **'Review the permanent consequences before deleting'**
   String get deleteAccountDescription;
 
   /// No description provided for @deleteAccountConfirmationTitle.
@@ -299,8 +353,146 @@ abstract class AppLocalizations {
   /// No description provided for @deleteAccountConfirmation.
   ///
   /// In en, this message translates to:
-  /// **'This action is permanent and cannot be undone.'**
+  /// **'This action is permanent and cannot be undone. Your DT Tracker account will be removed.'**
   String get deleteAccountConfirmation;
+
+  /// No description provided for @deleteAccountIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Deleting your DT Tracker account is permanent. Please review what will happen before continuing.'**
+  String get deleteAccountIntro;
+
+  /// No description provided for @deleteAccountConsequencesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'What happens when you delete your account?'**
+  String get deleteAccountConsequencesTitle;
+
+  /// No description provided for @deleteAccountAccessConsequence.
+  ///
+  /// In en, this message translates to:
+  /// **'Your account will no longer be accessible and you will lose access to DT Tracker with it.'**
+  String get deleteAccountAccessConsequence;
+
+  /// No description provided for @deleteAccountServerConsequence.
+  ///
+  /// In en, this message translates to:
+  /// **'The server will permanently process the deletion of your account.'**
+  String get deleteAccountServerConsequence;
+
+  /// No description provided for @deleteAccountIrreversibleConsequence.
+  ///
+  /// In en, this message translates to:
+  /// **'This action cannot be undone.'**
+  String get deleteAccountIrreversibleConsequence;
+
+  /// No description provided for @statistics.
+  ///
+  /// In en, this message translates to:
+  /// **'Statistics'**
+  String get statistics;
+
+  /// No description provided for @day.
+  ///
+  /// In en, this message translates to:
+  /// **'Day'**
+  String get day;
+
+  /// No description provided for @week.
+  ///
+  /// In en, this message translates to:
+  /// **'Week'**
+  String get week;
+
+  /// No description provided for @vehicle.
+  ///
+  /// In en, this message translates to:
+  /// **'Vehicle'**
+  String get vehicle;
+
+  /// No description provided for @statisticsLoadError.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to load statistics.'**
+  String get statisticsLoadError;
+
+  /// No description provided for @vehicleWithoutTrackerStatistics.
+  ///
+  /// In en, this message translates to:
+  /// **'This vehicle does not have a linked tracker.'**
+  String get vehicleWithoutTrackerStatistics;
+
+  /// No description provided for @addVehicleForStatistics.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a vehicle to view statistics.'**
+  String get addVehicleForStatistics;
+
+  /// No description provided for @kmDriven.
+  ///
+  /// In en, this message translates to:
+  /// **'KM DRIVEN'**
+  String get kmDriven;
+
+  /// No description provided for @totalDistance.
+  ///
+  /// In en, this message translates to:
+  /// **'Total distance'**
+  String get totalDistance;
+
+  /// No description provided for @dailyAverage.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily average'**
+  String get dailyAverage;
+
+  /// No description provided for @averageSpeed.
+  ///
+  /// In en, this message translates to:
+  /// **'Average speed'**
+  String get averageSpeed;
+
+  /// No description provided for @maximumSpeed.
+  ///
+  /// In en, this message translates to:
+  /// **'Maximum speed'**
+  String get maximumSpeed;
+
+  /// No description provided for @movingTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Moving time'**
+  String get movingTime;
+
+  /// No description provided for @retry.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get retry;
+
+  /// No description provided for @selectUpToSevenDays.
+  ///
+  /// In en, this message translates to:
+  /// **'Select up to 7 days'**
+  String get selectUpToSevenDays;
+
+  /// No description provided for @statisticsRangeMaximum.
+  ///
+  /// In en, this message translates to:
+  /// **'The maximum range is 7 days.'**
+  String get statisticsRangeMaximum;
+
+  /// No description provided for @speedDuringDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Speed during the day'**
+  String get speedDuringDay;
+
+  /// No description provided for @noSpeedRecords.
+  ///
+  /// In en, this message translates to:
+  /// **'No speed records.'**
+  String get noSpeedRecords;
 
   /// No description provided for @deletingAccount.
   ///
@@ -338,11 +530,35 @@ abstract class AppLocalizations {
   /// **'My Vehicles'**
   String get myVehicles;
 
+  /// No description provided for @myVehiclesSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage your vehicles and linked trackers'**
+  String get myVehiclesSubtitle;
+
+  /// No description provided for @searchVehicles.
+  ///
+  /// In en, this message translates to:
+  /// **'Search vehicles'**
+  String get searchVehicles;
+
   /// No description provided for @addVehicle.
   ///
   /// In en, this message translates to:
   /// **'Add Vehicle'**
   String get addVehicle;
+
+  /// No description provided for @addVehicleSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add the essential details for your vehicle'**
+  String get addVehicleSubtitle;
+
+  /// No description provided for @editVehicleSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep your vehicle information up to date'**
+  String get editVehicleSubtitle;
 
   /// No description provided for @vehicleDeleted.
   ///
@@ -1142,12 +1358,6 @@ abstract class AppLocalizations {
   /// **'Vehicle not found'**
   String get vehicleNotFound;
 
-  /// No description provided for @vehicle.
-  ///
-  /// In en, this message translates to:
-  /// **'Vehicle'**
-  String get vehicle;
-
   /// No description provided for @color.
   ///
   /// In en, this message translates to:
@@ -1868,12 +2078,6 @@ abstract class AppLocalizations {
   /// **'Max speed'**
   String get maxSpeed;
 
-  /// No description provided for @averageSpeed.
-  ///
-  /// In en, this message translates to:
-  /// **'Average speed'**
-  String get averageSpeed;
-
   /// No description provided for @points.
   ///
   /// In en, this message translates to:
@@ -2569,6 +2773,216 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Temporarily shared location'**
   String get temporarySharedLocation;
+
+  /// No description provided for @home.
+  ///
+  /// In en, this message translates to:
+  /// **'Home'**
+  String get home;
+
+  /// No description provided for @guestUser.
+  ///
+  /// In en, this message translates to:
+  /// **'there'**
+  String get guestUser;
+
+  /// No description provided for @homeGreeting.
+  ///
+  /// In en, this message translates to:
+  /// **'Hello, {name}'**
+  String homeGreeting(String name);
+
+  /// No description provided for @homeTagline.
+  ///
+  /// In en, this message translates to:
+  /// **'Your world, more secure'**
+  String get homeTagline;
+
+  /// No description provided for @quickActions.
+  ///
+  /// In en, this message translates to:
+  /// **'Quick actions'**
+  String get quickActions;
+
+  /// No description provided for @liveLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Live location'**
+  String get liveLocation;
+
+  /// No description provided for @zonesAndAlerts.
+  ///
+  /// In en, this message translates to:
+  /// **'Zones & alerts'**
+  String get zonesAndAlerts;
+
+  /// No description provided for @recentEvents.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent events'**
+  String get recentEvents;
+
+  /// No description provided for @usageAndReports.
+  ///
+  /// In en, this message translates to:
+  /// **'Usage & reports'**
+  String get usageAndReports;
+
+  /// No description provided for @realTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Real time'**
+  String get realTime;
+
+  /// No description provided for @alerts.
+  ///
+  /// In en, this message translates to:
+  /// **'Alerts'**
+  String get alerts;
+
+  /// No description provided for @trackerPlans.
+  ///
+  /// In en, this message translates to:
+  /// **'DT Tracker plans'**
+  String get trackerPlans;
+
+  /// No description provided for @planSelectionIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose the protection each vehicle needs.'**
+  String get planSelectionIntro;
+
+  /// No description provided for @planEssentialDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Real-time location, 7 days of history, and 2 geofences.'**
+  String get planEssentialDescription;
+
+  /// No description provided for @planProtectDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Everything in Essential, 30 days, location sharing, and remote immobilization.'**
+  String get planProtectDescription;
+
+  /// No description provided for @planTotalDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Everything in Protect, 12 months, unlimited geofences, and advanced protection.'**
+  String get planTotalDescription;
+
+  /// No description provided for @planEssentialFeatureLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Real-time GPS location'**
+  String get planEssentialFeatureLocation;
+
+  /// No description provided for @planEssentialFeatureStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Vehicle and tracker status'**
+  String get planEssentialFeatureStatus;
+
+  /// No description provided for @planEssentialFeatureHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'7 days of history and 2 geofences'**
+  String get planEssentialFeatureHistory;
+
+  /// No description provided for @planProtectFeatureIncluded.
+  ///
+  /// In en, this message translates to:
+  /// **'Everything included in Essential'**
+  String get planProtectFeatureIncluded;
+
+  /// No description provided for @planProtectFeatureHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'30 days of history and 10 geofences'**
+  String get planProtectFeatureHistory;
+
+  /// No description provided for @planProtectFeatureSharing.
+  ///
+  /// In en, this message translates to:
+  /// **'Location sharing and remote immobilization'**
+  String get planProtectFeatureSharing;
+
+  /// No description provided for @planTotalFeatureIncluded.
+  ///
+  /// In en, this message translates to:
+  /// **'Everything included in Protect'**
+  String get planTotalFeatureIncluded;
+
+  /// No description provided for @planTotalFeatureHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'12 months of history and unlimited geofences'**
+  String get planTotalFeatureHistory;
+
+  /// No description provided for @planTotalFeatureProtection.
+  ///
+  /// In en, this message translates to:
+  /// **'Theft mode, intensive tracking, and authorized users'**
+  String get planTotalFeatureProtection;
+
+  /// No description provided for @noData.
+  ///
+  /// In en, this message translates to:
+  /// **'No data'**
+  String get noData;
+
+  /// No description provided for @invalidYear.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid year'**
+  String get invalidYear;
+
+  /// No description provided for @noGps.
+  ///
+  /// In en, this message translates to:
+  /// **'No GPS'**
+  String get noGps;
+
+  /// No description provided for @gps.
+  ///
+  /// In en, this message translates to:
+  /// **'GPS'**
+  String get gps;
+
+  /// No description provided for @or.
+  ///
+  /// In en, this message translates to:
+  /// **'OR'**
+  String get or;
+
+  /// No description provided for @continueWithGoogle.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue with Google'**
+  String get continueWithGoogle;
+
+  /// No description provided for @closePreview.
+  ///
+  /// In en, this message translates to:
+  /// **'Close preview'**
+  String get closePreview;
+
+  /// No description provided for @playbackProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'{position} / {total}'**
+  String playbackProgress(int position, int total);
+
+  /// No description provided for @addPhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Add photo'**
+  String get addPhoto;
+
+  /// No description provided for @noPhotosYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No photos yet'**
+  String get noPhotosYet;
 }
 
 class _AppLocalizationsDelegate

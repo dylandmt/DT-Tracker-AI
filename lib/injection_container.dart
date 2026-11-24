@@ -64,6 +64,7 @@ import 'features/vehicles/domain/usecases/watch_vehicles.dart';
 import 'features/vehicles/presentation/bloc/tracker_link_bloc.dart';
 import 'features/vehicles/presentation/bloc/vehicle_form_bloc.dart';
 import 'features/vehicles/presentation/bloc/vehicles_bloc.dart';
+import 'features/vehicles/presentation/cubit/selected_vehicle_cubit.dart';
 import 'features/map/data/datasources/map_remote_datasource.dart';
 import 'features/map/data/repositories/map_repository_impl.dart';
 import 'features/map/domain/repositories/map_repository.dart';
@@ -88,6 +89,11 @@ import 'features/trips/domain/usecases/trip_usecases.dart';
 import 'features/trips/presentation/bloc/trip_bloc.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'features/auth/domain/usecases/sign_in_with_google.dart';
+import 'features/statistics/data/datasources/statistics_remote_datasource.dart';
+import 'features/statistics/data/repositories/statistics_repository_impl.dart';
+import 'features/statistics/domain/repositories/statistics_repository.dart';
+import 'features/statistics/domain/usecases/statistics_usecases.dart';
+import 'features/statistics/presentation/bloc/statistics_bloc.dart';
 
 final sl = GetIt.instance;
 
@@ -225,6 +231,19 @@ Future<void> initializeDependencies() async {
   );
 
   //============================================================================
+  // Features - Statistics
+  //============================================================================
+  sl.registerLazySingleton<StatisticsRemoteDataSource>(
+    () => StatisticsRemoteDataSourceImpl(firebaseAuth: sl()),
+  );
+  sl.registerLazySingleton<StatisticsRepository>(
+    () => StatisticsRepositoryImpl(remoteDataSource: sl(), networkInfo: sl()),
+  );
+  sl.registerLazySingleton(() => GetVehicleStatistics(sl()));
+  sl.registerLazySingleton(() => GetDailyStatistics(sl()));
+  sl.registerFactory(() => StatisticsBloc(getStatistics: sl()));
+
+  //============================================================================
   // Features - Trips
   //============================================================================
   sl.registerLazySingleton<TripRemoteDataSource>(
@@ -320,6 +339,13 @@ Future<void> initializeDependencies() async {
       getVehicles: sl(),
       watchVehicles: sl(),
       deleteVehicle: sl(),
+    ),
+  );
+  sl.registerLazySingleton(
+    () => SelectedVehicleCubit(
+      firebaseAuth: sl(),
+      watchVehicles: sl(),
+      preferences: sl(),
     ),
   );
 

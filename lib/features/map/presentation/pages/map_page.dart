@@ -44,6 +44,7 @@ class _MapPageState extends State<MapPage> with WidgetsBindingObserver {
   final Completer<GoogleMapController> _controllerCompleter = Completer();
 
   final _panelCoordinator = MapPanelCoordinator();
+  bool _mapSelectionPending = true;
   bool _locationPermissionGranted = false;
   bool _isGettingLocation = false;
   bool _locationServicesEnabled = true;
@@ -162,7 +163,7 @@ class _MapPageState extends State<MapPage> with WidgetsBindingObserver {
                   current.currentPlaybackPoint != null) ||
               previous.vehicleLocations != current.vehicleLocations,
           listener: (context, state) {
-            _syncMapSelection();
+            if (_mapSelectionPending) _syncMapSelection();
             if (state.errorMessage != null) {
               context.showErrorSnackBar(state.errorMessage!);
               context.read<MapBloc>().add(const ClearMapError());
@@ -700,10 +701,10 @@ class _MapPageState extends State<MapPage> with WidgetsBindingObserver {
       } else {
         _panelCoordinator.selectMarker();
       }
+      _vehicleSheetStage = VehicleSheetStage.intermediate;
     });
-    if (_vehicleSheetStage != VehicleSheetStage.intermediate) {
-      setState(() => _vehicleSheetStage = VehicleSheetStage.intermediate);
-    }
+    _mapSelectionPending = false;
+    context.read<MapBloc>().add(SelectVehicle(vehicle));
     context.read<SelectedVehicleCubit>().selectVehicle(vehicle.vehicleId);
     _animateToPosition(LatLng(vehicle.latitude, vehicle.longitude));
   }
@@ -717,10 +718,14 @@ class _MapPageState extends State<MapPage> with WidgetsBindingObserver {
         ?.id;
     final mapBloc = context.read<MapBloc>();
     final currentId = mapBloc.state.selectedVehicle?.vehicleId;
-    if (selectedId == currentId) return;
+    if (selectedId == currentId) {
+      _mapSelectionPending = false;
+      return;
+    }
     final location = mapBloc.state.vehicleLocations
         .where((item) => item.vehicleId == selectedId)
         .firstOrNull;
+    _mapSelectionPending = selectedId != null && location == null;
     if (location == null) {
       mapBloc.add(const ClearVehicleSelection());
       return;

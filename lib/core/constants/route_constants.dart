@@ -44,8 +44,11 @@ class RouteConstants {
   static const String profile = '/home/settings/profile';
   static const String securityPin = '/home/settings/security-pin';
   static const String alertsSettings = '/home/settings/alerts';
+  static const String deleteAccount = '/home/settings/delete-account';
   static const String friends = homeFriends;
   static const String shareLocation = '/share-location';
+  static const String statistics = '/statistics';
+  static const String dailyStatistics = '/statistics/daily';
 
   // Route Names
   static const String splashName = 'splash';
@@ -77,6 +80,9 @@ class RouteConstants {
   static const String profileName = 'profile';
   static const String securityPinName = 'securityPin';
   static const String alertsSettingsName = 'alertsSettings';
+  static const String deleteAccountName = 'deleteAccount';
   static const String friendsName = 'friends';
   static const String shareLocationName = 'shareLocation';
+  static const String statisticsName = 'statistics';
+  static const String dailyStatisticsName = 'dailyStatistics';
 }

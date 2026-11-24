@@ -23,18 +23,24 @@ import '../../features/events/presentation/pages/events_page.dart';
 import '../../features/settings/presentation/pages/settings_page.dart';
 import '../../features/settings/presentation/pages/profile_page.dart';
 import '../../features/settings/presentation/pages/alerts_settings_page.dart';
+import '../../features/settings/presentation/pages/delete_account_page.dart';
 import '../../features/settings/presentation/pages/security_pin_page.dart';
 import '../../features/social/presentation/pages/friends_page.dart';
 import '../../features/social/presentation/pages/share_location_page.dart';
 import '../../features/vehicles/presentation/bloc/tracker_link_bloc.dart';
 import '../../features/vehicles/presentation/bloc/vehicle_form_bloc.dart';
 import '../../features/vehicles/presentation/bloc/vehicles_bloc.dart';
+import '../../features/vehicles/presentation/cubit/selected_vehicle_cubit.dart';
 import '../../features/vehicles/presentation/pages/link_tracker_page.dart';
 import '../../features/vehicles/presentation/pages/vehicle_detail_page.dart';
 import '../../features/vehicles/presentation/pages/vehicle_form_page.dart';
 import '../../features/vehicles/presentation/pages/vehicles_page.dart';
 import '../../features/trips/presentation/bloc/trip_bloc.dart';
 import '../../features/trips/presentation/pages/trips_page.dart';
+import '../../features/statistics/presentation/bloc/statistics_bloc.dart';
+import '../../features/statistics/presentation/pages/daily_statistics_page.dart';
+import '../../features/statistics/presentation/pages/statistics_page.dart';
+import '../../features/vehicles/domain/entities/vehicle.dart';
 import '../../injection_container.dart';
 
 /// Application router configuration using GoRouter
@@ -149,14 +155,18 @@ class AppRouter {
         name: RouteConstants.shareLocationName,
         builder: (context, state) => const ShareLocationPage(),
       ),
-
       // Shell route with bottom navigation
       ShellRoute(
         navigatorKey: _shellNavigatorKey,
         builder: (context, state, child) {
           // Provide AuthBloc at shell level for settings page
-          return BlocProvider(
-            create: (_) => sl<AuthBloc>()..add(CheckAuthStatus()),
+          return MultiBlocProvider(
+            providers: [
+              BlocProvider(
+                create: (_) => sl<AuthBloc>()..add(CheckAuthStatus()),
+              ),
+              BlocProvider.value(value: sl<SelectedVehicleCubit>()),
+            ],
             child: HomePage(child: child),
           );
         },
@@ -255,6 +265,32 @@ class AppRouter {
             ),
           ),
 
+          // Statistics tab
+          GoRoute(
+            path: RouteConstants.statistics,
+            name: RouteConstants.statisticsName,
+            pageBuilder: (context, state) => NoTransitionPage(
+              child: BlocProvider(
+                create: (_) => sl<StatisticsBloc>(),
+                child: const StatisticsPage(),
+              ),
+            ),
+            routes: [
+              GoRoute(
+                path: 'daily',
+                name: RouteConstants.dailyStatisticsName,
+                parentNavigatorKey: _rootNavigatorKey,
+                builder: (context, state) {
+                  final data = state.extra! as Map<String, dynamic>;
+                  return DailyStatisticsPage(
+                    vehicle: data['vehicle']! as VehicleEntity,
+                    date: data['date']! as DateTime,
+                  );
+                },
+              ),
+            ],
+          ),
+
           // Friends tab
           GoRoute(
             path: RouteConstants.homeFriends,
@@ -296,6 +332,11 @@ class AppRouter {
                 path: 'alerts',
                 name: RouteConstants.alertsSettingsName,
                 builder: (context, state) => const AlertsSettingsPage(),
+              ),
+              GoRoute(
+                path: 'delete-account',
+                name: RouteConstants.deleteAccountName,
+                builder: (context, state) => const DeleteAccountPage(),
               ),
             ],
           ),

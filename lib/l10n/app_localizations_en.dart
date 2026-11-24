@@ -12,7 +12,38 @@ class AppLocalizationsEn extends AppLocalizations {
   String get appTitle => 'DT Tracker';
 
   @override
+  String get all => 'All';
+
+  @override
   String get settings => 'Settings';
+
+  @override
+  String get social => 'Social';
+
+  @override
+  String get socialSettingsSubtitle =>
+      'Connect and stay close to your friends.';
+
+  @override
+  String get manageFriends => 'Manage friends and friend requests.';
+
+  @override
+  String get settingsSubtitle =>
+      'Manage your account, security and app preferences.';
+
+  @override
+  String get accountSettingsSubtitle =>
+      'Manage your personal information and account.';
+
+  @override
+  String get securitySettingsSubtitle =>
+      'Keep your account and devices secure.';
+
+  @override
+  String get appSettingsSubtitle => 'Customize your app experience.';
+
+  @override
+  String get versionLabel => 'Version';
 
   @override
   String get account => 'Account';
@@ -105,14 +136,89 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get deleteAccountDescription =>
-      'Permanently delete your account and associated data';
+      'Review the permanent consequences before deleting';
 
   @override
   String get deleteAccountConfirmationTitle => 'Delete account?';
 
   @override
   String get deleteAccountConfirmation =>
-      'This action is permanent and cannot be undone.';
+      'This action is permanent and cannot be undone. Your DT Tracker account will be removed.';
+
+  @override
+  String get deleteAccountIntro =>
+      'Deleting your DT Tracker account is permanent. Please review what will happen before continuing.';
+
+  @override
+  String get deleteAccountConsequencesTitle =>
+      'What happens when you delete your account?';
+
+  @override
+  String get deleteAccountAccessConsequence =>
+      'Your account will no longer be accessible and you will lose access to DT Tracker with it.';
+
+  @override
+  String get deleteAccountServerConsequence =>
+      'The server will permanently process the deletion of your account.';
+
+  @override
+  String get deleteAccountIrreversibleConsequence =>
+      'This action cannot be undone.';
+
+  @override
+  String get statistics => 'Statistics';
+
+  @override
+  String get day => 'Day';
+
+  @override
+  String get week => 'Week';
+
+  @override
+  String get vehicle => 'Vehicle';
+
+  @override
+  String get statisticsLoadError => 'Unable to load statistics.';
+
+  @override
+  String get vehicleWithoutTrackerStatistics =>
+      'This vehicle does not have a linked tracker.';
+
+  @override
+  String get addVehicleForStatistics => 'Add a vehicle to view statistics.';
+
+  @override
+  String get kmDriven => 'KM DRIVEN';
+
+  @override
+  String get totalDistance => 'Total distance';
+
+  @override
+  String get dailyAverage => 'Daily average';
+
+  @override
+  String get averageSpeed => 'Average speed';
+
+  @override
+  String get maximumSpeed => 'Maximum speed';
+
+  @override
+  String get movingTime => 'Moving time';
+
+  @override
+  String get retry => 'Retry';
+
+  @override
+  String get selectUpToSevenDays => 'Select up to 7 days';
+
+  @override
+  String get statisticsRangeMaximum => 'The maximum range is 7 days.';
+
+  @override
+  String get speedDuringDay => 'Speed during the day';
+
+  @override
+  String get noSpeedRecords => 'No speed records.';
 
   @override
   String get deletingAccount => 'Deleting account...';
@@ -134,7 +240,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get myVehicles => 'My Vehicles';
 
   @override
+  String get myVehiclesSubtitle => 'Manage your vehicles and linked trackers';
+
+  @override
+  String get searchVehicles => 'Search vehicles';
+
+  @override
   String get addVehicle => 'Add Vehicle';
+
+  @override
+  String get addVehicleSubtitle => 'Add the essential details for your vehicle';
+
+  @override
+  String get editVehicleSubtitle => 'Keep your vehicle information up to date';
 
   @override
   String get vehicleDeleted => 'Vehicle deleted successfully';
@@ -611,9 +729,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get vehicleNotFound => 'Vehicle not found';
 
   @override
-  String get vehicle => 'Vehicle';
-
-  @override
   String get color => 'Color';
 
   @override
@@ -1001,9 +1116,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get maxSpeed => 'Max speed';
 
   @override
-  String get averageSpeed => 'Average speed';
-
-  @override
   String get points => 'Points';
 
   @override
@@ -1388,4 +1500,119 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get temporarySharedLocation => 'Temporarily shared location';
+
+  @override
+  String get home => 'Home';
+
+  @override
+  String get guestUser => 'there';
+
+  @override
+  String homeGreeting(String name) {
+    return 'Hello, $name';
+  }
+
+  @override
+  String get homeTagline => 'Your world, more secure';
+
+  @override
+  String get quickActions => 'Quick actions';
+
+  @override
+  String get liveLocation => 'Live location';
+
+  @override
+  String get zonesAndAlerts => 'Zones & alerts';
+
+  @override
+  String get recentEvents => 'Recent events';
+
+  @override
+  String get usageAndReports => 'Usage & reports';
+
+  @override
+  String get realTime => 'Real time';
+
+  @override
+  String get alerts => 'Alerts';
+
+  @override
+  String get trackerPlans => 'DT Tracker plans';
+
+  @override
+  String get planSelectionIntro => 'Choose the protection each vehicle needs.';
+
+  @override
+  String get planEssentialDescription =>
+      'Real-time location, 7 days of history, and 2 geofences.';
+
+  @override
+  String get planProtectDescription =>
+      'Everything in Essential, 30 days, location sharing, and remote immobilization.';
+
+  @override
+  String get planTotalDescription =>
+      'Everything in Protect, 12 months, unlimited geofences, and advanced protection.';
+
+  @override
+  String get planEssentialFeatureLocation => 'Real-time GPS location';
+
+  @override
+  String get planEssentialFeatureStatus => 'Vehicle and tracker status';
+
+  @override
+  String get planEssentialFeatureHistory => '7 days of history and 2 geofences';
+
+  @override
+  String get planProtectFeatureIncluded => 'Everything included in Essential';
+
+  @override
+  String get planProtectFeatureHistory => '30 days of history and 10 geofences';
+
+  @override
+  String get planProtectFeatureSharing =>
+      'Location sharing and remote immobilization';
+
+  @override
+  String get planTotalFeatureIncluded => 'Everything included in Protect';
+
+  @override
+  String get planTotalFeatureHistory =>
+      '12 months of history and unlimited geofences';
+
+  @override
+  String get planTotalFeatureProtection =>
+      'Theft mode, intensive tracking, and authorized users';
+
+  @override
+  String get noData => 'No data';
+
+  @override
+  String get invalidYear => 'Enter a valid year';
+
+  @override
+  String get noGps => 'No GPS';
+
+  @override
+  String get gps => 'GPS';
+
+  @override
+  String get or => 'OR';
+
+  @override
+  String get continueWithGoogle => 'Continue with Google';
+
+  @override
+  String get closePreview => 'Close preview';
+
+  @override
+  String playbackProgress(int position, int total) {
+    return '$position / $total';
+  }
+
+  @override
+  String get addPhoto => 'Add photo';
+
+  @override
+  String get noPhotosYet => 'No photos yet';
 }

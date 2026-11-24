@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/route_constants.dart';
 import '../../../../core/usecases/usecase.dart';
 import '../../../../injection_container.dart';
-import '../../../vehicles/domain/entities/vehicle.dart';
 import '../../../vehicles/domain/usecases/get_vehicles.dart';
 import '../widgets/app_navigation_bar.dart';
 
@@ -30,12 +29,7 @@ class _HomePageState extends State<HomePage> {
     final result = await sl<GetVehicles>()(const NoParams());
     if (!mounted) return;
     result.fold((_) {}, (vehicles) {
-      final showFriends = vehicles.any(
-        (vehicle) =>
-            vehicle.plan == VehiclePlan.protect ||
-            vehicle.plan == VehiclePlan.total,
-      );
-      if (!showFriends &&
+      if (vehicles.isEmpty &&
           GoRouterState.of(context).uri.path.startsWith('/home/friends')) {
         context.go('/home/vehicles');
       }
@@ -67,8 +61,11 @@ class _HomePageState extends State<HomePage> {
     if (location.startsWith('/home/vehicles')) {
       return 2;
     }
-    if (location.startsWith('/home/settings')) {
+    if (location.startsWith(RouteConstants.statistics)) {
       return 3;
+    }
+    if (location.startsWith('/home/settings')) {
+      return 4;
     }
     // Default to vehicles
     return 0;
@@ -87,6 +84,9 @@ class _HomePageState extends State<HomePage> {
         context.go('/home/vehicles');
         break;
       case 3:
+        context.go(RouteConstants.statistics);
+        break;
+      case 4:
         context.go('/home/settings');
         break;
     }

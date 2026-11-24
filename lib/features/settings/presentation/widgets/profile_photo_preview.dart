@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/utils/extensions.dart';
+
 void showProfilePhotoPreview(
   BuildContext context, {
   required ImageProvider imageProvider,
@@ -46,7 +48,7 @@ class _ProfilePhotoPreview extends StatelessWidget {
               top: 8,
               right: 8,
               child: IconButton.filledTonal(
-                tooltip: 'Close preview',
+                tooltip: context.l10n.closePreview,
                 onPressed: () => Navigator.of(context).pop(),
                 icon: const Icon(Icons.close),
               ),

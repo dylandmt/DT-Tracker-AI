@@ -144,9 +144,9 @@ class _LoginPageState extends State<LoginPage> {
                               color: Theme.of(context).dividerColor,
                             ),
                           ),
-                          const Padding(
+                          Padding(
                             padding: EdgeInsets.symmetric(horizontal: 12),
-                            child: Text('OR'),
+                            child: Text(context.l10n.or),
                           ),
                           Expanded(
                             child: Divider(
@@ -163,7 +163,7 @@ class _LoginPageState extends State<LoginPage> {
                           width: 20,
                           height: 20,
                         ),
-                        label: const Text('Continue with Google'),
+                        label: Text(context.l10n.continueWithGoogle),
                         style: OutlinedButton.styleFrom(
                           minimumSize: const Size.fromHeight(48),
                         ),

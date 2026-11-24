@@ -28,6 +28,8 @@ class _FriendsPageState extends State<FriendsPage> {
   List<Map<String, dynamic>> _searchResults = [];
   bool _loading = true;
   bool _working = false;
+  bool _canUseFriends = false;
+  bool _canShareLocation = false;
   String? _error;
 
   @override
@@ -50,12 +52,13 @@ class _FriendsPageState extends State<FriendsPage> {
     });
     try {
       final values = await Future.wait([
-        _social.friends(),
-        _social.incomingRequests(),
-        _social.outgoingRequests(),
-        _social.blocks(),
-        _social.incomingLocationShares(),
-        _social.outgoingLocationShares(),
+        _safeList(_social.friends),
+        _safeList(_social.incomingRequests),
+        _safeList(_social.outgoingRequests),
+        _safeList(_social.blocks),
+        _safeList(_social.incomingLocationShares),
+        _safeList(_social.outgoingLocationShares),
+        _safeList(_social.vehicles),
       ]);
       if (!mounted) return;
       setState(() {
@@ -65,11 +68,27 @@ class _FriendsPageState extends State<FriendsPage> {
         _blocks = values[3];
         _incomingShares = values[4];
         _outgoingShares = values[5];
+        final vehicles = values[6];
+        _canUseFriends = vehicles.isNotEmpty;
+        _canShareLocation = vehicles.any((vehicle) {
+          final plan = vehicle['plan'] ?? vehicle['entitlement']?['tier'];
+          return plan == 'protect' || plan == 'total';
+        });
       });
     } catch (error) {
       if (mounted) setState(() => _error = _message(error));
     } finally {
       if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> _safeList(
+    Future<List<Map<String, dynamic>>> Function() request,
+  ) async {
+    try {
+      return await request();
+    } catch (_) {
+      return const [];
     }
   }
 
@@ -314,11 +333,13 @@ class _FriendsPageState extends State<FriendsPage> {
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _loading || _working ? null : _startShareFlow,
-        icon: const Icon(Icons.share_location_outlined),
-        label: Text(context.l10n.shareLocation),
-      ),
+      floatingActionButton: _canShareLocation
+          ? FloatingActionButton.extended(
+              onPressed: _loading || _working ? null : _startShareFlow,
+              icon: const Icon(Icons.share_location_outlined),
+              label: Text(context.l10n.shareLocation),
+            )
+          : null,
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : TabBarView(
@@ -441,7 +462,9 @@ class _FriendsPageState extends State<FriendsPage> {
       title: Text(_name(user)),
       subtitle: Text(_nickname(user)),
       trailing: FilledButton(
-        onPressed: _working ? null : () => _sendFriendRequest(user),
+        onPressed: _working || !_canUseFriends
+            ? null
+            : () => _sendFriendRequest(user),
         child: Text(context.l10n.addFriend),
       ),
     );
@@ -475,7 +498,7 @@ class _FriendsPageState extends State<FriendsPage> {
                     children: [
                       Expanded(
                         child: FilledButton(
-                          onPressed: _working
+                          onPressed: _working || !_canUseFriends
                               ? null
                               : () => _run(
                                   () => _social.acceptRequest(

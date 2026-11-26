@@ -296,6 +296,24 @@ abstract class AppLocalizations {
   /// **'About'**
   String get about;
 
+  /// No description provided for @privacyPolicy.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy policy'**
+  String get privacyPolicy;
+
+  /// No description provided for @privacyPolicyDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'See how DT Tracker handles your data'**
+  String get privacyPolicyDescription;
+
+  /// No description provided for @privacyPolicyOpenFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not open the privacy policy.'**
+  String get privacyPolicyOpenFailed;
+
   /// No description provided for @helpAndSupport.
   ///
   /// In en, this message translates to:

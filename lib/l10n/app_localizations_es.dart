@@ -117,6 +117,15 @@ class AppLocalizationsEs extends AppLocalizations {
   String get about => 'Acerca de';
 
   @override
+  String get privacyPolicy => 'Política de privacidad';
+
+  @override
+  String get privacyPolicyDescription => 'Consulta cómo DT Tracker trata tus datos';
+
+  @override
+  String get privacyPolicyOpenFailed => 'No se pudo abrir la política de privacidad.';
+
+  @override
   String get helpAndSupport => 'Ayuda y soporte';
 
   @override

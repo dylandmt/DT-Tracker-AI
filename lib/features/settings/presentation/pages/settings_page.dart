@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/constants/route_constants.dart';
@@ -150,6 +151,12 @@ class SettingsPage extends StatelessWidget {
                     title: context.l10n.restartGuide,
                     subtitle: context.l10n.restartGuideSubtitle,
                     onTap: () => _restartGuide(context),
+                  ),
+                  _SettingsOptionTile(
+                    icon: Icons.privacy_tip_outlined,
+                    title: context.l10n.privacyPolicy,
+                    subtitle: context.l10n.privacyPolicyDescription,
+                    onTap: () => _openPrivacyPolicy(context),
                   ),
                   _SettingsOptionTile(
                     icon: Icons.info_outline,
@@ -310,6 +317,22 @@ class SettingsPage extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  Future<void> _openPrivacyPolicy(BuildContext context) async {
+    try {
+      final opened = await launchUrl(
+        Uri.https('dt-tracker.com', '/privacy'),
+        mode: LaunchMode.externalApplication,
+      );
+      if (opened) return;
+    } on Exception {
+      // Use the same message when the platform cannot launch the browser.
+    }
+
+    if (context.mounted) {
+      context.showErrorSnackBar(context.l10n.privacyPolicyOpenFailed);
+    }
   }
 
   void _showAboutDialog(BuildContext context) {
